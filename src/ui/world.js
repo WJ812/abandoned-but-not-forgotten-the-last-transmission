@@ -5,7 +5,7 @@ import {
 import { ctx } from '../gfx/ctx.js';
 import { takeFrame } from '../gfx/input.js';
 import { getSceneCached } from '../gfx/renderer.js';
-import { h, mount, unmount, Menu } from './dom.js';
+import { h, mount, unmount, Menu, Typer } from './dom.js';
 
 let prompt = null, promptId = '', sceneRef = null;
 
@@ -108,7 +108,7 @@ export const factPopup = {
         h('div', { class: 'fact-head' }, h('span', { class: 'bang' }, '[!]'), h('span', { class: 'ttl' }, fact.title), h('span', { class: 'chip' }, 'FIELD NOTE')),
         body, arch ? h('p', { class: 'fact-arch' }, h('b', null, 'ARCHIVIST  '), fact.archivist) : null,
         h('div', { class: 'foot' }, h('span', { class: 'key' }, 'Space'), ' continue')));
-    factTyper = new (ctx.Typer)(body, { cps: 90 }); factTyper.set(fact.explorer);
+    factTyper = new Typer(body, { cps: 90 }); factTyper.set(fact.explorer);
     mount(factRoot);
   },
   exit() { ctx.engine.acknowledgeFact(); unmount(factRoot); },
