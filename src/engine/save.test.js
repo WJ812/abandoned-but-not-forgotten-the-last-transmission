@@ -33,7 +33,7 @@ test('save round-trip through localStorage', () => {
     makeProgress();
     assert.equal(hasSave(), true);
     const raw = JSON.parse(ls.getItem(SAVE_KEY));
-    assert.deepEqual(Object.keys(raw).sort(), ['asked', 'blueprints', 'flags', 'mode', 'robotsTalked', 'v']);
+    assert.deepEqual(Object.keys(raw).sort(), ['asked', 'blueprints', 'factsLog', 'flags', 'mode', 'robotsTalked', 'v']);
     assert.equal(raw.v, SAVE_VERSION);
     init();                                       // fresh session restores the save
     expectProgress();

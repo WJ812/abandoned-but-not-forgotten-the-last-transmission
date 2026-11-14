@@ -12,6 +12,7 @@ import {
   Region, REGION_COUNT, Dir, Btn, EVT, DT, PLAYER, INTERACT_RANGE_PX, HEADLAMP, LATENCY,
   PHYSICS_DEFAULTS, HOP_REGIONS, STEP_INTERVAL_S, GF, Collect, BP_COUNT, BP_ALL_MASK, ROBOT_COUNT,
   Mode, Trigger, HotspotKind, Prop, PROP_COUNT, propRegion, SAVE_KEY, SAVE_VERSION, CANVAS_W, CANVAS_H,
+  SETTINGS_KEY, SETTINGS_DEFAULTS,
 } from '../contract.js';
 import { overlaps, pointIn, rectGap, rectCenter, angleDiff, popcount, sanitizeDt } from './geom.js';
 import { createPropState, propActionImpl, propTickImpl, mergeSpec } from './props.js';
@@ -100,7 +101,12 @@ const sess = {
   stepAccum: 0,
 };
 
+/** Persistent fact log (contract 10b): keys `${region}:${factId}`, order seen, no duplicates. */
+let factsLogKeys = [];
+const FACT_KEY_RE = /^\d+:\d+$/;
+
 function resetPersistent() {
+  factsLogKeys = [];
   game.blueprints = 0; game.robotsTalked = 0; game.asked = new Array(ROBOT_COUNT).fill(0);
   game.mode = Mode.EXPLORER; game.flags = 0;
 }
@@ -318,6 +324,8 @@ export function update(held = 0, pressed = 0) {
       game.factsSeen |= bit;
       game.pendingFact = f.id;
       game.events |= EVT.FACT;
+      const key = `${game.region}:${f.id}`;
+      if (!factsLogKeys.includes(key)) { factsLogKeys.push(key); writeSave(); }
       sess.factArmed.set(f.id, false);
     }
   }
@@ -420,6 +428,11 @@ export const latencyProgress = () => game.latency.progress;
 export const latencyActive = () => game.latency.active;
 
 export function acknowledgeFact() { game.pendingFact = -1; }
+
+/** Every fact pop-up seen, in order: [{region, id}] (fresh array, read-only). */
+export function factsLog() {
+  return factsLogKeys.map((k) => { const [r, i] = k.split(':'); return { region: Number(r), id: Number(i) }; });
+}
 
 /* ========================================================================
  * Progress + mode
@@ -533,7 +546,7 @@ let memSave = null;
 let memErased = false;   // eraseSave() ran this session (even if removeItem threw)
 
 /** Test hook: forget the in-memory fallback save. */
-export function _resetMemorySave() { memSave = null; memErased = false; }
+export function _resetMemorySave() { memSave = null; memErased = false; memSettings = null; }
 
 function storage() {
   try {
@@ -569,6 +582,10 @@ function parseSave(raw) {
     asked: o.asked.map((n) => n | 0),
     mode: o.mode,
     flags: o.flags & (GF.ENDING_UNLOCKED | GF.ENDING_SEEN | GF.INTRO_SEEN),
+    // optional (10b): older saves lack it -> []; invalid entries are dropped, duplicates removed
+    factsLog: Array.isArray(o.factsLog)
+      ? [...new Set(o.factsLog.filter((k) => typeof k === 'string' && FACT_KEY_RE.test(k)))]
+      : [],
   };
 }
 
@@ -582,6 +599,7 @@ export function loadSave() {
   game.asked = d.asked;
   game.mode = d.mode;
   game.flags = d.flags;
+  factsLogKeys = d.factsLog;
   if ((game.blueprints & BP_ALL_MASK) === BP_ALL_MASK) game.flags |= GF.ENDING_UNLOCKED;
   return true;
 }
@@ -590,6 +608,7 @@ export function writeSave() {
   const raw = JSON.stringify({
     v: SAVE_VERSION, blueprints: game.blueprints, robotsTalked: game.robotsTalked,
     asked: game.asked.slice(0, ROBOT_COUNT).map((n) => n | 0), mode: game.mode, flags: game.flags,
+    factsLog: factsLogKeys.slice(),
   });
   memSave = raw;
   memErased = false;
@@ -606,4 +625,48 @@ export function eraseSave() {
   if (s && typeof s.removeItem === 'function') {
     try { s.removeItem(SAVE_KEY); } catch { /* ignore */ }
   }
+}
+
+/* ========================================================================
+ * Settings (contract 10b): own key, never affect hasSave(), guarded like the
+ * save with an in-memory copy that takes priority this session. eraseSave()
+ * does not touch them.
+ * ====================================================================== */
+let memSettings = null;
+
+function readSettingsRaw() {
+  if (memSettings !== null) return memSettings;
+  const s = storage();
+  if (s) {
+    try { return s.getItem(SETTINGS_KEY); } catch { /* fall through */ }
+  }
+  return null;
+}
+
+export function getSettings() {
+  const out = { ...SETTINGS_DEFAULTS };
+  const raw = readSettingsRaw();
+  if (typeof raw !== 'string') return out;
+  let o;
+  try { o = JSON.parse(raw); } catch { return out; }
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return out;
+  for (const k of Object.keys(SETTINGS_DEFAULTS)) {
+    if (Object.prototype.hasOwnProperty.call(o, k) && typeof o[k] === 'boolean') out[k] = o[k];
+  }
+  return out;
+}
+
+/** Set one known boolean setting and persist it. Returns false (no change) for
+ *  unknown keys or non-boolean values. */
+export function setSetting(name, value) {
+  if (typeof name !== 'string' || !Object.prototype.hasOwnProperty.call(SETTINGS_DEFAULTS, name)) return false;
+  if (typeof value !== 'boolean') return false;
+  const next = { ...getSettings(), [name]: value };
+  const raw = JSON.stringify(next);
+  memSettings = raw;
+  const s = storage();
+  if (s) {
+    try { s.setItem(SETTINGS_KEY, raw); } catch { /* memSettings keeps the session */ }
+  }
+  return true;
 }

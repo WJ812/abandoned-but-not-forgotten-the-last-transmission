@@ -20,7 +20,7 @@ test('barrel exports exactly the contract engine API', { skip }, () => {
     'markIntroSeen', 'markEndingSeen', 'completion', 'isLit', 'headlampCone',
     'latencyStart', 'latencyTick', 'latencyProgress', 'latencyActive', 'acknowledgeFact',
     'propOpen', 'propAction', 'propTick', 'propClose', 'propState',
-    'hasSave', 'loadSave', 'writeSave', 'eraseSave'].sort();
+    'hasSave', 'loadSave', 'writeSave', 'eraseSave', 'factsLog', 'getSettings', 'setSetting'].sort();
   assert.deepEqual(Object.keys(engine).sort(), expected);
 });
 

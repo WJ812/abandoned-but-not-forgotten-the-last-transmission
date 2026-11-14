@@ -582,8 +582,8 @@ export const SAVE_VERSION = 1;
  *   localStorage[SETTINGS_KEY] = JSON { muted: boolean, reduceFlashing: boolean }
  *   engine.getSettings() -> {muted, reduceFlashing}   defaults {muted:false, reduceFlashing:false}
  *   engine.setSetting(name, value)                     persists immediately (guarded like the save)
- *   The frontend also turns reduceFlashing on when the system's prefers-reduced-motion is set,
- *   unless the player has explicitly set it.
+ *   Effective reduce-flashing = settings.reduceFlashing OR the system's prefers-reduced-motion
+ *   (computed by the frontend; safety-first: an OS reduce-motion preference always wins).
  */
 export const SETTINGS_KEY = 'abandoned_not_forgotten_settings_v1';
 export const SETTINGS_DEFAULTS = Object.freeze({ muted: false, reduceFlashing: false });

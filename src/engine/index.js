@@ -15,4 +15,5 @@ export {
   latencyStart, latencyTick, latencyProgress, latencyActive, acknowledgeFact,
   propOpen, propAction, propTick, propClose, propState,
   hasSave, loadSave, writeSave, eraseSave,
+  factsLog, getSettings, setSetting,
 } from './core.js';
