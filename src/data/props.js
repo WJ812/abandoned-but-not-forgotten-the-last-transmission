@@ -8,7 +8,8 @@
  * Apollo 17 Mission Report (MSC-07904) and Apollo Lunar Surface Journal (ALSJ);
  * RCA GCTA documentation as summarized in the ALSJ; NASA/JPL Mars Pathfinder
  * press kit and rover fact sheets; Landis & Jenkins (1997) Materials Adherence
- * Experiment; Rieder et al., Science 278, 1771 (1997) APXS results.
+ * Experiment; NASA NSSDCA preliminary APXS results
+ * (https://nssdc.gsfc.nasa.gov/planetary/marspath/apxs.html).
  */
 import { Prop } from '../contract.js';
 import { deepFreeze } from './util.js';
@@ -52,9 +53,9 @@ const EVA3 = traverse(
 const LRV_NAV = {
   prop: Prop.LRV_NAV,
   title: 'LRV Navigation Console',
-  blurb: 'The odometer still reads 35.9 km. Pick one of the three real Apollo 17 drives and replay it: watch the heading, the distance, and the arrow pointing home to the lander.',
-  archivist: 'Dead reckoning: a directional gyro for heading plus wheel odometer pulses, processed into bearing and range to the LM. Drive legs from the Apollo 17 Mission Report; map paths are traced, not surveyed.',
-  odometerKm: 35.9,
+  blurb: 'The odometer shows about 35.7 km. Pick one of the three real Apollo 17 drives and replay it: watch the heading, the distance, and the arrow pointing home to the lander.',
+  archivist: 'Dead reckoning: gyro heading plus wheel odometer pulses gave bearing and range to the LM. Legs: Mission Report (totals vary slightly). EVA-1 1.1 km and EVA-3 4.2 km max ranges are approximate; paths traced.',
+  odometerKm: 35.7,
   maxRangeFromLmKm: 7.6,
   navSystem: 'Directional gyro, wheel odometers, signal processing unit, sun-shadow device for gyro alignment',
   lm: LM,
@@ -171,37 +172,38 @@ const SOJ_SOLAR = {
 };
 
 /* ---------- SOJ_APXS ----------
- * Oxide weight percents rounded from Rieder et al. (1997), Table 1 (APXS
- * analyses A-3 Barnacle Bill and A-7 Yogi). Later recalibrations shift them
- * by a few percent; the qualitative finding is unchanged. */
+ * Oxide weight percents: NASA NSSDCA PRELIMINARY APXS results
+ * (https://nssdc.gsfc.nasa.gov/planetary/marspath/apxs.html). Yogi's values are
+ * affected by dust. Barnacle Bill was the first rock the APXS analyzed (no
+ * single sol is claimed: sol = null, see 'sols'). */
 const SOJ_APXS = {
   prop: Prop.SOJ_APXS,
   title: 'Alpha Proton X-ray Spectrometer',
   blurb: 'Press the APXS head against a rock and wait. It counts particles and X-rays bouncing back, which takes about ten hours, so the rover worked through the cold night.',
-  archivist: 'Curium-244 sources bombard the rock; detectors read backscattered alpha particles, protons, and X-rays to give element amounts. Values here are rounded 1997 results.',
+  archivist: 'Curium-244 sources bombard the rock; detectors read backscattered alpha particles, protons, and X-rays. Values are NASA preliminary APXS results; Yogi\'s include dust.',
   integrationHours: 10,
   targets: [
     {
-      id: 0, name: 'Barnacle Bill', sol: 3, rockType: 'andesite-like volcanic rock',
+      id: 0, name: 'Barnacle Bill', sol: null, sols: 'first rock analyzed', rockType: 'andesite-like volcanic rock',
       composition: [
-        { element: 'SiO2', pct: 58.6 },
-        { element: 'FeO', pct: 12.9 },
-        { element: 'Al2O3', pct: 10.8 },
-        { element: 'CaO', pct: 5.3 },
-        { element: 'MgO', pct: 3.0 },
+        { element: 'SiO2', pct: 55.0 },
+        { element: 'FeO', pct: 12.7 },
+        { element: 'Al2O3', pct: 12.4 },
+        { element: 'CaO', pct: 4.6 },
+        { element: 'MgO', pct: 3.1 },
       ],
       finding: 'High silica, like andesite on Earth: a sign that Mars magma had changed and evolved, not just simple basalt.',
     },
     {
-      id: 1, name: 'Yogi', sol: 10, rockType: 'basaltic rock with soil coating',
+      id: 1, name: 'Yogi', sol: 8, sols: 'Sols 8-10', rockType: 'basaltic rock with soil coating',
       composition: [
-        { element: 'SiO2', pct: 55.5 },
-        { element: 'FeO', pct: 13.1 },
-        { element: 'Al2O3', pct: 10.6 },
-        { element: 'CaO', pct: 6.6 },
-        { element: 'MgO', pct: 5.9 },
+        { element: 'SiO2', pct: 50.9 },
+        { element: 'FeO', pct: 13.8 },
+        { element: 'Al2O3', pct: 11.4 },
+        { element: 'CaO', pct: 5.8 },
+        { element: 'MgO', pct: 6.3 },
       ],
-      finding: 'Less silica and more magnesium than Barnacle Bill. Part of the signal is Mars soil stuck to the rock, which looked like the dust everywhere else.',
+      finding: 'Less silica and more magnesium than Barnacle Bill. These preliminary values are affected by the dust coating the rock.',
     },
   ],
 };
@@ -211,12 +213,12 @@ const SOJ_HAZARD = {
   prop: Prop.SOJ_HAZARD,
   title: 'Laser Hazard Detection',
   blurb: 'In 1997, five lasers painted stripes on the ground and two cameras watched them. A bent stripe meant a rock, and Sojourner chose its own way around. See how a scan worked; the parked rover stays put.',
-  archivist: 'Five laser stripe projectors and two black-and-white front cameras measured the terrain ahead. Hazard height and scan range here are approximate (about one wheel diameter, about half a rover length).',
+  archivist: 'Five laser stripe projectors and two black-and-white front cameras measured the terrain ahead. Threshold 13 cm (largest of its 6/8/13 cm settings); scan range about 20 cm, approximate.',
   laserStripes: 5,
   cameras: 2,
   wheelDiameterCm: 13,
   hazardHeightCm: 13,       // approximate: about one wheel diameter
-  scanRangeCm: 30,          // approximate: about half a rover length ahead of the front
+  scanRangeCm: 20,          // approximate
   decision: 'If a stripe showed a rock or drop ahead, the rover stopped, backed up, turned away from the side with the hazard, and tried again toward its waypoint.',
   obstacles: MARS_OBSTACLES,
 };
@@ -254,7 +256,7 @@ const SOJ_LEGS = [
 const SOJ_DRIVE = {
   prop: Prop.SOJ_DRIVE,
   title: 'Drive Log (1997)',
-  blurb: 'Sojourner has been silent since September 27, 1997, and it will never move again. Replay its real drives instead: four legs around the lander, about 100 meters in 83 sols.',
+  blurb: 'Pathfinder sent its last full transmission on September 27, 1997. Sojourner will never move again. Replay its real drives instead: four legs around the lander, about 100 meters in 83 sols.',
   archivist: 'Leg paths, per-leg distances, and sol ranges are traced from the 1997 traverse map and are approximate. Totals: about 100 m driven, never more than about 12 m from the lander, at up to 1 cm/s.',
   maxSpeedCmS: 1,
   totalTraverseM: 100,
@@ -262,7 +264,7 @@ const SOJ_DRIVE = {
   landerPos: MARS_LANDER_POS,
   commandNote: 'In 1997, drivers at JPL picked waypoints in 3-D views from the lander camera. Each plan went to the lander, then by radio modem to the rover, which drove it on its own.',
   lastContactUtc: '1997-09-27',
-  fate: 'Pathfinder last sent data on September 27, 1997. Sojourner could only talk through the lander. It was programmed to drive back toward the lander and wait if contact was lost; nobody knows how long it tried.',
+  fate: 'LAST FULL TRANSMISSION 27 SEP 1997 (sol 83); faint signals until Oct 7, mission ended Nov 4. Its software would drive toward the lander; it likely circled nearby, kept about 3 m off. No one knows how long.',
   lander: SOJ_LANDER,
   legs: SOJ_LEGS,
 };

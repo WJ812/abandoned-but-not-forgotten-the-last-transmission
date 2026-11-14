@@ -92,7 +92,7 @@ Rendered from the team's painted scene: an archive room with bookshelves, a swir
       * the repaired fender.
     * *Greeting:* `"Telemetry static... Wheel encoders idle since December 14, 1972. Welcome to Taurus-Littrow, Explorer."`
     * *Question Menu (Pokémon-style):* 5–6 questions plus "Goodbye", asked in any order and repeatable. It includes:
-      * *"How far did you carry the astronauts?":* Explains driving 35.9 km across lunar craters and mountains during Apollo 17, carrying two astronauts, tools, and 110 kg of moon rocks.
+      * *"How far did you carry the astronauts?":* Explains driving about 35.7 km across lunar craters and mountains during Apollo 17, carrying two astronauts, tools, and 110 kg of moon rocks.
       * *"Why were you left behind on the Moon?":* Explains mass limits on the Apollo Lunar Module Ascent Stage—and how its TV camera stayed behind to film the crew's liftoff from the Moon.
 
 ### 4.2 Expedition 2: Mars (*Ares Vallis — Mars Pathfinder Site*)

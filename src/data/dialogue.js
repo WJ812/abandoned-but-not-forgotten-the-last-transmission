@@ -10,8 +10,8 @@
  *
  * Sources: Apollo 17 Mission Report; ALSJ (Apollo 17 EVA transcripts and
  * commentary); NASA NSSDCA LRV and Apollo 17 pages; NASA/JPL Mars Pathfinder
- * press kit, mission pages, and end-of-mission releases (1997); Rieder et al.,
- * Science 278 (1997) for the APXS results.
+ * press kit, mission pages, and end-of-mission releases (1997); NASA NSSDCA
+ * preliminary APXS results (nssdc.gsfc.nasa.gov/planetary/marspath/apxs.html).
  */
 import { Robot } from '../contract.js';
 import { deepFreeze } from './util.js';
@@ -36,11 +36,11 @@ export const DIALOGUES = deepFreeze({
         label: 'How far did you carry the astronauts?',
         prompt: 'How far did you carry the astronauts?',
         answer: [
-          'Over three drives I carried Gene Cernan and Jack Schmitt 35.9 kilometers: across the valley floor, up the slopes of the mountains, and around craters bigger than a football field.',
+          'Over three drives I carried Gene Cernan and Jack Schmitt about 35.7 kilometers: across the valley floor, up the slopes of the mountains, and around craters bigger than a football field.',
           'I hauled their tools, cameras, and sample bags too. By the end, the mission had gathered about 110 kilograms of Moon rocks and soil, the biggest haul of any Apollo landing.',
         ],
         archivist: [
-          'Drive legs (Apollo 17 Mission Report): EVA-1 3.3 km, EVA-2 20.3 km, EVA-3 12.1 km; NASA gives 35.9 km in total. The 110.5 kg is the whole mission sample return, not one drive.',
+          'Drive legs (Apollo 17 Mission Report): EVA-1 3.3, EVA-2 20.3, EVA-3 12.1 km: about 35.7 km (NASA: 35.74 km; published totals vary slightly). The 110.5 kg is the mission sample total.',
         ],
       },
       {
@@ -157,7 +157,7 @@ export const DIALOGUES = deepFreeze({
           'Barnacle Bill had lots of silica, like some volcanic rocks on Earth. Yogi had less silica and more magnesium. Mars rocks turned out to be more varied than scientists expected!',
         ],
         archivist: [
-          'The APXS used curium-244 sources and counted alpha particles, protons, and X-rays bounced back from the rock. Barnacle Bill was about 58% SiO2, close to an andesite. Yogi was partly coated in soil.',
+          'The APXS used curium-244 sources and counted alpha particles, protons, and X-rays bounced back from the rock. Preliminary results: Barnacle Bill about 55% SiO2, Yogi about 51% with more MgO. Yogi\'s values include dust.',
         ],
       },
       {
@@ -189,11 +189,11 @@ export const DIALOGUES = deepFreeze({
         label: 'What happened at the end?',
         prompt: 'What happened at the end of your mission?',
         answer: [
-          'I could not talk to Earth by myself. Every message went through Pathfinder, the lander. On September 27, 1997, Pathfinder went quiet, and no one called me again.',
-          'I had a plan for that: if I lost touch, I would drive back toward the lander and wait. Maybe I am still circling it now, listening. This is my last transmission. I am glad you heard it.',
+          'I could not talk to Earth by myself. Every message went through Pathfinder, the lander. On September 27, 1997, Pathfinder sent its last full transmission. Then it went quiet, and no one called me again.',
+          'I had a plan for that: if I lost touch, I would drive toward the lander. I may have circled near it for a while, keeping my distance, listening. This is my last transmission. I am glad you heard it.',
         ],
         archivist: [
-          'Last contact: Sep 27, 1997, 10:23 UTC; the lander battery likely failed and it grew too cold. Totals: over 16,500 lander images, 550 rover images, and more than 15 chemical analyses of rocks and soil.',
+          'Last full data: Sep 27, 1997 (sol 83). Faint signals until Oct 7; NASA ended the mission Nov 4. A roughly 3 m virtual barrier likely kept the rover circling clear of the lander.',
         ],
       },
     ],

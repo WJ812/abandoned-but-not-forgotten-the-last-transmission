@@ -89,12 +89,12 @@ export const ENDING = deepFreeze({
     { label: 'Signal delay', moon: 'about 1.3 s', mars: 'about 11 min' },
     { label: 'Mass', moon: '210 kg', mars: '10.5 kg' },
     { label: 'Speed', moon: '18 km/h recorded', mars: '1 cm/s' },
-    { label: 'Distance driven', moon: '35.9 km', mars: 'about 100 m' },
+    { label: 'Distance driven', moon: 'about 35.7 km', mars: 'about 100 m' },
     { label: 'Active', moon: 'Dec 11-14, 1972', mars: 'Jul 5 - Sep 27, 1997' },
   ],
   montage: [
     { art: 'montage_lrv', caption: 'LRV-3, parked east of the Challenger landing site in Taurus-Littrow. December 1972.' },
-    { art: 'montage_sojourner', caption: 'Sojourner beside the Pathfinder lander in Ares Vallis. Last contact: September 27, 1997.' },
+    { art: 'montage_sojourner', caption: 'Sojourner beside the Pathfinder lander in Ares Vallis. Last full transmission: September 27, 1997.' },
   ],
   closing: [
     'Though their batteries fade, their solar panels cover with dust, and their wheels fall silent across the planetary voids... these robotic pioneers carry human curiosity into the dark.',

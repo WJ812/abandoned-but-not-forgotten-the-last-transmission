@@ -483,7 +483,7 @@ export const PropAction = Object.freeze({
  *
  * LRV_NAV {
  *   prop, title, blurb, archivist,
- *   odometerKm: 35.9, maxRangeFromLmKm: 7.6, navSystem: string,
+ *   odometerKm: 35.7, maxRangeFromLmKm: 7.6, navSystem: string,
  *   lm: Point (minimap fraction 0..1),
  *   evas: [{ id, label, dateUtc, distanceKm, durationMin, maxRangeKm,
  *            path: Point[] (minimap fractions, >= 4 points),
@@ -520,7 +520,7 @@ export const PropAction = Object.freeze({
  * }
  * SOJ_APXS {
  *   prop, title, blurb, archivist,
- *   integrationHours: number (~10), targets: [{ id, name:'Barnacle Bill'|'Yogi'|..., sol:number,
+ *   integrationHours: number (~10), targets: [{ id, name:'Barnacle Bill'|'Yogi'|..., sol:number|null, [sols]:string (display),
  *     rockType: string, composition: [{element:string, pct:number}], finding: string }] (>= 2)
  * }
  * SOJ_HAZARD {

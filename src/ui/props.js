@@ -270,7 +270,7 @@ const PANELS = {
         { label: 'Leg', value: leg ? `${leg.label} (${leg.sols || ''})` : '-' },
         { label: 'Sol', value: st.sol ?? '-' }, { label: 'Distance', value: `${f1(st.distanceM ?? 0, 1)} m of ${f1(leg?.distanceM ?? 0, 1)} m` },
         { label: 'Range to lander', value: `${f1(st.rangeToLanderM ?? 0, 1)} m (max ${spec.maxFromLanderM} m)` },
-        { label: 'Stop', value: st.stop || '-' }, { label: 'Last contact', value: spec.lastContactUtc || '1997-09-27' },
+        { label: 'Stop', value: st.stop || '-' }, { label: 'Last full data', value: spec.lastContactUtc || '1997-09-27' },
       ];
     },
     draw(g, t) {
@@ -296,7 +296,7 @@ const PANELS = {
       // closing card after the final leg
       if (st.legIndex === spec.legs.length - 1 && tt >= 0.999) {
         g.fillStyle = 'rgba(0,0,0,0.85)'; g.fillRect(14, 28, 212, 78); g.strokeStyle = '#ff6b5a'; g.strokeRect(14.5, 28.5, 211, 77);
-        drawText(g, 'LAST CONTACT 27 SEP 1997', 22, 34, '#ff6b5a', 1);
+        drawText(g, 'LAST FULL DATA 27 SEP 1997', 22, 34, '#ff6b5a', 1);
         wrapLabel(spec.fate || 'Contact was lost and never regained.', 49).slice(0, 12).forEach((ln, i) => drawText(g, ln, 22, 46 + i * 6, '#e6edf5'));
         if (Math.floor(t * 2) % 2) drawText(g, '_', 22, 98, '#ff6b5a');
       }

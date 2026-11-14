@@ -190,7 +190,8 @@ test('prop specs: shapes and verified hardware values', () => {
     assert.ok(Object.isFrozen(s));
   }
   const nav = data.getPropSpec(Prop.LRV_NAV);
-  assert.equal(nav.odometerKm, 35.9);
+  assert.equal(nav.odometerKm, 35.7);
+  assert.ok(Math.abs(nav.evas.reduce((a, e) => a + e.distanceKm, 0) - nav.odometerKm) < 0.05);
   assert.equal(nav.maxRangeFromLmKm, 7.6);
   assert.equal(nav.evas.length, 3);
   const inUnit = (pt) => pt.x >= 0 && pt.x <= 1 && pt.y >= 0 && pt.y <= 1;
@@ -254,7 +255,8 @@ test('prop specs: shapes and verified hardware values', () => {
   for (const x of apxs.targets) {
     const sum = x.composition.reduce((a, c) => a + c.pct, 0);
     assert.ok(sum > 0 && sum <= 100, `${x.name} composition sums to ${sum}`);
-    assert.ok(x.sol >= 1 && x.sol <= 83);
+    assert.ok(x.sol === null || (x.sol >= 1 && x.sol <= 83));
+    assert.ok(typeof x.sols === 'string' && x.sols.length <= LABEL_MAX);
   }
 
   const haz = data.getPropSpec(Prop.SOJ_HAZARD);

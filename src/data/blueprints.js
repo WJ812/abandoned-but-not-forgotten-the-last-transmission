@@ -17,7 +17,7 @@ export const BLUEPRINTS = deepFreeze({
     schematic: 'schematic_lrv',
     explorerPages: [
       'Aim: carry two astronauts much farther than they could walk. On Apollo 15, 16, and 17 the rover turned short walks into long drives to mountains and craters kilometers from the lander.',
-      'Discovery: on Apollo 17 it drove 35.9 km and reached 7.6 km from the lander. It helped the crew gather about 110 kg of samples for the mission, including orange volcanic glass from Shorty crater.',
+      'Discovery: on Apollo 17 it drove about 35.7 km and reached 7.6 km from the lander. It helped the crew gather about 110 kg of samples for the mission, including orange volcanic glass from Shorty crater.',
     ],
     archivistPages: [
       'Power: two 36 V silver-zinc primary batteries, 121 Ah each (about 8.7 kWh in all), never recharged. Each wheel had its own 0.25 hp DC motor, so the rover could keep driving if one motor failed.',
@@ -32,7 +32,7 @@ export const BLUEPRINTS = deepFreeze({
       { label: 'Wheel motors', value: '4 x 0.25 hp DC' },
       { label: 'Design speed', value: 'about 13 km/h' },
       { label: 'Recorded top speed', value: '18 km/h (Apollo 17)' },
-      { label: 'Apollo 17 distance', value: '35.9 km' },
+      { label: 'Apollo 17 distance', value: 'about 35.7 km' },
       { label: 'Farthest from LM', value: '7.6 km' },
       { label: 'Flown on', value: 'Apollo 15, 16, 17 (1971-72)' },
     ],
