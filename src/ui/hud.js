@@ -54,8 +54,8 @@ export function sync(force) {
   lampEl.style.display = game.region === Region.MOON ? '' : 'none';
   lampEl.replaceChildren(icon(2, 'F'), game.headlampOn ? ' LAMP ON' : ' LAMP OFF [F]');
   lampEl.classList.toggle('on', !!game.headlampOn);
-  modeBtn.replaceChildren(icon(game.mode === Mode.ARCHIVIST ? 5 : 4, game.mode === Mode.ARCHIVIST ? 'A' : 'E'), ' ' + (modeLabels()[game.mode] || ''));
+  modeBtn.replaceChildren(icon(game.mode === Mode.ARCHIVIST ? 5 : 4, game.mode === Mode.ARCHIVIST ? '◆' : '◎'), ' ' + (modeLabels()[game.mode] || ''));
   modeBtn.classList.toggle('arch', game.mode === Mode.ARCHIVIST);
-  muteBtn.replaceChildren(icon(3, 'S'), ctx.audio.muted ? ' MUTED' : ' SOUND');
+  muteBtn.replaceChildren(icon(3, ctx.audio.muted ? '✕' : '♪'), ctx.audio.muted ? ' MUTED' : ' SOUND');
   muteBtn.classList.toggle('off', ctx.audio.muted);
 }
