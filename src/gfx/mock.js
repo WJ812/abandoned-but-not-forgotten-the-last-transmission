@@ -5,23 +5,20 @@
  */
 import {
   Region, Station, Blueprint, Robot, Mission, Pack, Mode, Surface, Prop, PropAction, HotspotKind, Trigger, Dir, EVT, GF, Collect,
-  BP_ALL_MASK, BP_COUNT, PLAYER, INTERACT_RANGE_PX, HEADLAMP, PHYSICS_DEFAULTS, LATENCY, DT, SAVE_KEY, SAVE_VERSION, PROP_COUNT, Btn,
+  BP_ALL_MASK, BP_COUNT, CANVAS_W, CANVAS_H, PLAYER, INTERACT_RANGE_PX, HEADLAMP, PHYSICS_DEFAULTS, LATENCY, DT, SAVE_KEY, SAVE_VERSION, PROP_COUNT, Btn,
 } from '../contract.js';
 
 const R = (x, y, w, h) => ({ x, y, w, h });
-const hs = (id, kind, rect, ref, label, extra = {}) => ({ id, kind, rect, trigger: kind === 'portal' || kind === 'returnPad' ? Trigger.STEP : Trigger.PRESS, ref, solid: false, label, ...extra });
+const hs = (id, kind, rect, ref, label, extra = {}) => ({ id, kind, rect, trigger: kind === 'returnPad' ? Trigger.STEP : Trigger.PRESS, ref, solid: false, label, ...extra });
 const W = (x, y, w, h) => R(x, y, w, h);
 
 const SCENES = {
-  [Region.HUB]: { region: 0, name: 'NASA Archives', w: 320, h: 180, background: 'scene_hub', surface: Surface.WOOD, spawn: { x: 148, y: 100, facing: Dir.DOWN }, solids: [], shadows: [], facts: [], walkable: W(8, 62, 304, 114),
+  [Region.HUB]: { region: 0, name: 'NASA Archives', w: CANVAS_W, h: CANVAS_H, background: 'scene_hub', surface: Surface.WOOD, spawn: { x: 168, y: 100, facing: Dir.DOWN }, solids: [], shadows: [], facts: [], walkable: W(8, 62, 344, 114),
     hotspots: [
-      hs('hub.starmap', 'station', R(20, 30, 36, 30), Station.STAR_MAP, 'Star Map', { solid: true }),
-      hs('hub.portal', 'portal', R(140, 34, 40, 24), 0, 'Portal'),
-      hs('hub.computer', 'station', R(262, 30, 36, 30), Station.ARCHIVE_COMPUTER, 'Archive Computer', { solid: true }),
-      hs('hub.notebook', 'station', R(20, 140, 28, 26), Station.NOTEBOOK, 'Notebook', { solid: true }),
-      hs('hub.bay', 'decor', R(250, 136, 52, 34), Station.EXPANSION_BAY, 'Expansion Bay', { solid: true, caption: 'Sealed crates: expansion packs, coming soon.' }),
+      hs('hub.portal', 'portal', R(160, 34, 40, 24), 0, 'Portal: Moon / Mars', { solid: true }),
+      hs('hub.computer', 'station', R(300, 30, 36, 30), Station.ARCHIVE_COMPUTER, 'Archive Computer', { solid: true }),
     ] },
-  [Region.MOON]: { region: 1, name: 'Taurus-Littrow', w: 320, h: 180, background: 'scene_moon', surface: Surface.REGOLITH, spawn: { x: 150, y: 120, facing: Dir.UP }, solids: [R(260, 120, 20, 12)], shadows: [R(200, 66, 100, 50), R(30, 124, 70, 40)], walkable: W(6, 56, 308, 120),
+  [Region.MOON]: { region: 1, name: 'Taurus-Littrow', w: CANVAS_W, h: CANVAS_H, background: 'scene_moon', surface: Surface.REGOLITH, spawn: { x: 150, y: 120, facing: Dir.UP }, solids: [R(260, 120, 20, 12)], shadows: [R(200, 66, 100, 50), R(30, 124, 70, 40)], walkable: W(6, 56, 348, 120),
     facts: [0, 1, 2].map((i) => ({ id: i, rect: R(60 + i * 90, 100 + (i % 2) * 20, 24, 20), title: `Moon fact ${i + 1}`, explorer: 'The Moon has 1/6 of Earth gravity, so hops carry you high and slow.', archivist: 'g = 1.62 m/s2.' })),
     hotspots: [
       hs('moon.lrv', 'robot', R(110, 56, 74, 30), Robot.LRV, 'Lunar Rover', { solid: true }),
@@ -29,7 +26,7 @@ const SCENES = {
       hs('moon.cam', 'prop', R(148, 90, 14, 10), Prop.LRV_CAMERA, 'TV camera'), hs('moon.fender', 'prop', R(166, 90, 14, 10), Prop.LRV_FENDER, 'Fender'),
       hs('moon.bp', 'blueprint', R(228, 82, 12, 12), Blueprint.LRV, 'LRV blueprint'), hs('moon.pad', 'returnPad', R(20, 90, 24, 12), 0, 'Return pad'),
     ] },
-  [Region.MARS]: { region: 2, name: 'Ares Vallis', w: 320, h: 180, background: 'scene_mars', surface: Surface.SAND, spawn: { x: 40, y: 120, facing: Dir.RIGHT }, solids: [R(200, 100, 20, 14), R(90, 100, 16, 10)], shadows: [], walkable: W(6, 56, 308, 120),
+  [Region.MARS]: { region: 2, name: 'Ares Vallis', w: CANVAS_W, h: CANVAS_H, background: 'scene_mars', surface: Surface.SAND, spawn: { x: 40, y: 120, facing: Dir.RIGHT }, solids: [R(200, 100, 20, 14), R(90, 100, 16, 10)], shadows: [], walkable: W(6, 56, 348, 120),
     facts: [0, 1, 2].map((i) => ({ id: i, rect: R(70 + i * 80, 130, 24, 20), title: `Mars fact ${i + 1}`, explorer: 'Mars has 0.38 g and a thin carbon dioxide atmosphere.', archivist: 'g = 3.72 m/s2.' })),
     hotspots: [
       hs('mars.sojourner', 'robot', R(140, 90, 24, 14), Robot.SOJOURNER, 'Sojourner'),
@@ -60,7 +57,7 @@ const PROPSPEC = {
     { id: 0, label: 'EVA 1', dateUtc: '1972-12-11', distanceKm: 3.5, durationMin: 262, maxRangeKm: 2.0, path: path([0.5, 0.5], [0.6, 0.4], [0.75, 0.45], [0.7, 0.65], [0.5, 0.5]), stations: [{ name: 'Station 1', at: 0.4 }] },
     { id: 1, label: 'EVA 2', dateUtc: '1972-12-12', distanceKm: 20.1, durationMin: 441, maxRangeKm: 7.6, path: path([0.5, 0.5], [0.3, 0.3], [0.15, 0.5], [0.3, 0.75], [0.5, 0.5]), stations: [{ name: 'Station 4', at: 0.5 }] },
     { id: 2, label: 'EVA 3', dateUtc: '1972-12-13', distanceKm: 12.2, durationMin: 439, maxRangeKm: 4.0, path: path([0.5, 0.5], [0.55, 0.2], [0.85, 0.3], [0.9, 0.7], [0.5, 0.5]), stations: [{ name: 'Station 8', at: 0.6 }] }] },
-  [Prop.LRV_BATTERY]: { title: 'Battery Panel', blurb: 'Silver-zinc cells, now at 0%.', archivist: 'Not rechargeable.', count: 2, voltageV: 36, capacityAh: 121, chemistry: 'silver-zinc', rechargeable: false, energyWh: 8712, motors: { count: 4, hp: 0.25, watts: 186 }, topSpeedKmh: 18, evaDrawWh: [1500, 5200, 3400], whyDead: 'Silver-zinc cells cannot be recharged.' },
+  [Prop.LRV_BATTERY]: { title: 'Battery Panel', blurb: 'Silver-zinc cells, now at 0%.', archivist: 'Not rechargeable.', count: 2, voltageV: 36, capacityAh: 121, chemistry: 'silver-zinc', rechargeable: false, energyWh: 8712, motors: { count: 4, hp: 0.25, watts: 186 }, topSpeedKmh: 18, evaDrawWh: [1500, 5200, 3400], chargeHistory: [{ label: 'Landing', dateUtc: '1972-12-11', pct: 100, estimated: false }, { label: 'EVA 1', dateUtc: '1972-12-11', pct: 82, estimated: false }, { label: 'EVA 2', dateUtc: '1972-12-12', pct: 40, estimated: false }, { label: 'EVA 3', dateUtc: '1972-12-13', pct: 8, estimated: false }, { label: 'Left behind', dateUtc: '1972-12-14', pct: 5, estimated: true }, { label: 'Today', dateUtc: '2026-11-14', pct: 0, estimated: true }], whyDead: 'Silver-zinc cells cannot be recharged.' },
   [Prop.LRV_CAMERA]: { title: 'TV Camera (GCTA)', blurb: 'Commands reach the Moon after a delay.', archivist: 'Earth-Moon light time ~1.3 s.', panMinDeg: -180, panMaxDeg: 180, tiltMinDeg: -15, tiltMaxDeg: 85, zoomMin: 1, zoomMax: 6, panStepDeg: 15, tiltStepDeg: 10, commandDelayS: 1.3, liftoffUtc: '1972-12-14 22:54 UTC', liftoffSequence: [{ atS: 0, tiltDeg: 0 }, { atS: 3, tiltDeg: 40 }, { atS: 6, tiltDeg: 70 }], operator: 'Ed Fendell' },
   [Prop.LRV_FENDER]: { title: 'Fender Repair', blurb: 'Taped maps saved the day.', archivist: 'Duct tape and maps.', brokenDate: 'Dec 11, 1972', fixDate: 'Dec 12, 1972', fixMaterials: 'maps, duct tape, clamps', wheelDiameterCm: 81.8, wheelMaterial: 'zinc-coated woven steel mesh', dustWithoutFender: 'a dust rooster tail covers the crew', dustWithFender: 'dust stays mostly down' },
   [Prop.SOJ_SOLAR]: { title: 'Solar Panel', blurb: 'A 16 W panel, dimmed by dust.', archivist: 'GaAs cells.', panelW: 16, panelAreaM2: 0.2, cellType: 'GaAs', batteryChemistry: 'LiSOCl2', batteryRechargeable: false, solHours: 24.66, dustLossPerSol: 0.0027, missionSols: 83, plannedSols: 7, nightPowerSource: 'non-rechargeable batteries' },
@@ -112,7 +109,7 @@ export const engine = {
   enterRegion(r) {
     const sc = SCENES[r]; game.region = r; Object.assign(game.player, { x: sc.spawn.x, y: sc.spawn.y, vx: 0, vy: 0, z: 0, vz: 0, facing: sc.spawn.facing, anim: 0, moving: false, airborne: false });
     game.factsSeen = 0; game.pendingFact = -1; game.headlampOn = false; game.latency = { active: false, progress: 0, elapsed: 0 }; game.nearHotspot = null; game.inShadow = false;
-    wasOnPortal = sc.hotspots.some((h) => h.kind === 'portal' && ov(hit(game.player), h.rect)); wasOnPad = true;
+    wasOnPortal = sc.hotspots.some((h) => h.kind === 'portal' && h.trigger === Trigger.STEP && ov(hit(game.player), h.rect)); wasOnPad = true;
   },
   getPhysics: (r) => PHYSICS_DEFAULTS[r],
   update(held, pressed) {
@@ -142,7 +139,7 @@ export const engine = {
     }
     if ((best?.id ?? null) !== (prevNear?.id ?? null)) game.events |= best ? EVT.ENTERED_HOTSPOT : EVT.LEFT_HOTSPOT;
     game.nearHotspot = prevNear = best;
-    const onPortal = sc.hotspots.some((h) => h.kind === 'portal' && ov(b, h.rect)); if (onPortal && !wasOnPortal) game.events |= EVT.ON_PORTAL; wasOnPortal = onPortal;
+    const onPortal = sc.hotspots.some((h) => h.kind === 'portal' && h.trigger === Trigger.STEP && ov(b, h.rect)); if (onPortal && !wasOnPortal) game.events |= EVT.ON_PORTAL; wasOnPortal = onPortal;
     const onPad = sc.hotspots.some((h) => h.kind === 'returnPad' && ov(b, h.rect)); if (onPad && !wasOnPad) game.events |= EVT.ON_RETURN_PAD; wasOnPad = onPad;
     for (const f of sc.facts) if (!(game.factsSeen & (1 << f.id)) && ov(b, f.rect)) { game.factsSeen |= 1 << f.id; game.pendingFact = f.id; game.events |= EVT.FACT; break; }
     const was = game.inShadow; game.inShadow = sc.shadows.some((s) => ov(b, s)) && !engine.isLit(b.x + 6, b.y + 4);

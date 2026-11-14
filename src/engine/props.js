@@ -16,7 +16,7 @@ import {
   Prop, PropAction as A, LATENCY, PX_PER_M, TIME_SCALE, Region, CANVAS_W, CANVAS_H,
   HotspotKind, Robot,
 } from '../contract.js';
-import { clamp, overlaps, rayRect, rectGap, rectCenter, norm360, DEG } from './geom.js';
+import { clamp, overlaps, rayRect, rectGap, rectCenter, norm360, DEG, sanitizeDt } from './geom.js';
 
 /* ------------------------------------------------------------------------
  * Tuning (time compression and draw-scale factors). Real numbers come from
@@ -49,8 +49,8 @@ export const PROP_TUNING = Object.freeze({
   ROVER_FOOT_W: 16, ROVER_FOOT_H: 8,
   DRIVE_TIME_COMPRESS: 20,    // on top of TIME_SCALE: 1 cm/s -> 6 px/s on screen
   DRIVE_STALL_S: 8,
-  DRIVE_SUBSTEP_S: 1 / 60,    // large ticks are split so the rover cannot tunnel
-  DRIVE_MAX_TICK_S: 120,      // cap on one propTick's simulated time           // no progress for this long -> 'blocked'
+  DRIVE_SUBSTEP_S: 1 / 60,    // ticks are split into sub-steps...
+  DRIVE_SUBSTEP_PX: 2,        // ...of at most 2 px of travel, each collision-checked           // no progress for this long -> 'blocked'
   DRIVE_RIPPLE_DEG: 3,        // rocker-bogie rocking over small stones
   DRIVE_RIPPLE_M: 0.35,       // wavelength of that rocking
   DRIVE_ROCK_TILT_DEG: 12,    // extra tilt when a wheel climbs beside a rock
@@ -185,7 +185,8 @@ export function propActionImpl(s, spec, action, arg, ctx) {
  * ====================================================================== */
 export function propTickImpl(s, spec, dt, ctx) {
   s.changed = false;
-  if (!(dt > 0) || !Number.isFinite(dt)) return s;   // ignore 0, negative, NaN, Infinity
+  dt = sanitizeDt(dt);              // NaN/Infinity/negative -> 0, huge -> MAX_TICK_DT
+  if (!(dt > 0)) return s;
   switch (s.prop) {
     case Prop.LRV_NAV: return navTick(s, spec, dt, ctx);
     case Prop.LRV_BATTERY: return batteryTick(s, spec, dt);
@@ -705,12 +706,15 @@ function driveAction(s, spec, action, arg, ctx) {
   return s;
 }
 
-/** Large dt is split into sub-steps so the rover can never jump over a rock. */
+/** The tick is split into sub-steps of at most DRIVE_SUBSTEP_PX of travel
+ *  (like the player's movement), each collision-checked: no tunnelling. */
 function driveTick(s, spec, dt, ctx) {
   const world = driveWorld(spec, ctx);
-  let remaining = Math.min(dt, T.DRIVE_MAX_TICK_S);
+  const speed = Math.max(1e-6, driveSpeedPxS(spec));
+  const maxH = Math.min(T.DRIVE_SUBSTEP_S, T.DRIVE_SUBSTEP_PX / speed);
+  let remaining = dt;
   while (remaining > 1e-12) {
-    const h = Math.min(remaining, T.DRIVE_SUBSTEP_S);
+    const h = Math.min(remaining, maxH);
     driveStep(s, spec, h, world);
     remaining -= h;
     if (s.stopSignal < 0 && s.phase !== 'signal' && s.phase !== 'moving') break;

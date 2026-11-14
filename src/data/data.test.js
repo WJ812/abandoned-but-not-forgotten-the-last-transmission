@@ -214,6 +214,22 @@ test('prop specs: shapes and verified hardware values', () => {
   assert.equal(bat.evaDrawWh.length, 3);
   assert.ok(bat.evaDrawWh.reduce((a, b) => a + b, 0) < bat.energyWh);
 
+  const hist = bat.chargeHistory;
+  assert.ok(hist.length >= 6);
+  assert.equal(hist[0].pct, 100);
+  assert.equal(hist[hist.length - 1].pct, 0);
+  assert.equal(hist[hist.length - 1].estimated, false);
+  let prevT = -Infinity; let prevPct = 101;
+  for (const h of hist) {
+    assert.ok(h.label.length > 0 && h.label.length <= LABEL_MAX, h.label);
+    assert.ok(h.pct >= 0 && h.pct <= 100, h.label);
+    assert.ok(h.pct <= prevPct, 'charge never rises (primary cells)'); prevPct = h.pct;
+    const ts = Date.parse(h.dateUtc);
+    assert.ok(ts > prevT, `dates ascending at ${h.label}`); prevT = ts;
+    assert.equal(typeof h.estimated, 'boolean');
+  }
+  assert.ok(hist.slice(1, 4).every((h) => h.estimated), 'derived post-EVA levels are flagged');
+
   const cam = data.getPropSpec(Prop.LRV_CAMERA);
   assert.equal(cam.commandDelayS, 1.3);
   assert.deepEqual([cam.zoomMin, cam.zoomMax], [1, 6]);

@@ -1,13 +1,13 @@
 /** Hub / Region screens (the walkable world) plus fact pop-up and portal menu. */
 import {
-  EVT, Screen, Region, HotspotKind, Station, Sfx, Surface, Mode, HOP_REGIONS, GRAVITY_G,
+  CANVAS_W, CANVAS_H, EVT, Screen, Region, HotspotKind, Station, Sfx, Surface, Mode, HOP_REGIONS, GRAVITY_G,
 } from '../contract.js';
 import { ctx } from '../gfx/ctx.js';
 import { takeFrame } from '../gfx/input.js';
 import { getSceneCached } from '../gfx/renderer.js';
 import { h, mount, unmount, Menu, Typer } from './dom.js';
 
-let prompt = null, promptId = '', sceneRef = null;
+let prompt = null, promptId = '', sceneRef = null, pendingEvt = 0;
 
 function ensurePrompt() {
   if (!prompt || !prompt.isConnected) {
@@ -23,8 +23,8 @@ function updatePrompt() {
   promptId = id;
   if (!near) { prompt.classList.add('hidden'); return; }
   prompt.querySelector('.plabel').textContent = near.label || near.id;
-  prompt.style.left = `${((near.rect.x + near.rect.w / 2) / 320) * 100}%`;
-  prompt.style.top = `${(Math.max(14, near.rect.y - 15) / 180) * 100}%`;
+  prompt.style.left = `${Math.max(9, Math.min(91, ((near.rect.x + near.rect.w / 2) / CANVAS_W) * 100))}%`;
+  prompt.style.top = `${(Math.max(14, near.rect.y - 15) / CANVAS_H) * 100}%`;
   prompt.classList.remove('hidden');
 }
 
@@ -45,9 +45,9 @@ export function interact(hot) {
       break;
     }
     case HotspotKind.STATION:
-      if (hot.ref === Station.STAR_MAP) { A.play(Sfx.STATION_STARMAP); ctx.go(Screen.STAR_MAP); }
-      else if (hot.ref === Station.ARCHIVE_COMPUTER) { A.play(Sfx.STATION_COMPUTER); ctx.go(Screen.ARCHIVE_COMPUTER); }
-      else if (hot.ref === Station.NOTEBOOK) { A.play(Sfx.NOTEBOOK); ctx.go(Screen.NOTEBOOK); }
+      if (hot.ref === Station.STAR_MAP) { A.play(Sfx.STATION_STARMAP); ctx.go(Screen.ARCHIVE_COMPUTER, { tab: 'starmap' }); }
+      else if (hot.ref === Station.ARCHIVE_COMPUTER) { A.play(Sfx.STATION_COMPUTER); ctx.go(Screen.ARCHIVE_COMPUTER, { tab: 'blueprints' }); }
+      else if (hot.ref === Station.NOTEBOOK) { A.play(Sfx.NOTEBOOK); ctx.go(Screen.ARCHIVE_COMPUTER, { tab: 'notebook' }); }
       else ctx.toast(hot.caption || hot.label);
       break;
     case HotspotKind.PROP: A.play(Sfx.PROP_OPEN); ctx.go(Screen.PROP_PANEL, { prop: hot.ref }); break;
@@ -66,7 +66,10 @@ export function returnToHub() {
 
 function makeWorld(name) {
   return {
-    enter() { ensurePrompt(); promptId = '?'; sceneRef = getSceneCached(ctx.engine.game.region); },
+    enter() {
+      ensurePrompt(); promptId = '?'; sceneRef = getSceneCached(ctx.engine.game.region);
+      if (pendingEvt & EVT.ON_RETURN_PAD) { pendingEvt = 0; returnToHub(); } else if (pendingEvt & EVT.ON_PORTAL) { pendingEvt = 0; ctx.go(Screen.PORTAL_MENU); } else pendingEvt = 0;
+    },
     exit() { prompt?.classList.add('hidden'); promptId = '?'; },
     update() {
       const E = ctx.engine; const game = E.game;
@@ -80,7 +83,7 @@ function makeWorld(name) {
       updatePrompt();
       if (game.pendingFact >= 0 && (ev & EVT.FACT)) {
         const fz = scene.facts.find((x) => x.id === game.pendingFact);
-        if (fz) { ctx.go(Screen.FACT_POPUP, { fact: fz }); return; }
+        if (fz) { pendingEvt = ev & (EVT.ON_RETURN_PAD | EVT.ON_PORTAL); ctx.go(Screen.FACT_POPUP, { fact: fz }); return; }
         E.acknowledgeFact();
       }
       if (ev & EVT.ON_PORTAL) { ctx.audio.play(Sfx.PORTAL); ctx.flash('cyan'); ctx.go(Screen.PORTAL_MENU); return; }
@@ -88,7 +91,7 @@ function makeWorld(name) {
     },
     action(a) {
       if (a === 'confirm') { const hot = ctx.engine.findInteract(); if (hot) interact(hot); }
-      else if (a === 'notebook') { ctx.audio.play(Sfx.NOTEBOOK); ctx.go(Screen.NOTEBOOK); }
+      else if (a === 'notebook') { ctx.audio.play(Sfx.NOTEBOOK); ctx.go(Screen.ARCHIVE_COMPUTER, { tab: 'notebook' }); }
       else if (a === 'pause') { ctx.audio.play(Sfx.PAUSE); ctx.go(Screen.PAUSE); }
     },
   };

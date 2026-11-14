@@ -160,7 +160,7 @@ test('SIGNAL latency reaches 1.0 in exactly LATENCY.GAUGE_REAL_S', () => {
   assert.equal(p, 1);
   assert.ok(game.events & EVT.LATENCY_DONE);
   latencyStart();
-  assert.equal(latencyTick(LATENCY.GAUGE_REAL_S / 2), 0.5);
+  assert.equal(latencyTick(LATENCY.GAUGE_REAL_S / 20), 0.05);
   enterRegion(Region.MARS);
   assert.equal(latencyActive(), false);
   assert.equal(latencyProgress(), 0);

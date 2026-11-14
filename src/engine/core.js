@@ -13,7 +13,7 @@ import {
   PHYSICS_DEFAULTS, HOP_REGIONS, STEP_INTERVAL_S, GF, Collect, BP_COUNT, BP_ALL_MASK, ROBOT_COUNT,
   Mode, Trigger, HotspotKind, Prop, PROP_COUNT, propRegion, SAVE_KEY, SAVE_VERSION, CANVAS_W, CANVAS_H,
 } from '../contract.js';
-import { overlaps, pointIn, rectGap, rectCenter, angleDiff, popcount } from './geom.js';
+import { overlaps, pointIn, rectGap, rectCenter, angleDiff, popcount, sanitizeDt } from './geom.js';
 import { createPropState, propActionImpl, propTickImpl, mergeSpec, isRoverPart } from './props.js';
 
 /* ========================================================================
@@ -429,8 +429,7 @@ export function latencyStart() {
 export function latencyTick(dt = DT) {
   const L = game.latency;
   if (!L.active) return L.progress;
-  const step = dt === Infinity ? LATENCY.GAUGE_REAL_S : (Number.isFinite(dt) ? Math.max(0, dt) : 0);
-  L.elapsed += step;
+  L.elapsed += sanitizeDt(dt);      // NaN/Infinity/negative -> 0, huge -> MAX_TICK_DT
   L.progress = Math.min(1, L.elapsed / LATENCY.GAUGE_REAL_S);
   if (L.progress >= 1 - 1e-9) {
     L.progress = 1;

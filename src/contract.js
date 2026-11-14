@@ -493,6 +493,10 @@ export const PropAction = Object.freeze({
  *   energyWh: number, motors: {count: 4, hp: 0.25, watts: number (per motor)}, topSpeedKmh: 18 (recorded),
  *   [designSpeedKmh]: 13,
  *   evaDrawWh: number[] (per EVA, for the load test), whyDead: string
+ *   chargeHistory: [{ label, dateUtc, pct (0..100, both packs combined), estimated: boolean }]
+ *     battery charge over time for the panel's graph: 100% before EVA-1, after each
+ *     EVA (Dec 11-13, 1972), then the long discharge to today's 0%. Points that are
+ *     derived rather than from telemetry MUST set estimated: true (drawn dashed).
  * }
  * LRV_CAMERA {
  *   prop, title, blurb, archivist,

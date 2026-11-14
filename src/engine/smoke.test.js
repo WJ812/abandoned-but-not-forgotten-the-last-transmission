@@ -4,7 +4,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Region, Btn, Prop, PropAction as A, PROP_COUNT, DT, EVT } from '../contract.js';
+import { Region, Btn, Prop, PropAction as A, PROP_COUNT, DT, EVT, CANVAS_W, CANVAS_H } from '../contract.js';
 
 let engine = null;
 let loadError = null;
@@ -35,7 +35,7 @@ test('real scenes: spawn is clear, nothing fires on spawn, walking works', { ski
       for (let i = 0; i < 120; i++) engine.update(dir, 0);
       const p = engine.game.player;
       assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y));
-      assert.ok(p.x > -24 && p.x < 320 && p.y > -24 && p.y < 180);
+      assert.ok(p.x > -24 && p.x < CANVAS_W && p.y > -24 && p.y < CANVAS_H);
     }
   }
 });

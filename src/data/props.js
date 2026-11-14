@@ -73,6 +73,24 @@ const ENERGY_WH = BAT_COUNT * BAT_V * BAT_AH;              // 8,712 Wh
 const DESIGN_RANGE_KM = 92;                                // LRV Operations Handbook, 57 statute miles
 const WH_PER_KM_EST = ENERGY_WH / DESIGN_RANGE_KM;         // ~95 Wh/km design-average estimate
 
+/** Battery graph. Post-EVA levels are DERIVED from evaDrawWh / energyWh (no
+ * sourced per-EVA telemetry), the exhaustion date is an estimate (first
+ * lunar night at Taurus-Littrow, when the cells froze); only the start and
+ * today's 0% are stated as fact. EVA end times = start + duration (UTC). */
+function chargeHistory() {
+  const draws = LRV_NAV.evas.map((e) => Math.round(e.distanceKm * WH_PER_KM_EST));
+  const ends = ['1972-12-12T07:06Z', '1972-12-13T07:05Z', '1972-12-14T05:40Z'];
+  const pts = [{ label: 'Before EVA-1 (full)', dateUtc: '1972-12-11T23:54Z', pct: 100, estimated: false }];
+  let left = ENERGY_WH;
+  draws.forEach((d, i) => {
+    left -= d;
+    pts.push({ label: `After EVA-${i + 1} (estimate)`, dateUtc: ends[i], pct: Math.round((left / ENERGY_WH) * 1000) / 10, estimated: true });
+  });
+  pts.push({ label: 'Exhausted, first lunar night (est.)', dateUtc: '1972-12-25T00:00Z', pct: 0, estimated: true });
+  pts.push({ label: 'Today', dateUtc: '2026-11-14T00:00Z', pct: 0, estimated: false });
+  return pts;
+}
+
 const LRV_BATTERY = {
   prop: Prop.LRV_BATTERY,
   title: 'LRV Battery Panel',
@@ -88,6 +106,7 @@ const LRV_BATTERY = {
   topSpeedKmh: 18,                                         // recorded by Cernan, Apollo 17
   designSpeedKmh: 13,                                      // extra field: design speed on level ground
   evaDrawWh: LRV_NAV.evas.map((e) => Math.round(e.distanceKm * WH_PER_KM_EST)),
+  chargeHistory: chargeHistory(),
   whyDead: 'Silver-zinc primary cells give their energy once and cannot be recharged. Their energy was used up long ago, and nothing on the Moon can refill them.',
 };
 

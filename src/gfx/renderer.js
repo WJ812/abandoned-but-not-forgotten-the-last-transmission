@@ -117,7 +117,7 @@ function drawHotspots(g, scene, bgReal, t) {
     else if (h.kind === HotspotKind.STATION && STATION_ASSET[h.ref]) asset = STATION_ASSET[h.ref];
     else if (h.kind === HotspotKind.DECOR && h.ref === Station.EXPANSION_BAY) asset = 'station_expansion_bay';
     if (asset) {
-      if (!bgReal || A.isReal(asset)) {
+      if (!bgReal) {
         const s = A.slotOf(asset); const c = rectCenter(r);
         A.draw(g, asset, s.frames > 1 && (isNear || h.kind === HotspotKind.PORTAL) ? 1 : 0, c.x - s.w / 2, c.y - s.h / 2);
         if (h.kind === HotspotKind.PORTAL && !bgReal) { g.fillStyle = `rgba(61,214,245,${0.15 + 0.1 * Math.sin(t * 4)})`; g.fillRect(r.x, r.y, r.w, r.h); }

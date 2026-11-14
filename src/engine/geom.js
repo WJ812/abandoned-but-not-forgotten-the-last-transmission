@@ -64,6 +64,14 @@ export function angleDiff(a, b) {
 
 export const DEG = Math.PI / 180;
 
+/** Largest simulated time one tick may advance (s). Guards against tab-sleep
+ *  spikes and bad callers. */
+export const MAX_TICK_DT = 0.25;
+
+/** Sanitize a tick dt: non-finite, negative or non-number -> 0; huge -> MAX_TICK_DT. */
+export const sanitizeDt = (dt) =>
+  (typeof dt === 'number' && Number.isFinite(dt) && dt > 0 ? Math.min(dt, MAX_TICK_DT) : 0);
+
 export const popcount = (n) => {
   let c = 0;
   let v = n >>> 0;

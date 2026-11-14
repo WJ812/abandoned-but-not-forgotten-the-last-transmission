@@ -25,19 +25,15 @@ const hs = (id, kind, rect, trigger, ref, solid, label, extra = {}) =>
   ({ id, kind, rect, trigger, ref, solid, label, ...extra });
 
 /* =====================================================================
- * HUB: NASA Archives, orbital observation room (spec section 3 layout)
- *   [STAR MAP]   [PORTAL]   [ARCHIVE COMP]
- *               (astronaut)
- *   [NOTEBOOK]            [EXPANSION BAY]
+ * HUB: NASA Archives. REAL ART: 'Artwork/Scenes/The Hub (INTERACTIVE).png',
+ * 360x180. Geometry measured from the art. Per the user's decision the ONLY
+ * interactables are the portal (PRESS -> location menu) and the computer desk
+ * (Archive Computer, which also holds the Notebook and Star Map).
  * ===================================================================== */
-const HUB_WALKABLE = R(8, 44, 304, 128);          // back wall + window above y=44
-const HUB_STAR_MAP = R(24, 28, 40, 30);           // wall console, protrudes to y=58
-const HUB_PORTAL = R(140, 54, 40, 24);            // floor pad (step on)
-const HUB_COMPUTER = R(256, 28, 40, 30);          // wall console, protrudes to y=58
-const HUB_NOTEBOOK = R(24, 136, 32, 24);          // desk with the notebook
-const HUB_EXPANSION = R(252, 130, 56, 32);        // sealed crates (decor)
-const HUB_PLANTER_L = R(100, 44, 16, 12);         // hydroponics planters by the wall
-const HUB_PLANTER_R = R(204, 44, 16, 12);
+const HUB_WALKABLE = R(4, 138, 352, 40);          // floor band for the feet hitbox
+const HUB_PORTAL = R(50, 118, 90, 24);            // portal ring's floor base
+const HUB_PORTAL_PLINTH = R(40, 118, 110, 24);    // plinth edges either side of the base
+const HUB_COMPUTER = R(142, 112, 193, 53);        // computer desk
 
 const HUB = {
   region: Region.HUB,
@@ -45,17 +41,13 @@ const HUB = {
   w: CANVAS_W, h: CANVAS_H,
   background: 'scene_hub',
   surface: Surface.WOOD,
-  spawn: { x: 148, y: 120, facing: Dir.UP },
+  spawn: { x: 88, y: 144, facing: Dir.UP },
   walkable: HUB_WALKABLE,
-  solids: [HUB_PLANTER_L, HUB_PLANTER_R],
+  solids: [HUB_PORTAL_PLINTH],
   shadows: [],
   hotspots: [
-    hs('hub.starmap', K.STATION, HUB_STAR_MAP, T.PRESS, Station.STAR_MAP, true, 'Star Map'),
-    hs('hub.portal', K.PORTAL, HUB_PORTAL, T.STEP, 0, false, 'Portal: Moon / Mars'),
+    hs('hub.portal', K.PORTAL, HUB_PORTAL, T.PRESS, 0, true, 'Portal'),
     hs('hub.computer', K.STATION, HUB_COMPUTER, T.PRESS, Station.ARCHIVE_COMPUTER, true, 'Archive Computer'),
-    hs('hub.notebook', K.STATION, HUB_NOTEBOOK, T.PRESS, Station.NOTEBOOK, true, 'Explorer Notebook'),
-    hs('hub.expansion', K.DECOR, HUB_EXPANSION, T.PRESS, Station.EXPANSION_BAY, true, 'Expansion Bay',
-      { caption: 'Sealed crates: Lunar Legacy, Martian Frontiers, Deep Space. Coming soon.' }),
   ],
   facts: [],
 };

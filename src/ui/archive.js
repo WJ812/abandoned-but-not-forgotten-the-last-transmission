@@ -1,22 +1,30 @@
-/** Archive Computer (cards, transcripts, catalog, ending trigger) and the Ending. */
-import { Mode, Sfx, Screen, Robot, Blueprint, MISSION_COUNT, GF, Region } from '../contract.js';
+/** Archive Computer (notebook, star map, blueprints, transcripts, expansions, recap) and the Ending. */
+import { Mode, Sfx, Screen, Robot, Blueprint, MISSION_COUNT, GF, Region, CANVAS_W, CANVAS_H } from '../contract.js';
 import { MISSION_ICONS } from '../assets.js';
 import { ctx } from '../gfx/ctx.js';
 import { h, mount, unmount, spriteCanvas, Typer } from './dom.js';
 import { page1El, page2El } from './cards.js';
+import { buildNotebook, createStarMap } from './menus.js';
 
-const TABS = ['BLUEPRINTS', 'TRANSCRIPTS', 'CATALOG', 'RECAP'];
-let root, tab, idx, listEl, detailEl, tabsEl;
+const TAB_DEFS = [
+  { id: 'notebook', label: 'NOTEBOOK', custom: true },
+  { id: 'starmap', label: 'STAR MAP', custom: true },
+  { id: 'blueprints', label: 'BLUEPRINTS' },
+  { id: 'transcripts', label: 'TRANSCRIPTS' },
+  { id: 'expansions', label: 'EXPANSIONS' },
+  { id: 'recap', label: 'RECAP', needsEnding: true },
+];
+let root, tabs, tab, idx, tabsEl, bodyEl, listEl, detailEl, hintEl, statusEl, map, cur;
 
-function items() {
+function items(id) {
   const E = ctx.engine, D = ctx.data, game = E.game;
-  if (tab === 0) {
+  if (id === 'blueprints') {
     return [Blueprint.LRV, Blueprint.SOJOURNER].map((b) => {
       const c = D.getBlueprint(b); const have = !!(game.blueprints & (1 << b));
       return { label: have ? c.name : 'LOCKED BLUEPRINT', locked: !have, detail: () => (have ? h('div', { class: 'ad-card' }, page1El(c), page2El(c)) : h('p', { class: 'dim' }, 'Recover this blueprint in the field to unlock its card.')) };
     });
   }
-  if (tab === 1) {
+  if (id === 'transcripts') {
     const out = [];
     for (const r of [Robot.LRV, Robot.SOJOURNER]) {
       const d = D.getDialogue(r);
@@ -30,9 +38,9 @@ function items() {
     }
     return out;
   }
-  if (tab === 2) {
+  if (id === 'expansions') {
     const cat = D.getCatalog();
-    return Array.from({ length: MISSION_COUNT }, (_, i) => cat[i]).map((m) => ({
+    return Array.from({ length: MISSION_COUNT }, (_, i) => cat[i]).filter(Boolean).map((m) => ({
       label: m.name, sub: D.getPackInfo(m.pack).name,
       detail: () => h('div', null,
         h('div', { class: 'cat-head' }, spriteCanvas(MISSION_ICONS[m.id] || m.icon, 0, 'cat-ico'), h('div', null, h('div', { class: 'who' }, m.name), h('div', { class: 'dim' }, `${m.body} - ${m.site} - ${m.dates}`))),
@@ -40,47 +48,73 @@ function items() {
         h('p', null, m.summary), game.mode === Mode.ARCHIVIST ? h('p', { class: 'arch-p' }, m.archivist) : null),
     }));
   }
-  const ready = !!(game.flags & GF.ENDING_UNLOCKED);
   return [{
-    label: ready ? 'Play the final recap' : 'RECAP LOCKED', locked: !ready, recap: ready,
-    detail: () => (ready
-      ? h('div', null, h('div', { class: 'who' }, 'CORE ARCHIVE COMPLETE'), h('p', null, 'Both blueprints are recovered. The Moon-versus-Mars comparison, the montage and the closing message are ready.'), h('p', { class: 'cta' }, 'Press Space to play'))
-      : h('div', null, h('div', { class: 'who' }, 'RECAP LOCKED'), h('p', null, `Recover both core blueprints (${E.completion().count}/2) to unlock the recap.`))),
+    label: 'Play the final recap', recap: true,
+    detail: () => h('div', null, h('div', { class: 'who' }, 'CORE ARCHIVE COMPLETE'), h('p', null, 'Both blueprints are recovered. The Moon-versus-Mars comparison, the montage and the closing message are ready.'), h('p', { class: 'cta' }, 'Press Space to play')),
   }];
 }
 
-function render() {
-  const list = items();
-  idx = Math.min(idx, list.length - 1);
-  tabsEl.replaceChildren(...TABS.map((t, i) => h('span', { class: `tab${i === tab ? ' sel' : ''}${i === 3 && ctx.engine.game.flags & GF.ENDING_UNLOCKED && !(ctx.engine.game.flags & GF.ENDING_SEEN) ? ' ping' : ''}` }, t)));
-  listEl.replaceChildren(...list.map((it, i) => h('li', { class: `item${i === idx ? ' sel' : ''}${it.locked ? ' off' : ''}`, onclick: () => { idx = i; render(); } }, h('span', { class: 'mk' }), h('span', { class: 'lb' }, it.label), it.sub ? h('span', { class: 'sub' }, it.sub) : null)));
-  detailEl.replaceChildren(list[idx]?.detail() ?? '');
-  detailEl.scrollTop = 0;
-  render.cur = list[idx];
+function build() {
+  const unlocked = !!(ctx.engine.game.flags & GF.ENDING_UNLOCKED);
+  tabs = TAB_DEFS.filter((t) => !t.needsEnding || unlocked);
 }
 
-export const archive = {
-  enter() {
-    tab = 0; idx = 0;
-    tabsEl = h('div', { class: 'tabs' }); listEl = h('ul', { class: 'alist' }); detailEl = h('div', { class: 'adetail' });
-    root = h('div', { class: 'screen center' },
-      h('div', { class: 'card archive crt' },
-        h('div', { class: 'card-title' }, h('span', { class: 'chip cy' }, 'TERMINAL'), 'NASA ARCHIVE COMPUTER'),
-        tabsEl, h('div', { class: 'acols' }, listEl, detailEl),
-        h('div', { class: 'foot' }, h('span', { class: 'key' }, 'A/D'), ' tab  ', h('span', { class: 'key' }, 'W/S'), ' item  ', h('span', { class: 'key' }, 'Space'), ' open  ', h('span', { class: 'key' }, 'Esc'), ' close')));
-    mount(root); render();
-  },
-  exit() { unmount(root); },
-  update() {},
-  action(a) {
-    if (a === 'left') { tab = (tab + 3) % 4; idx = 0; ctx.audio.play(Sfx.CURSOR); render(); }
-    else if (a === 'right') { tab = (tab + 1) % 4; idx = 0; ctx.audio.play(Sfx.CURSOR); render(); }
-    else if (a === 'up') { idx = Math.max(0, idx - 1); ctx.audio.play(Sfx.CURSOR); render(); }
-    else if (a === 'down') { idx++; ctx.audio.play(Sfx.CURSOR); render(); }
-    else if (a === 'confirm') { if (render.cur?.recap) { ctx.audio.play(Sfx.ENDING); ctx.go(Screen.ENDING); } else ctx.audio.play(Sfx.CURSOR); }
-    else if (a === 'pause') { ctx.audio.play(Sfx.CANCEL); ctx.back(); }
-  },
-};
+function renderTabs() {
+  const game = ctx.engine.game;
+  tabsEl.replaceChildren(...tabs.map((t, i) => h('span', { class: `tab${i === tab ? ' sel' : ''}${t.id === 'recap' && !(game.flags & GF.ENDING_SEEN) ? ' ping' : ''}`, onclick: () => setTab(i) }, h('i', null, String(i + 1)), t.label)));
+}
+
+function renderBody() {
+  const def = tabs[tab]; map = null; cur = null;
+  bodyEl.replaceChildren();
+  if (def.id === 'notebook') bodyEl.appendChild(h('div', { class: 'apane' }, buildNotebook()));
+  else if (def.id === 'starmap') { map = createStarMap(); bodyEl.appendChild(h('div', { class: 'apane' }, map.el)); }
+  else {
+    const list = items(def.id);
+    idx = Math.max(0, Math.min(idx, list.length - 1));
+    listEl = h('ul', { class: 'alist' }, list.map((it, i) => h('li', { class: `item${i === idx ? ' sel' : ''}${it.locked ? ' off' : ''}`, onclick: () => { idx = i; renderBody(); } }, h('span', { class: 'mk' }), h('span', { class: 'lb' }, it.label), it.sub ? h('span', { class: 'sub' }, it.sub) : null)));
+    detailEl = h('div', { class: 'adetail' }, list[idx]?.detail() ?? h('p', { class: 'dim' }, 'Nothing here yet.'));
+    cur = list[idx];
+    bodyEl.appendChild(h('div', { class: 'acols' }, listEl, detailEl));
+  }
+  const E = ctx.engine; const c = E.completion();
+  statusEl.textContent = `ARCHIVE ${c.percent}%  |  BLUEPRINTS ${c.count}/${c.total}  |  MODE ${E.game.mode === Mode.ARCHIVIST ? 'ARCHIVIST' : 'EXPLORER'}`;
+  const nav = def.id === 'starmap' ? 'W/S select body  ' : def.custom ? '' : 'W/S item  Space open  ';
+  hintEl.replaceChildren(h('span', { class: 'key' }, 'A/D'), ' tab  ', nav, h('span', { class: 'key' }, '1-9'), ' jump  ', h('span', { class: 'key' }, 'Esc'), ' close');
+}
+
+function setTab(i) { tab = (i + tabs.length) % tabs.length; idx = 0; ctx.audio.play(Sfx.CURSOR); renderTabs(); renderBody(); }
+
+function makeComputer(initialId) {
+  return {
+    enter(p) {
+      build();
+      const want = p?.tab || initialId;
+      tab = Math.max(0, tabs.findIndex((t) => t.id === want)); idx = 0;
+      tabsEl = h('div', { class: 'tabs' }); bodyEl = h('div', { class: 'abody' }); hintEl = h('div', { class: 'foot' }); statusEl = h('span', { class: 'astatus' });
+      root = h('div', { class: 'screen center' },
+        h('div', { class: 'card archive crt' },
+          h('div', { class: 'card-title' }, h('span', { class: 'chip cy' }, 'TERMINAL'), 'NASA ARCHIVE COMPUTER', h('span', { class: 'boot-cur' }, '_')),
+          h('div', { class: 'astatusbar' }, statusEl), tabsEl, bodyEl, hintEl));
+      mount(root); renderTabs(); renderBody();
+    },
+    exit() { unmount(root); },
+    update() { map?.update(); },
+    action(a, e) {
+      if (a === 'left') setTab(tab - 1);
+      else if (a === 'right') setTab(tab + 1);
+      else if (a === 'num' && e.digit <= tabs.length) setTab(e.digit - 1);
+      else if (a === 'up' || a === 'down') {
+        const d = a === 'up' ? -1 : 1;
+        if (map) map.move(d); else if (!tabs[tab].custom) { idx = Math.max(0, idx + d); ctx.audio.play(Sfx.CURSOR); renderBody(); }
+      } else if (a === 'confirm') { if (cur?.recap) { ctx.audio.play(Sfx.ENDING); ctx.go(Screen.ENDING); } }
+      else if (a === 'pause' || a === 'notebook') { ctx.audio.play(Sfx.CANCEL); ctx.back(); }
+    },
+  };
+}
+export const archive = makeComputer('blueprints');
+export const notebookScreen = makeComputer('notebook');
+export const starMapScreen = makeComputer('starmap');
 
 /* ---------------- Ending ---------------- */
 let eRoot, eStage, ending, eT, eBody, eTyper, ePage, eShot;
@@ -115,7 +149,7 @@ export const endingScreen = {
   },
   exit() { ctx.audio.stopLoop(Sfx.ENDING); ctx.engine.markEndingSeen(); unmount(eRoot); },
   update(dt) {
-    ctx.time; eTyper?.update(dt);
+    eTyper?.update(dt);
     if (eStage === 1) {
       eT += dt;
       const i = Math.min(1, Math.floor(eT / MONTAGE_S));
@@ -134,17 +168,17 @@ export const endingScreen = {
   },
   /** Montage drawn on the canvas with a crossfade and slow push-in. */
   drawBackdrop(g) {
-    g.fillStyle = '#02040c'; g.fillRect(0, 0, 320, 180);
+    g.fillStyle = '#02040c'; g.fillRect(0, 0, CANVAS_W, CANVAS_H);
     if (eStage === 1 || eStage === 2 || eStage === 3) {
       const t = eStage === 1 ? eT : MONTAGE_S * 2;
       const i = Math.min(1, Math.floor(t / MONTAGE_S)), local = t - i * MONTAGE_S;
       const fade = Math.min(1, local / 1.2) * (eStage === 1 ? 1 : 0.35);
       const z = 1 + local * 0.006;
-      g.save(); g.globalAlpha = fade; g.translate(160, 90); g.scale(z, z); g.translate(-160, -90);
+      g.save(); g.globalAlpha = fade; g.translate(CANVAS_W / 2, CANVAS_H / 2); g.scale(z, z); g.translate(-CANVAS_W / 2, -CANVAS_H / 2);
       ctx.assets.draw(g, ending.montage[i].art, 0, 0, 0); g.restore();
     } else {
-      g.fillStyle = '#071a3f'; g.fillRect(0, 0, 320, 180);
-      for (let i = 0; i < 70; i++) { g.fillStyle = (Math.floor(ctx.time * 2 + i) % 6) ? '#31456f' : '#fff'; g.fillRect((i * 83) % 320, (i * 47) % 180, 1, 1); }
+      g.fillStyle = '#071a3f'; g.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      for (let i = 0; i < 70; i++) { g.fillStyle = (Math.floor(ctx.time * 2 + i) % 6) ? '#31456f' : '#fff'; g.fillRect((i * 83) % CANVAS_W, (i * 47) % CANVAS_H, 1, 1); }
     }
     return true;
   },

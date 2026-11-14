@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   Region, CANVAS_W, CANVAS_H, PLAYER, INTERACT_RANGE_PX, Trigger, HotspotKind,
-  FACTS_MIN, FACTS_MAX, LABEL_MAX, TEXT_MAX, Surface, Dir, Prop,
+  FACTS_MIN, FACTS_MAX, Station, LABEL_MAX, TEXT_MAX, Surface, Dir, Prop,
 } from '../contract.js';
 import { hasAsset } from '../assets.js';
 import { getScene, getPropSpec } from './index.js';
@@ -86,13 +86,22 @@ for (const region of REGIONS) {
       assert.ok(Object.values(Trigger).includes(h.trigger));
       assert.ok(Number.isInteger(h.ref) && typeof h.solid === 'boolean');
       assert.ok(h.label.length > 0 && h.label.length <= LABEL_MAX, h.label);
-      const step = h.kind === HotspotKind.PORTAL || h.kind === HotspotKind.RETURN_PAD;
+      // Hub portal is PRESS (user decision, 360x180 art); region return pads are STEP.
+      const step = h.kind === HotspotKind.RETURN_PAD;
       assert.equal(h.trigger, step ? Trigger.STEP : Trigger.PRESS, h.id);
       if (step) assert.equal(h.solid, false);
       if (h.kind === HotspotKind.DECOR) assert.ok(h.caption && h.caption.length <= TEXT_MAX);
     }
     const kinds = s.hotspots.map((h) => h.kind);
-    if (region === Region.HUB) assert.ok(kinds.includes(HotspotKind.PORTAL));
+    if (region === Region.HUB) {
+      assert.deepEqual(s.hotspots.map((h) => [h.id, h.kind, h.trigger, h.ref, h.solid, h.label]), [
+        ['hub.portal', HotspotKind.PORTAL, Trigger.PRESS, 0, true, 'Portal'],
+        ['hub.computer', HotspotKind.STATION, Trigger.PRESS, Station.ARCHIVE_COMPUTER, true, 'Archive Computer'],
+      ]);
+      assert.equal(s.hotspots[1].facing, undefined);
+      const hb = hit(s.spawn.x, s.spawn.y);
+      for (const h of s.hotspots) assert.ok(gap(hb, h.rect) > INTERACT_RANGE_PX, `spawn in range of ${h.id}`);
+    }
     else {
       for (const k of [HotspotKind.ROBOT, HotspotKind.BLUEPRINT, HotspotKind.RETURN_PAD]) assert.ok(kinds.includes(k), k);
     }
