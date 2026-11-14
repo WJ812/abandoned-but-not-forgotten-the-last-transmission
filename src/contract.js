@@ -569,6 +569,28 @@ export const PropAction = Object.freeze({
 export const SAVE_KEY = 'abandoned_not_forgotten_save_v1';
 export const SAVE_VERSION = 1;
 
+/* 10b. ADDITIONS (2026-11-15). Both are backward-compatible: old saves without these fields stay valid.
+ *
+ * FACT LOG: every fact pop-up the player has seen is remembered for the Notebook's "Facts" list.
+ *   Save JSON gains an optional field `factsLog: string[]` of keys `${region}:${factId}`, in order seen, no duplicates.
+ *   The engine appends the key when EVT.FACT fires (the pause box still shows as before) and autosaves.
+ *   engine.factsLog() -> [{region, id}]   read-only; the frontend resolves the text through
+ *   data.getScene(region).facts.find(f => f.id === id).
+ *
+ * SETTINGS: player preferences, stored under their OWN key so they work before any New Game
+ *   and never make hasSave() true.
+ *   localStorage[SETTINGS_KEY] = JSON { muted: boolean, reduceFlashing: boolean }
+ *   engine.getSettings() -> {muted, reduceFlashing}   defaults {muted:false, reduceFlashing:false}
+ *   engine.setSetting(name, value)                     persists immediately (guarded like the save)
+ *   The frontend also turns reduceFlashing on when the system's prefers-reduced-motion is set,
+ *   unless the player has explicitly set it.
+ */
+export const SETTINGS_KEY = 'abandoned_not_forgotten_settings_v1';
+export const SETTINGS_DEFAULTS = Object.freeze({ muted: false, reduceFlashing: false });
+
+/** Dialogue typewriter speed: medium, Pokemon-like. The first Space finishes the line; the second continues. */
+export const TEXT_CPS = 40;
+
 /* ========================================================================
  * 11. AUDIO IDS  (frontend synthesizes with WebAudio; assets.js AUDIO slots
  * may override any id with a real file). Mute toggle in pause menu + HUD.

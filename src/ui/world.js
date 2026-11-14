@@ -1,17 +1,45 @@
 /** Hub / Region screens (the walkable world) plus fact pop-up and portal menu. */
 import {
-  CANVAS_W, CANVAS_H, EVT, Screen, Region, HotspotKind, Station, Sfx, Surface, Mode, Prop, Robot, HOP_REGIONS, GRAVITY_G,
+  CANVAS_W, CANVAS_H, PLAYER, Btn, DT, EVT, Screen, Region, HotspotKind, Station, Sfx, Surface, Mode, Prop, Robot, HOP_REGIONS, GRAVITY_G,
 } from '../contract.js';
 import { ctx } from '../gfx/ctx.js';
-import { takeFrame } from '../gfx/input.js';
+import { takeFrame, clearInput } from '../gfx/input.js';
 import { getSceneCached } from '../gfx/renderer.js';
 import { h, mount, unmount, Menu, Typer, spriteCanvas, at } from './dom.js';
 
 let prompt = null, promptId = '', sceneRef = null, pendingEvt = 0;
 
+/* Defensive anti-freeze: if movement keys are held but the astronaut has not moved for a while and is
+ * wedged inside a solid / outside the walkable area, nudge it to the nearest free spot. */
+const MOVE_BITS = Btn.LEFT | Btn.RIGHT | Btn.UP | Btn.DOWN;
+let stuckT = 0, lastX = 0, lastY = 0;
+const hbox = (p) => ({ x: p.x + PLAYER.HIT_X, y: p.y + PLAYER.HIT_Y, w: PLAYER.HIT_W, h: PLAYER.HIT_H });
+const ovl = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+function badPos(scene, x, y) {
+  const b = hbox({ x, y }); b.x += 3; b.y += 3; b.w -= 6; b.h -= 6; const w = scene.walkable;   // shrunk: only DEEP wedges count
+  if (w && (b.x < w.x || b.y < w.y || b.x + b.w > w.x + w.w || b.y + b.h > w.y + w.h)) return true;
+  return (scene.solids || []).some((s) => ovl(b, s)) || scene.hotspots.some((hh) => hh.solid && ovl(b, hh.rect));
+}
+function antiFreeze(scene, held, dt) {
+  const p = ctx.engine.game.player;
+  const moved = Math.abs(p.x - lastX) + Math.abs(p.y - lastY);
+  lastX = p.x; lastY = p.y;
+  if (!(held & MOVE_BITS) || moved > 0.02) { stuckT = 0; return; }
+  stuckT += dt;
+  if (stuckT < 4) return;
+  stuckT = 0;
+  if (!badPos(scene, p.x, p.y)) return;           // just pushing against a wall: leave it alone
+  for (let r = 1; r <= 40; r++) {
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      if (!badPos(scene, p.x + dx, p.y + dy)) { p.x += dx; p.y += dy; p.vx = 0; p.vy = 0; return; }
+    }
+  }
+}
+
 function ensurePrompt() {
   if (!prompt || !prompt.isConnected) {
-    prompt = h('div', { class: 'prompt hidden' }, h('span', { class: 'key' }, 'E'), h('span', { class: 'plabel' }));
+    prompt = h('div', { class: 'prompt hidden' }, h('span', { class: 'key' }, 'Space'), h('span', { class: 'plabel' }));
     ctx.ui.appendChild(prompt);
   }
 }
@@ -72,7 +100,7 @@ export function returnToHub() {
 function makeWorld(name) {
   return {
     enter() {
-      ensurePrompt(); promptId = '?'; sceneRef = getSceneCached(ctx.engine.game.region);
+      stuckT = 0; ensurePrompt(); promptId = '?'; sceneRef = getSceneCached(ctx.engine.game.region);
       if (pendingEvt & EVT.ON_RETURN_PAD) { pendingEvt = 0; returnToHub(); } else if (pendingEvt & EVT.ON_PORTAL) { pendingEvt = 0; ctx.go(Screen.PORTAL_MENU); } else pendingEvt = 0;
     },
     exit() { prompt?.classList.add('hidden'); promptId = '?'; },
@@ -81,7 +109,7 @@ function makeWorld(name) {
       const f = takeFrame();
       E.update(f.held, f.pressed);
       const ev = game.events; const scene = getSceneCached(game.region); sceneRef = scene;
-      stepSound(scene, ev);
+      stepSound(scene, ev); antiFreeze(scene, f.held, DT);
       if (ev & EVT.HEADLAMP) ctx.audio.play(Sfx.HEADLAMP);
       if (ev & EVT.ENTERED_HOTSPOT) ctx.audio.play(Sfx.CURSOR);
       if (ev & EVT.BUMP && ctx.time - (this._bump || 0) > 0.4) { this._bump = ctx.time; }

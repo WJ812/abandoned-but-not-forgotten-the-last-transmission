@@ -45,3 +45,30 @@ No high-severity bugs were found.
 - **Portal and return pad:** they never trigger again while the player stands on them, and never on the frame the player arrives. This held across 1,000 region switches.
 - **Saves:** corrupted, wrong-version, empty, very large, and `__proto__`-poisoned save data never crashes the game.
 - **Performance:** a frame takes 1 to 7 µs, against a budget of 16.7 ms.
+
+## 2026-11-14: Fact checks against NASA sources
+
+Two rounds of checks compared every number in the game with NASA, NSSDCA, JPL and *Apollo Lunar Surface Journal* sources.
+
+| # | Area | Issue | Fix | Commit |
+|---|---|---|---|---|
+| 15 | LRV distance | The total said 35.9 km, but the three moonwalk drives add up to 35.7 km. | Changed to about 35.7 km everywhere, matching NASA's 35.74 km. The Archivist page notes that published totals vary slightly. | `9e84ba7` |
+| 16 | APXS rock chemistry | The Barnacle Bill and Yogi values didn't match NASA's published APXS table. | Replaced with the NSSDCA preliminary values. Yogi is marked as dust-affected. | `9e84ba7` |
+| 17 | Sojourner's last contact | "Last contact, 27 Sep 1997" was stated as final. That was actually the last *full* transmission: faint signals continued until 7 Oct, and the mission ended 4 Nov. | Reworded throughout. The contingency-mode wording is hedged. | `9e84ba7` |
+| 18 | Smaller details | The hazard scan range, the EVA-1 and EVA-3 ranges, and Barnacle Bill's sol were unconfirmed. | The scan range is now about 20 cm. The unconfirmed values are marked approximate. | `9e84ba7` |
+| 19 | Details that couldn't be verified | The TV camera's pan and tilt limits, the operator's name, Twin Peaks, Big Crater, the fender maps, Sojourner's mass, and the distance to Surveyor 3. | Worded as "about" or "reported", or reduced to what sources confirm. | `6e97db7` |
+
+## 2026-11-14: Keyboard playthrough in a real browser (round 1)
+
+The full game was played from the title screen to the ending using only key input. Every step passed, and no console errors appeared.
+
+| # | Severity | Area | Bug | Fix | Commit |
+|---|---|---|---|---|---|
+| 20 | Medium | Dialogue | While an answer typed out, and during the SIGNAL bar, the key hint was out of date, and Esc did something different from what it said. | The hint now follows the dialogue's state. | WIP |
+| 21 | Medium | Archive Computer | The "Recap" tab blinked fully invisible, which hid the ending. | It now glows steadily instead of disappearing. | WIP |
+| 22 | Medium | Mars | The player froze once and could not move. This was not reproduced. | Input is reset on every return to the world, and a guard moves the astronaut free if it is ever wedged inside a solid. | WIP |
+| 23 | Low | Star Map | Its content overflowed the screen and hid the info panel. | Reorganized into a side-by-side layout with no scrolling. | WIP |
+| 24 | Low | Hardware panels | Long text was cut off, and labels on the drive log and battery chart overlapped. | Long text wraps, the labels are staggered, and the chart tooltip moved clear of the other labels. | WIP |
+| 25 | Low | Replays | Pressing Space selected the EVA instead of starting the replay. | Play is now the default control. | WIP |
+| 26 | Low | Usability | The walkway under Sojourner was only 10 px wide. The world prompt showed "E" while every other hint said "Space". | The walkway is now 18 px, and the prompt says "Space". | `16a271e` |
+| 27 | Low | Moon | Crater shadows were drawn as rectangles over round craters. | They are now drawn as ellipses that match the crater floors. | `d640ca2` |

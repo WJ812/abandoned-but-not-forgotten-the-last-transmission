@@ -20,7 +20,7 @@ const blipId = () => (robot === Robot.LRV ? Sfx.TALK_LRV : Sfx.TALK_SOJ);
 
 function setPages(list, nextState, from = Infinity) {
   pages = list.length ? list : ['...']; pi = 0; archFrom = from; st = nextState;
-  showPage();
+  showPage(); refreshHint();
 }
 function showPage() {
   textBox.classList.remove('hidden'); menuWrap.classList.add('hidden'); sigWrap.classList.add('hidden');
@@ -36,7 +36,7 @@ function toMenu() {
     ...d.questions.map((q) => ({ label: q.label, sub: E.hasAsked(robot, q.id) ? '✓' : '' })),
     { label: 'Goodbye', cls: 'bye' },
   ]);
-  textBox.classList.add('hidden'); sigWrap.classList.add('hidden'); menuWrap.classList.remove('hidden');
+  textBox.classList.add('hidden'); sigWrap.classList.add('hidden'); menuWrap.classList.remove('hidden'); refreshHint();
 }
 
 function pickMenu(i) {
@@ -48,7 +48,7 @@ function pickMenu(i) {
     st = 'signal'; lastTick = 0;
     E.latencyStart();
     textBox.classList.add('hidden'); sigWrap.classList.remove('hidden');
-    sigFill.style.width = '0%';
+    sigFill.style.width = '0%'; refreshHint();
   } else startAnswer();
 }
 
@@ -69,13 +69,14 @@ function advance() {
   else if (st === 'bye') ctx.back();
 }
 
-function setFocus(n) {
-  focus = n; hw?.setFocus(n - 1);
+function refreshHint() {
   const names = hw ? '  Tab: next area  1: dialogue  2-5: hardware' : '';
-  hintEl.textContent = focus === 0
-    ? `${st === 'menu' ? 'W/S choose  Space ask  Esc goodbye' : 'Space: continue  Esc: skip'}${names}`
-    : `Hardware ${focus + 1}: W/S control  Space run  A/D adjust  Esc back to dialogue${names}`;
+  if (focus > 0) { hintEl.textContent = `Hardware ${focus + 1}: W/S control  Space run  A/D adjust  Esc back to dialogue${names}`; return; }
+  hintEl.textContent = st === 'signal' ? `Receiving signal...  Esc cancel${names}`
+    : st === 'menu' ? `W/S choose  Space ask  Esc goodbye${names}`
+    : `Space continue · Esc skip${names}`;
 }
+function setFocus(n) { focus = n; hw?.setFocus(n - 1); refreshHint(); }
 
 export const dialogue = {
   enter({ robot: r }) {
@@ -138,6 +139,7 @@ export const dialogue = {
       if (a === 'num' && e.digit <= n + 1) { ctx.audio.play(Sfx.CURSOR); setFocus(e.digit - 1); return; }
       if (focus > 0) { if (a === 'pause' || a === 'notebook') setFocus(0); else hw.action(a, e); return; }
     }
+    if (st === 'signal') { if (a === 'pause') { ctx.audio.play(Sfx.CANCEL); toMenu(); setFocus(0); } return; }   // Esc cancels the pending answer
     if (st === 'menu') {
       if (a === 'up') menu.move(-1); else if (a === 'down') menu.move(1);
       else if (a === 'left') menu.move(-4); else if (a === 'right') menu.move(4);

@@ -7,7 +7,7 @@ import { CANVAS_W, CANVAS_H, DT, Screen, Region, Sfx } from './contract.js';
 import * as assets from './gfx/assetloader.js';
 import { ctx } from './gfx/ctx.js';
 import { AudioEngine } from './gfx/audio.js';
-import { initInput, clearPressed } from './gfx/input.js';
+import { initInput, clearPressed, clearInput } from './gfx/input.js';
 import { renderWorld } from './gfx/renderer.js';
 import { initHud, sync as syncHud } from './ui/hud.js';
 import { h } from './ui/dom.js';

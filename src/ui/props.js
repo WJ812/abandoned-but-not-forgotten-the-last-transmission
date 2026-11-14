@@ -97,9 +97,9 @@ const PANELS = {
       if (lt && (lt.running || lt.drawnWh)) { drawText(g, 'LOAD TEST', 166, 4, '#8fb4e8'); bar(g, 166, 12, 68, 6, 1 - (lt.remainingPct ?? 0) / 100 || 0, '#ffd166'); }
       drawText(g, `NOW ${f1(st.chargePct, 0)}%`, 166, 22, (st.chargePct || 0) > 0 ? '#5fe0a0' : '#ff6b5a');
       const H = spec.chargeHistory;
-      const GL = 24, GT = 44, GB = 114, GH = GB - GT;
+      const GL = 24, GT = 46, GB = 114, GH = GB - GT;
       const Y = (p) => Math.round(GB - (clamp(p, 0, 100) / 100) * GH);
-      drawText(g, 'LRV BATTERY CHARGE %', 6, 36, '#8fb4e8');
+      drawText(g, 'LRV BATTERY CHARGE %', 6, 35, '#8fb4e8');
       if (!H.length) { drawText(g, 'NO CHARGE HISTORY', GL + 4, 70, '#ff6b5a'); return; }
       // axes and grid
       for (const p of [0, 50, 100]) { g.fillStyle = p === 0 ? '#3a5a96' : '#16294d'; g.fillRect(GL, Y(p), 212, 1); drawText(g, String(p), p === 100 ? 6 : p === 50 ? 10 : 14, Y(p) - 2, '#8fb4e8'); }
@@ -146,8 +146,8 @@ const PANELS = {
       const tl = `TODAY ${f1(H[li].pct, 0)}%`; drawText(g, tl, Math.min(lx - 3 * tl.length, BX1 - 4 * tl.length + 6), Math.min(GB - 12, ly - 10), '#ff6b5a');
       // tooltip for the selected point
       const c = H[hist], tip = `${c.label} ${c.dateUtc} ${f1(c.pct, 0)}%`.toUpperCase().slice(0, 44);
-      const tw = tip.length * 4 + 4, tx = clamp(xs[hist] - tw / 2, GL, BX1 + 8 - tw);
-      g.fillStyle = '#000'; g.fillRect(tx, 25, tw, 8); g.strokeStyle = '#ffd166'; g.strokeRect(tx + 0.5, 25.5, tw - 1, 7); drawText(g, tip, tx + 2, 27, '#ffd166');
+      const tw = tip.length * 4 + 4, tx = clamp(xs[hist] - tw / 2, 94, Math.max(94, BX1 + 8 - tw));
+      g.fillStyle = '#000'; g.fillRect(tx, 32, tw, 8); g.strokeStyle = '#ffd166'; g.strokeRect(tx + 0.5, 32.5, tw - 1, 7); drawText(g, tip, tx + 2, 34, '#ffd166');
       // legend
       g.fillStyle = '#5fe0a0'; g.fillRect(6, 130, 10, 1); drawText(g, 'MEASURED', 19, 128, '#8fb4e8');
       g.fillStyle = '#ffd166'; for (let k = 0; k < 10; k += 6) g.fillRect(80 + k, 130, 3, 1); drawText(g, 'DASHED = ESTIMATED', 96, 128, '#8fb4e8');
@@ -278,18 +278,20 @@ const PANELS = {
       const leg = spec.legs[st.legIndex || 0]; if (!leg) return;
       const P = (p) => [p.x * CW, p.y * CH];
       // lander
-      const [lx, ly] = P(spec.lander); g.fillStyle = '#b07a4a'; g.fillRect(Math.round(lx) - 6, Math.round(ly) - 4, 13, 9); drawText(g, 'LANDER', Math.round(lx) - 11, Math.round(ly) + 7, '#ffd166');
+      const [lx, ly] = P(spec.lander); g.fillStyle = '#b07a4a'; g.fillRect(Math.round(lx) - 6, Math.round(ly) - 4, 13, 9); drawText(g, 'LANDER', Math.round(lx) - 11, Math.round(ly) - 13, '#ffd166');
       const pts = leg.path.map(P);
       g.strokeStyle = '#5a6f9c'; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
       const tt = clamp(st.t ?? 0, 0, 1), seg = tt * (pts.length - 1);
       g.strokeStyle = '#ffd166'; g.beginPath();
       for (let i = 0; i <= Math.floor(seg) && i < pts.length; i++) (i ? g.lineTo(pts[i][0], pts[i][1]) : g.moveTo(pts[i][0], pts[i][1]));
       const pos = st.pos ? P(st.pos) : pts[0]; g.lineTo(pos[0], pos[1]); g.stroke();
-      leg.stops.forEach((s) => {
+      leg.stops.forEach((s, si) => {
         const k = clamp(s.at ?? 0, 0, 1) * (pts.length - 1), a = Math.min(pts.length - 2, Math.floor(k)), p0 = pts[a], p1 = pts[a + 1];
         const x = p0[0] + (p1[0] - p0[0]) * (k - a), y = p0[1] + (p1[1] - p0[1]) * (k - a);
         g.fillStyle = '#5fe0a0'; g.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3);
-        drawText(g, String(s.name).slice(0, 12), Math.round(x) + 4, Math.round(y) - 7, '#5fe0a0');
+        const nm = String(s.name).slice(0, 14); let ty = Math.round(y) + (si % 2 ? 5 : -7); let tx2 = Math.round(x) + 4;
+        if (Math.abs(x - lx) < 34 && Math.abs(ty - ly) < 16) ty = Math.round(ly) + 10 + si * 7;
+        tx2 = Math.min(tx2, CW - nm.length * 4 - 2); drawText(g, nm, tx2, ty, '#5fe0a0');
       });
       g.fillStyle = '#fff'; g.fillRect(Math.round(pos[0]) - 2, Math.round(pos[1]) - 2, 5, 5);
       drawText(g, '1997 TRAVERSE REPLAY (TRACED)', 4, 4, '#8fb4e8');
@@ -320,6 +322,7 @@ function makeInst(p) {
   const i = { prop: p, spec: normSpec(p, ctx.data.getPropSpec(p)), st: ctx.engine.propOpen(p) || {}, hist: 0, ctl: 0, panel: null, warn: false };
   use(i); try { i.panel = PANELS[p](); } catch (e) { i.panel = { controls: [], rows: () => [], draw() {} }; console.warn('prop panel build failed', p, e); }
   const px = pixCanvas(CW, CH, 'prop-cv'); i.cv = px; save(i);
+  const pl = i.panel.controls.findIndex((c) => /^play/i.test(c.label)); if (pl >= 0) i.ctl = pl;   // Space starts a replay right away
   return i;
 }
 function use(i) { prop = i.prop; spec = i.spec; st = i.st; hist = i.hist; panel = i.panel; }
@@ -383,7 +386,7 @@ export function createHardware(ids) {
       const r = rowsOf(c.i).slice(0, 3);
       c.rows.replaceChildren(...r.map((x) => h('div', null, h('span', null, x.label), h('em', null, String(x.value)))));
       use(c.i); const cc = c.i.panel.controls[c.i.ctl];
-      c.ctl.replaceChildren(h('span', { class: 'ctl-k' }, n === focus ? 'W/S Space' : String(n + 2)), cc ? `${cc.label}${cc.sub ? ' - ' + cc.sub : ''}` : '-');
+      c.ctl.replaceChildren(h('span', { class: 'ctl-k' }, n === focus ? (c.i.panel.controls.length > 1 ? 'W/S Space' : 'Space') : String(n + 2)), cc ? `${cc.label}${cc.sub ? ' - ' + cc.sub : ''}` : '-');
     });
   };
   refresh();
