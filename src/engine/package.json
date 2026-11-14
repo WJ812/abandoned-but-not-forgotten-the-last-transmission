@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "main": "all_tests.js",
+  "private": true,
+  "description": "Node-only: lets `node --test src/engine/` (a directory argument, which Node 22 executes as an entry point) run every src/engine/*.test.js. Browsers import ./index.js directly and never read this."
+}

@@ -6,6 +6,6 @@
   "type": "module",
   "scripts": {
     "start": "node tools/serve.mjs",
-    "test": "node --test src/data/ src/engine/"
+    "test": "node --test \"src/**/*.test.js\""
   }
 }

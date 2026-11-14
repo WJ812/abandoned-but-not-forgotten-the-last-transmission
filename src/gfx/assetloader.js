@@ -68,12 +68,12 @@ function paintScene(c, id, slot) {
   for (let x = 0; x < w; x += 16) c.fillRect(x, 0, 1, h);
   for (let y = 0; y < h; y += 16) c.fillRect(0, y, w, 1);
   c.strokeStyle = shade(col, 0.5); c.lineWidth = 1; c.strokeRect(0.5, 0.5, w - 1, h - 1);
-  const t = slot.placeholder.label.toUpperCase();
+  const t = id === 'title_bg' ? '' : slot.placeholder.label.toUpperCase();
   const tw = textWidth(t, 2);
   const bw = Math.min(tw, w - 8);
   const lx = Math.floor((w - bw) / 2);
-  c.fillStyle = 'rgba(0,0,0,0.55)'; c.fillRect(lx - 4, 4, bw + 8, 16);
-  if (tw <= w - 8) drawText(c, t, lx, 8, '#ffffff', 2);
+  if (t) { c.fillStyle = 'rgba(0,0,0,0.55)'; c.fillRect(lx - 4, 4, bw + 8, 16); }
+  if (!t) { /* no banner */ } else if (tw <= w - 8) drawText(c, t, lx, 8, '#ffffff', 2);
   else drawLabelBox(c, t, 4, 4, w - 8, 16, '#ffffff');
   drawText(c, `PLACEHOLDER ${w}X${h}  ${slot.src.replace(/^.*Artwork\//, '')}`.slice(0, 78), 4, h - 9, 'rgba(255,255,255,0.7)');
 }

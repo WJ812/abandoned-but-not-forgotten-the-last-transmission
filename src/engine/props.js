@@ -684,14 +684,15 @@ function driveTick(s, spec, dt) {
         s.detourSide = cross > 0 ? -1 : 1;
       } else s.detourSide = 1;
     }
-    for (const a of [30, 60, 90, 120]) {
-      for (const sd of [s.detourSide, -s.detourSide]) {
+    // Exhaust the chosen side before trying the other (no left/right dithering).
+    for (const sd of [s.detourSide, -s.detourSide]) {
+      for (const a of [30, 60, 90, 120, 150]) {
         moved = tryAt(sd * a);
         if (moved) { usedOff = sd * a; break; }
       }
       if (moved) break;
     }
-  } else s.detourSide = 0;
+  }
 
   if (!moved) {
     s.phase = 'blocked'; s.speedPxS = 0; s.changed = true;
