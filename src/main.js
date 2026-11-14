@@ -16,8 +16,8 @@ import { hubScreen, regionScreen, factPopup, portalMenuScreen } from './ui/world
 import { dialogue } from './ui/dialogue.js';
 import { blueprintCard } from './ui/cards.js';
 import { propPanel } from './ui/props.js';
-import { notebook, starMap, pause } from './ui/menus.js';
-import { archive, endingScreen } from './ui/archive.js';
+import { pause } from './ui/menus.js';
+import { archive, notebookScreen, starMapScreen, endingScreen } from './ui/archive.js';
 
 const params = new URLSearchParams(location.search);
 
@@ -47,13 +47,13 @@ function note(text) {
 }
 
 async function loadModules() {
-  if (params.get('mock') === '1') { const m = await import('./gfx/mock.js'); ctx.mock = true; return m; }
+  if (params.get('mock') === '1') { const m = await import('./gfx/mock.js'); ctx.mock = 'asked'; return m; }
   try {
     const [engine, data] = await Promise.all([import('./engine/index.js'), import('./data/index.js')]);
     return { engine, data };
   } catch (err) {
     console.warn('Engine/data modules unavailable, falling back to the dev mock.', err);
-    const m = await import('./gfx/mock.js'); ctx.mock = true; return m;
+    const m = await import('./gfx/mock.js'); ctx.mock = 'fallback'; return m;
   }
 }
 
@@ -83,7 +83,7 @@ ctx.toast = (text, ms = 2400) => {
 ctx.screens = {
   [Screen.TITLE]: title, [Screen.HUB]: hubScreen, [Screen.REGION]: regionScreen, [Screen.PORTAL_MENU]: portalMenuScreen,
   [Screen.DIALOGUE]: dialogue, [Screen.FACT_POPUP]: factPopup, [Screen.BLUEPRINT_CARD]: blueprintCard,
-  [Screen.PROP_PANEL]: propPanel, [Screen.NOTEBOOK]: notebook, [Screen.STAR_MAP]: starMap,
+  [Screen.PROP_PANEL]: propPanel, [Screen.NOTEBOOK]: notebookScreen, [Screen.STAR_MAP]: starMapScreen,
   [Screen.ARCHIVE_COMPUTER]: archive, [Screen.PAUSE]: pause, [Screen.ENDING]: endingScreen,
 };
 
@@ -134,7 +134,7 @@ async function boot() {
   initInput((action, e) => ctx.current?.action?.(action, e));
   ctx.go(Screen.TITLE);
   devJump(params.get('go'));
-  if (ctx.mock) ctx.toast('DEV MOCK: engine and data are simulated (?mock=1)', 4000);
+  if (ctx.mock) ctx.toast(ctx.mock === 'asked' ? 'Dev mock active: engine and data are simulated.' : 'Game engine or data could not be loaded, so placeholder content is shown.', 4500);
   startLoop();
 }
 

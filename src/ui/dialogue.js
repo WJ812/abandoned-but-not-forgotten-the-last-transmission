@@ -123,5 +123,11 @@ export const dialogue = {
       else if (a === 'pause') { ctx.audio.play(Sfx.CANCEL); goodbye(); }
       else if (a === 'num' && menu.items[e.digit - 1]) { menu.index = e.digit - 1; menu.render(); menu.pick(); }
     } else if (st !== 'signal' && a === 'confirm') advance();
+    else if (st !== 'signal' && a === 'pause') {
+      const E = ctx.engine; ctx.audio.play(Sfx.CANCEL);
+      if (st === 'greet') { E.markRobotTalked(robot); toMenu(); }
+      else if (st === 'answer') { E.markAsked(robot, d.questions[qIdx].id); toMenu(); }
+      else if (st === 'bye') ctx.back();
+    }
   },
 };

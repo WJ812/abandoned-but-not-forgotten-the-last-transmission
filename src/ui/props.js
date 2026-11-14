@@ -3,7 +3,7 @@
  * behavior from engine prop state. Scene overlays (camera head, rover sprite,
  * laser stripes, dust) are drawn by gfx/renderer.js from the same state.
  */
-import { Prop, PropAction, Sfx, Mode, HotspotKind, Robot, LATENCY } from '../contract.js';
+import { Prop, PropAction, Sfx, Mode, LATENCY, CANVAS_W } from '../contract.js';
 import { ctx } from '../gfx/ctx.js';
 import { drawText } from '../gfx/pixfont.js';
 import { sojournerPos, getSceneCached } from '../gfx/renderer.js';
@@ -15,13 +15,31 @@ const f1 = (v, n = 1) => (typeof v === 'number' ? v.toFixed(n) : String(v ?? '-'
 const bar = (g, x, y, w, hh, k, col, bg = '#10213f') => { g.fillStyle = bg; g.fillRect(x, y, w, hh); g.fillStyle = col; g.fillRect(x, y, Math.round(w * clamp(k, 0, 1)), hh); };
 const frame = (g) => { g.fillStyle = '#06122b'; g.fillRect(0, 0, CW, CH); g.fillStyle = 'rgba(61,214,245,0.07)'; for (let x = 0; x < CW; x += 12) g.fillRect(x, 0, 1, CH); for (let y = 0; y < CH; y += 12) g.fillRect(0, y, CW, 1); };
 
+const arr = (v) => (Array.isArray(v) ? v : []);
+const pt = (v, d) => (v && typeof v.x === 'number' && typeof v.y === 'number' ? v : d);
+/** Guard against missing or short arrays in a (possibly malformed) PropSpec. */
+function normSpec(p, raw) {
+  const s = { ...(raw || {}) };
+  s.title = s.title || 'Hardware'; s.blurb = s.blurb || '';
+  if (p === Prop.LRV_NAV) {
+    s.evas = arr(s.evas).map((e, i) => ({ label: `EVA ${i + 1}`, distanceKm: 0, ...(e || {}), path: arr(e?.path).length >= 2 ? e.path : [{ x: 0.4, y: 0.5 }, { x: 0.6, y: 0.5 }], stations: arr(e?.stations) }));
+    s.lm = pt(s.lm, { x: 0.5, y: 0.5 }); s.odometerKm = s.odometerKm ?? 0; s.maxRangeFromLmKm = s.maxRangeFromLmKm ?? 0;
+  } else if (p === Prop.LRV_BATTERY) {
+    s.evaDrawWh = arr(s.evaDrawWh); s.motors = { count: 0, hp: 0, ...(s.motors || {}) }; s.count = s.count || 2; s.energyWh = s.energyWh || 0;
+    s.chargeHistory = arr(s.chargeHistory).filter((c) => c && typeof c.pct === 'number');
+  } else if (p === Prop.LRV_CAMERA) s.liftoffSequence = arr(s.liftoffSequence);
+  else if (p === Prop.SOJ_APXS) s.targets = arr(s.targets).map((t) => ({ name: '?', rockType: '', finding: '', ...(t || {}), composition: arr(t?.composition) }));
+  else if (p === Prop.SOJ_HAZARD || p === Prop.SOJ_DRIVE) s.obstacles = arr(s.obstacles);
+  return s;
+}
+
 let P, spec, root, cv, rowsEl, menu, panel, rowT, st, prop;
-let cursor = { x: 0, y: 0 };
+let cursor = { x: 0, y: 0 }, hist = 0, warned = false;
 
 const act = (a, arg) => { ctx.audio.play(Sfx.PROP_ACTION); st = ctx.engine.propAction(prop, a, arg) || st; };
 
 function roverScene() { const sp = sojournerPos(getSceneCached(ctx.engine.game.region)); return sp ? { x: sp.x, y: sp.y } : { x: 160, y: 100 }; }
-const K = 0.75;
+const K = CW / CANVAS_W;
 
 const PANELS = {
   [Prop.LRV_NAV]: () => ({
@@ -50,18 +68,84 @@ const PANELS = {
   }),
   [Prop.LRV_BATTERY]: () => ({
     controls: spec.evaDrawWh.map((w, i) => ({ label: `Load test: EVA ${i + 1}`, sub: `${Math.round(w)} Wh`, run: () => act(A.BAT_LOAD_TEST, i) })),
-    rows: () => [
-      { label: 'Charge', value: `${f1(st.chargePct, 0)}%` }, { label: 'Voltage', value: `${f1(st.voltageV, 0)} V (rated ${spec.voltageV} V)` },
-      { label: 'Cells', value: `${spec.count} x ${spec.capacityAh} Ah ${spec.chemistry}` }, { label: 'Rechargeable', value: spec.rechargeable ? 'yes' : 'no' },
-      { label: 'Energy', value: `${Math.round(spec.energyWh)} Wh` }, { label: 'Motors', value: `${spec.motors.count} x ${spec.motors.hp} hp` },
-      st.loadTest?.running || st.loadTest?.drawnWh ? { label: 'Load test', value: `drew ${Math.round(st.loadTest.drawnWh)} Wh, ${f1(st.loadTest.remainingPct, 0)}% left` } : { label: 'Why dead', value: spec.whyDead },
-    ],
+    onKey(a) {
+      const n = spec.chargeHistory.length; if (!n || (a !== 'left' && a !== 'right')) return false;
+      hist = (hist + (a === 'right' ? 1 : -1) + n) % n; ctx.audio.play(Sfx.CURSOR); return true;
+    },
+    hint: [['W/S', 'choose'], ['A/D', 'graph point'], ['Space', 'do'], ['Esc', 'close']],
+    rows: () => {
+      const pnt = spec.chargeHistory[hist];
+      const lt = st.loadTest;
+      return [
+        { label: 'Charge now', value: `${f1(st.chargePct, 0)}%  (${f1(st.voltageV, 0)} V of ${spec.voltageV} V)` },
+        pnt ? { label: pnt.label, value: `${pnt.dateUtc}  ${f1(pnt.pct, 0)}%${pnt.estimated ? '  (estimated)' : ''}` } : { label: 'History', value: 'no charge history available' },
+        { label: 'Cells', value: `${spec.count} x ${spec.capacityAh} Ah ${spec.chemistry}, ${spec.rechargeable ? 'rechargeable' : 'not rechargeable'}` },
+        { label: 'Energy / motors', value: `${Math.round(spec.energyWh)} Wh, ${spec.motors.count} x ${spec.motors.hp} hp` },
+        lt && (lt.running || lt.drawnWh) ? { label: 'Load test', value: `drew ${Math.round(lt.drawnWh)} Wh, ${f1(lt.remainingPct, 0)}% left` } : { label: 'Why dead', value: spec.whyDead || '-' },
+      ];
+    },
     draw(g, t) {
       frame(g);
-      for (let i = 0; i < spec.count; i++) { const x = 20 + i * 108; g.fillStyle = '#2a3a58'; g.fillRect(x, 24, 96, 44); g.fillStyle = '#10213f'; g.fillRect(x + 4, 28, 88, 36); bar(g, x + 6, 32, 84, 28, st.chargePct / 100, '#5fe0a0', '#1a0d10'); drawText(g, `BAT ${i + 1}`, x + 4, 14, '#8fb4e8'); }
-      drawText(g, `${f1(st.chargePct, 0)}%`, 100, 40, '#ff6b5a', 2);
-      const lt = st.loadTest; if (lt) { drawText(g, 'LOAD TEST', 20, 82, '#8fb4e8'); bar(g, 20, 92, 200, 10, 1 - (lt.remainingPct ?? 0) / 100 || 0, '#ffd166'); drawText(g, `DRAWN ${Math.round(lt.drawnWh || 0)} WH`, 20, 108, '#fff'); }
-      if (st.chargePct === 0 && Math.floor(t * 2) % 2) drawText(g, 'EMPTY - NOT RECHARGEABLE', 20, 122, '#ff6b5a');
+      // compact cell gauges
+      for (let i = 0; i < spec.count && i < 3; i++) { const x = 6 + i * 52; g.fillStyle = '#2a3a58'; g.fillRect(x, 4, 46, 16); bar(g, x + 2, 6, 42, 12, (st.chargePct || 0) / 100, '#5fe0a0', '#1a0d10'); drawText(g, `BAT ${i + 1}`, x + 2, 22, '#8fb4e8'); }
+      const lt = st.loadTest;
+      if (lt && (lt.running || lt.drawnWh)) { drawText(g, 'LOAD TEST', 166, 4, '#8fb4e8'); bar(g, 166, 12, 68, 6, 1 - (lt.remainingPct ?? 0) / 100 || 0, '#ffd166'); }
+      drawText(g, `NOW ${f1(st.chargePct, 0)}%`, 166, 22, (st.chargePct || 0) > 0 ? '#5fe0a0' : '#ff6b5a');
+      const H = spec.chargeHistory;
+      const GL = 24, GT = 44, GB = 114, GH = GB - GT;
+      const Y = (p) => Math.round(GB - (clamp(p, 0, 100) / 100) * GH);
+      drawText(g, 'LRV BATTERY CHARGE %', 6, 36, '#8fb4e8');
+      if (!H.length) { drawText(g, 'NO CHARGE HISTORY', GL + 4, 70, '#ff6b5a'); return; }
+      // axes and grid
+      for (const p of [0, 50, 100]) { g.fillStyle = p === 0 ? '#3a5a96' : '#16294d'; g.fillRect(GL, Y(p), 212, 1); drawText(g, String(p), p === 100 ? 6 : p === 50 ? 10 : 14, Y(p) - 2, '#8fb4e8'); }
+      g.fillStyle = '#3a5a96'; g.fillRect(GL, GT, 1, GH + 1);
+      // broken x axis: [EVA days] // [50-year tail]
+      const t0 = Date.parse(H[0].dateUtc), tEva = Date.parse('1972-12-14T23:59:00Z'), tEnd = Date.parse(H[H.length - 1].dateUtc);
+      const okT = H.every((c) => !Number.isNaN(Date.parse(c.dateUtc)));
+      const AX0 = GL + 4, AX1 = 132, BX0 = 146, BX1 = 232;
+      const X = (c, i) => {
+        if (!okT) return Math.round(AX0 + (i / Math.max(1, H.length - 1)) * (BX1 - AX0));
+        const tm = Date.parse(c.dateUtc);
+        if (tm <= tEva) return Math.round(AX0 + ((tm - t0) / Math.max(1, tEva - t0 + 86400000)) * (AX1 - AX0));
+        return Math.round(BX0 + ((tm - tEva) / Math.max(1, tEnd - tEva)) * (BX1 - BX0));
+      };
+      g.fillStyle = '#ffd166'; g.fillRect(AX1 + 3, GB - 3, 1, 7); g.fillRect(AX1 + 6, GB - 3, 1, 7);
+      drawText(g, '1972', AX0, GB + 5, '#8fb4e8'); drawText(g, 'TODAY', BX1 - 20, GB + 5, '#8fb4e8');
+      // segments: solid when measured, dashed when the end point is estimated
+      const xs = H.map(X);
+      for (let i = 1; i < H.length; i++) {
+        const x0 = xs[i - 1], y0 = Y(H[i - 1].pct), x1 = xs[i], y1 = Y(H[i].pct);
+        if (x1 < x0) continue;
+        const crossBreak = x0 < AX1 + 2 && x1 > BX0 - 2;
+        const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
+        g.fillStyle = H[i].estimated ? '#ffd166' : '#5fe0a0';
+        for (let k = 0; k <= n; k++) {
+          if (H[i].estimated && Math.floor(k / 3) % 2) continue;
+          const xx = x0 + ((x1 - x0) * k) / n;
+          if (crossBreak && xx > AX1 && xx < BX0) continue;
+          g.fillRect(Math.round(xx), Math.round(y0 + ((y1 - y0) * k) / n), 1, 1);
+        }
+      }
+      // points and labels
+      let lastLabelX = -99;
+      H.forEach((c, i) => {
+        const x = xs[i], y = Y(c.pct), sel = i === hist;
+        g.fillStyle = sel ? '#ffffff' : c.estimated ? '#ffd166' : '#5fe0a0'; g.fillRect(x - 1, y - 1, 3, 3);
+        if (sel) { g.strokeStyle = '#ffffff'; g.strokeRect(x - 3.5, y - 3.5, 7, 7); }
+        const lab = /^EVA/i.test(c.label) ? c.label.toUpperCase() : null;
+        if (lab && x - lastLabelX > 20) { drawText(g, lab, x - 8, Math.max(GT - 2, y - 12), '#e6edf5'); lastLabelX = x; }
+      });
+      // TODAY marker
+      const li = H.length - 1, lx = xs[li], ly = Y(H[li].pct);
+      g.fillStyle = '#ff6b5a'; for (let yy = GT; yy < GB; yy += 4) g.fillRect(lx, yy, 1, 2);
+      const tl = `TODAY ${f1(H[li].pct, 0)}%`; drawText(g, tl, Math.min(lx - 3 * tl.length, BX1 - 4 * tl.length + 6), Math.min(GB - 12, ly - 10), '#ff6b5a');
+      // tooltip for the selected point
+      const c = H[hist], tip = `${c.label} ${c.dateUtc} ${f1(c.pct, 0)}%`.toUpperCase().slice(0, 44);
+      const tw = tip.length * 4 + 4, tx = clamp(xs[hist] - tw / 2, GL, BX1 + 8 - tw);
+      g.fillStyle = '#000'; g.fillRect(tx, 25, tw, 8); g.strokeStyle = '#ffd166'; g.strokeRect(tx + 0.5, 25.5, tw - 1, 7); drawText(g, tip, tx + 2, 27, '#ffd166');
+      // legend
+      g.fillStyle = '#5fe0a0'; g.fillRect(6, 130, 10, 1); drawText(g, 'MEASURED', 19, 128, '#8fb4e8');
+      g.fillStyle = '#ffd166'; for (let k = 0; k < 10; k += 6) g.fillRect(80 + k, 130, 3, 1); drawText(g, 'DASHED = ESTIMATED', 96, 128, '#8fb4e8');
     },
   }),
   [Prop.LRV_CAMERA]: () => ({
@@ -154,7 +238,7 @@ const PANELS = {
       ctx.assets.draw(g, 'sojourner_apxs', st.deployed ? 1 : 0, 56, st.deployed ? 52 : 40, { w: 32, h: 32 });
       if (st.deployed) { g.fillStyle = `rgba(61,214,245,${0.3 + 0.2 * Math.sin(t * 10)})`; g.fillRect(64, 80, 16, 3); }
       bar(g, 20, 112, 90, 8, st.progress, '#3dd6f5');
-      const comp = st.result?.composition; if (comp) {
+      const comp = arr(st.result?.composition); if (comp.length) {
         comp.slice(0, 6).forEach((c, i) => { drawText(g, c.element, 126, 10 + i * 17, '#8fb4e8'); bar(g, 146, 9 + i * 17, 88, 8, c.pct / 60, '#ffd166'); drawText(g, `${f1(c.pct)}%`, 192, 10 + i * 17, '#fff'); });
       } else drawText(g, st.deployed ? 'MEASURING...' : 'PICK A ROCK', 130, 60, '#8fb4e8');
     },
@@ -168,7 +252,8 @@ const PANELS = {
     draw(g, t) { drawField(g, t, spec.obstacles, st); },
   }),
   [Prop.SOJ_DRIVE]: () => ({
-    controls: [{ label: 'Send waypoint', sub: 'Space', run: () => sendDrive() }, { label: 'Stop', run: () => act(A.DRIVE_STOP) }],
+    hint: [['WASD/Arrows', 'aim'], ['Space', 'send'], ['2', 'stop'], ['Esc', 'close']],
+    controls: [{ label: 'Send waypoint', sub: '1 / Space', run: () => sendDrive() }, { label: 'Stop', sub: '2', run: () => act(A.DRIVE_STOP) }],
     rows: () => [
       { label: 'Phase', value: st.phase }, { label: 'Signal', value: st.phase === 'signal' ? `${LATENCY.LABEL} ${f1(st.signal * 100, 0)}%` : LATENCY.LABEL },
       { label: 'Odometer', value: `${f1(st.odometerM, 2)} m (mission ~${spec.totalTraverseM} m)` }, { label: 'Speed', value: `max ${spec.maxSpeedCmS} cm/s (scene time compressed)` },
@@ -176,7 +261,7 @@ const PANELS = {
     ],
     onKey(a) {
       const d = { up: [0, -6], down: [0, 6], left: [-6, 0], right: [6, 0] }[a]; if (!d) return false;
-      cursor.x = clamp(cursor.x + d[0], 4, 316); cursor.y = clamp(cursor.y + d[1], 56, 176); ctx.audio.play(Sfx.CURSOR); return true;
+      cursor.x = clamp(cursor.x + d[0], 4, CANVAS_W - 4); cursor.y = clamp(cursor.y + d[1], 56, 176); ctx.audio.play(Sfx.CURSOR); return true;
     },
     draw(g, t) { drawField(g, t, spec.obstacles, st, true); },
   }),
@@ -204,7 +289,7 @@ function drawField(g, t, obstacles, s, drive) {
 
 export const propPanel = {
   enter({ prop: p }) {
-    prop = p; spec = ctx.data.getPropSpec(p); st = ctx.engine.propOpen(p);
+    prop = p; spec = normSpec(p, ctx.data.getPropSpec(p)); st = ctx.engine.propOpen(p); hist = 0;
     const rv = roverScene(); cursor = { x: Math.round(rv.x + 30), y: Math.round(rv.y) };
     panel = PANELS[p]();
     const px = pixCanvas(CW, CH, 'prop-cv'); cv = px;
@@ -218,14 +303,13 @@ export const propPanel = {
       h('div', { class: 'card-title' }, h('span', { class: 'chip' }, 'HARDWARE'), spec.title),
       h('p', { class: 'blurb' }, spec.blurb), arch ? h('p', { class: 'blurb arch-p' }, spec.archivist) : null,
       h('div', { class: 'pcols' }, h('div', null, px.c, rowsEl), menu.el),
-      h('div', { class: 'foot' }, h('span', { class: 'key' }, 'W/S'), ' choose ', h('span', { class: 'key' }, 'Space'), ' do  ', h('span', { class: 'key' }, 'Esc'), ' close')));
+      h('div', { class: 'foot' }, (panel.hint || [['W/S', 'choose'], ['Space', 'do'], ['1-9', 'quick'], ['Esc', 'close']]).map(([k, t]) => [h('span', { class: 'key' }, k), ` ${t}  `]))));
     mount(root); refreshRows();
   },
   exit() { ctx.engine.propClose(prop); unmount(root); },
   update(dt) {
     st = ctx.engine.propTick(prop, dt) || st;
-    panel.draw(cv.g, ctx.time);
-    rowT -= dt; if (rowT <= 0) { rowT = 0.1; refreshRows(); }
+    try { panel.draw(cv.g, ctx.time); rowT -= dt; if (rowT <= 0) { rowT = 0.1; refreshRows(); } } catch (err) { if (!warned) { warned = true; console.warn('prop panel draw failed', err); } }
   },
   action(a, e) {
     if (panel.onKey?.(a)) return;

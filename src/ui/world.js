@@ -124,54 +124,39 @@ export const factPopup = {
   },
 };
 
-/* ---------------- Portal menu ---------------- */
-let portalRoot, portalMenu, portalDetail, portalStats;
+/* ---------------- Portal dropdown ---------------- */
+let portalRoot, portalMenu, portalStats;
 const PORTAL_REGIONS = [Region.MOON, Region.MARS];
-function portalRender() {
-  const i = portalMenu.index;
-  portalDetail.textContent = '';
-  if (i < 2) {
-    const s = portalStats[i];
-    portalDetail.append(
-      h('div', { class: 'pd-name' }, s.name.toUpperCase()),
-      h('div', { class: 'pd-site' }, s.site),
-      h('div', { class: 'pd-g' }, h('span', null, `g = ${s.gravityMps2} m/s2  (${s.gravityG}g)`),
-        h('div', { class: 'bar' }, h('i', { style: { width: `${Math.min(100, (s.gravityG || GRAVITY_G[PORTAL_REGIONS[i]]) * 100)}%` } }))),
-      h('div', { class: 'pd-row' }, h('b', null, 'Air  '), s.atmosphere),
-      h('div', { class: 'pd-row' }, h('b', null, 'Rover  '), s.rover));
-  } else portalDetail.append(h('div', { class: 'pd-site' }, 'Stay in the NASA Archives hub.'));
-}
 export const portalMenuScreen = {
   enter() {
     portalStats = PORTAL_REGIONS.map((r) => ctx.data.getRegionStats(r));
     portalMenu = new Menu({
-      cls: 'big',
-      items: [
-        ...portalStats.map((s, i) => ({ label: `${i + 1}. ${s.name.toUpperCase()}`, sub: s.site })),
-        { label: 'Stay in the Hub', sub: 'Esc' },
-      ],
+      cls: 'drop-list',
+      items: portalStats.map((s, i) => ({ label: `${i + 1}. ${s.name.toUpperCase()}`, sub: s.site })),
       onPick: (i) => {
-        if (i >= 2) { ctx.audio.play(Sfx.CANCEL); ctx.back(); return; }
         ctx.audio.play(Sfx.PORTAL); ctx.flash('cyan');
         ctx.engine.enterRegion(PORTAL_REGIONS[i]);
         ctx.go(Screen.REGION);
       },
     });
-    portalDetail = h('div', { class: 'pd' });
-    portalRoot = h('div', { class: 'screen center' },
-      h('div', { class: 'card portal' },
-        h('div', { class: 'card-title' }, h('span', { class: 'chip' }, 'TELEPORT'), 'DESTINATION SELECTOR'),
-        h('div', { class: 'portal-cols' }, portalMenu.el, portalDetail),
-        h('div', { class: 'foot' }, h('span', { class: 'key' }, 'W/S'), ' choose  ', h('span', { class: 'key' }, 'Space'), ' go  ', h('span', { class: 'key' }, '1-2'), ' quick pick')));
-    mount(portalRoot); portalRender();
+    const sc = getSceneCached(Region.HUB);
+    const hot = sc.hotspots.find((x) => x.kind === HotspotKind.PORTAL);
+    const r = hot ? hot.rect : { x: CANVAS_W / 2 - 20, y: 30, w: 40, h: 24 };
+    const cx = Math.max(16, Math.min(84, ((r.x + r.w / 2) / CANVAS_W) * 100));
+    portalRoot = h('div', { class: 'screen dropwrap' },
+      h('div', { class: 'dropdown', style: { left: `${cx}%`, top: `${((r.y + r.h + 3) / CANVAS_H) * 100}%` } },
+        h('div', { class: 'drop-head' }, h('span', null, 'DESTINATION'), h('span', { class: 'drop-caret' }, '▼')),
+        portalMenu.el,
+        h('div', { class: 'foot' }, h('span', { class: 'key' }, 'W/S'), ' choose ', h('span', { class: 'key' }, 'Space'), ' go ', h('span', { class: 'key' }, 'Esc'), ' close')));
+    mount(portalRoot);
   },
   exit() { unmount(portalRoot); },
   update() {},
   action(a, e) {
-    if (a === 'up') { portalMenu.move(-1); portalRender(); }
-    else if (a === 'down') { portalMenu.move(1); portalRender(); }
+    if (a === 'up') portalMenu.move(-1);
+    else if (a === 'down') portalMenu.move(1);
     else if (a === 'confirm') portalMenu.pick();
-    else if (a === 'num' && e.digit <= 2) { portalMenu.index = e.digit - 1; portalMenu.render(); portalMenu.pick(); }
+    else if (a === 'num' && e.digit <= PORTAL_REGIONS.length) { portalMenu.index = e.digit - 1; portalMenu.render(); portalMenu.pick(); }
     else if (a === 'pause') { ctx.audio.play(Sfx.CANCEL); ctx.back(); }
   },
 };

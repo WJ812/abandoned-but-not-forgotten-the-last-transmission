@@ -158,7 +158,7 @@ table.kv { width: 100%; border-collapse: collapse; font-size: 0.82em; } .kv th {
 table.cmp { width: 100%; border-collapse: collapse; font-size: 0.85em; } .cmp th, .cmp td { padding: 0.3em 0.6em; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; } .cmp thead th { color: var(--amber); letter-spacing: 0.15em; } .cmp tbody th { color: var(--slate); font-weight: 400; }
 
 /* ---- star map ---- */
-.starmap { width: 82%; } .map-wrap { position: relative; border: 1px solid var(--line); overflow: hidden; aspect-ratio: 16 / 8; } .map-cv { width: 100%; height: 100%; object-fit: fill; }
+.starmap { width: 100%; } .map-wrap { position: relative; border: 1px solid var(--line); overflow: hidden; aspect-ratio: 2 / 1; max-height: 62%; margin: 0 auto; } .map-cv { width: 100%; height: 100%; object-fit: fill; }
 .bl { position: absolute; transform: translateX(-50%); font-family: var(--mono); font-size: 0.7em; letter-spacing: 0.15em; color: var(--white); text-shadow: 0 0 4px #000; }
 .sweep { position: absolute; left: 50%; top: 50%; width: 80%; height: 2px; transform-origin: 0 0; background: linear-gradient(90deg, rgba(61,214,245,0.7), transparent); animation: sweep 5s linear infinite; }
 @keyframes sweep { to { transform: rotate(360deg); } }
@@ -185,3 +185,25 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 0.85em; } .cmp th
 .prop { width: 58%; height: 100%; max-height: 100%; } .blurb { font-size: 0.85em; margin: 0; color: var(--white); } .pcols { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 1em; min-height: 0; overflow: hidden; }
 canvas.prop-cv { width: 100%; aspect-ratio: 240 / 135; height: auto; border: 1px solid var(--cyan); } .prow { margin-top: 0.4em; }
 .pmenu .item { font-size: 0.88em; padding: 0.25em 0.6em; }
+
+/* ---- portal dropdown ---- */
+.dropwrap { background: rgba(2, 6, 16, 0.25); }
+.dropdown { position: absolute; transform: translate(-50%, 0); min-width: 30%; background: var(--panel); border: 1px solid var(--cyan); border-top: 3px solid var(--cyan); border-radius: 0 0 0.4em 0.4em; padding: 0.4em 0.5em 0.5em; box-shadow: 0 1em 2.5em rgba(0, 0, 0, 0.7), 0 0 1.4em rgba(61, 214, 245, 0.35); transform-origin: top center; animation: dropin 0.18s var(--ease); }
+@keyframes dropin { from { transform: translate(-50%, -0.6em) scaleY(0.85); opacity: 0; } }
+.drop-head { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.72em; letter-spacing: 0.25em; color: var(--cyan); padding: 0.1em 0.5em 0.4em; border-bottom: 1px solid var(--line); margin-bottom: 0.3em; }
+.drop-list .item { font-size: 0.98em; padding: 0.4em 0.7em; }
+.dropdown .foot { margin-top: 0.4em; font-size: 0.7em; }
+
+/* ---- computer terminal ---- */
+.archive { position: relative; gap: 0.5em; }
+.archive::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.16) 3px); mix-blend-mode: multiply; }
+.crt { text-shadow: 0 0 0.4em rgba(95, 224, 160, 0.35); animation: crt-on 0.35s steps(6) 1; }
+@keyframes crt-on { from { filter: brightness(2.2) contrast(1.4); } to { filter: none; } }
+.boot-cur { margin-left: 0.4em; color: var(--green); animation: blink 0.9s steps(1) infinite; }
+.astatusbar { font-family: var(--mono); font-size: 0.72em; letter-spacing: 0.1em; color: var(--green); border: 1px solid rgba(95, 224, 160, 0.25); padding: 0.2em 0.7em; background: rgba(95, 224, 160, 0.06); }
+.tab { cursor: pointer; display: inline-flex; gap: 0.5em; align-items: baseline; } .tab i { font-style: normal; opacity: 0.6; font-size: 0.85em; }
+.abody { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+.abody .acols { flex: 1; min-height: 0; } .apane { flex: 1; min-height: 0; overflow: auto; padding-right: 0.4em; }
+.crt .cmp th, .crt .cmp td { border-color: rgba(95, 224, 160, 0.25); } .crt .tbl-title { color: var(--green); } .crt .bar i { background: var(--green); }
+.crt .key { background: #031a12; border-color: rgba(95, 224, 160, 0.5); color: #b8f5d8; }
+.crt .nb-pct b { color: var(--amber); }
