@@ -52,7 +52,7 @@ export const DIALOGUES = deepFreeze({
           'So they parked me where my TV camera could see the lander. On December 14, 1972, Houston steered my camera, and I filmed Challenger rising off the Moon. Then they went home, and I stayed.',
         ],
         archivist: [
-          'The LM ascent stage returned only crew, samples, and film; the descent stage became its launch pad. Ed Fendell in Houston commanded the GCTA camera, sending each move early to beat the 1.3 s light delay.',
+          'The LM ascent stage returned only crew, samples, and film; the descent stage became its launch pad. Flight controller Ed Fendell ran the GCTA; the liftoff tilt was a pre-timed sequence, sent early for the 1.3 s delay.',
         ],
       },
       {
@@ -73,10 +73,10 @@ export const DIALOGUES = deepFreeze({
         prompt: 'What happened to your fender?',
         answer: [
           'On our first day a hammer handle caught my right rear fender extension and snapped it off. Without it, my wheel threw a rooster tail of gray dust all over the crew and my batteries.',
-          'Dark dust soaks up sunlight and heat. Overnight, people on Earth worked out a fix: four stiff map pages taped together and clamped on with clamps from the lander lights. It held for the rest of the mission!',
+          'Dark dust soaks up heat. Overnight, people on Earth worked out a fix: stiff laminated maps from the crew\'s map set, taped together and clamped on with clamps from a lander light. It held for the rest of the mission!',
         ],
         archivist: [
-          'Dec 11, 1972 (EVA-1): a tape repair failed because dust stops tape sticking. At the start of EVA-2, Cernan fitted 4 laminated maps with duct tape and 2 clamps from the LM utility lights. The fender came home.',
+          'EVA-1, Dec 11, 1972: tape alone failed in the dust. At the start of EVA-2, Cernan fitted laminated maps from the crew map set with duct tape and 2 clamps from the LM movable overhead light. The fender came home.',
         ],
       },
       {

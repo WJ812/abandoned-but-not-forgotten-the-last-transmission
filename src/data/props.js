@@ -116,7 +116,7 @@ const LRV_CAMERA = {
   prop: Prop.LRV_CAMERA,
   title: 'Ground-Commanded TV Camera',
   blurb: 'Houston steered this camera by radio. Every command takes about 1.3 seconds to reach the Moon, so you have to plan ahead. Try to replay the famous liftoff shot!',
-  archivist: 'RCA GCTA: color TV, 6:1 zoom, pan about 340 degrees, tilt +85 to -45 degrees. Ed Fendell sent the liftoff tilt commands early to cover the delay. Liftoff replay keyframes are a reconstruction.',
+  archivist: 'RCA GCTA: color TV, 6x zoom, a reported pan range of about 340 degrees, tilt roughly +85 to -45. Flight controller Ed Fendell ran a pre-timed liftoff tilt; replay keyframes are a reconstruction.',
   panMinDeg: -170,
   panMaxDeg: 170,
   tiltMinDeg: -45,
@@ -135,18 +135,18 @@ const LRV_CAMERA = {
     { atS: 11, tiltDeg: 42 },
     { atS: 16, tiltDeg: 55 },
   ],
-  operator: 'Ed Fendell, Mission Control, Houston',
+  operator: 'Flight controller Ed Fendell, Houston',
 };
 
 /* ---------- LRV_FENDER ---------- */
 const LRV_FENDER = {
   prop: Prop.LRV_FENDER,
   title: 'Repaired Right-Rear Fender',
-  blurb: 'Four map pages, duct tape, and two lamp clamps. Spin the wheel with and without this fix and watch the dust fly.',
+  blurb: 'Laminated maps, duct tape, and two lamp clamps. Spin the wheel with and without this fix and watch the dust fly.',
   archivist: 'Broken during EVA-1 when a hammer handle caught it; a first tape repair failed in the dust. The map fix, worked out overnight on Earth, was fitted at the start of EVA-2 and held for the rest of the mission.',
   brokenDate: '1972-12-11 (EVA-1)',
   fixDate: '1972-12-12 (start of EVA-2)',
-  fixMaterials: 'Four laminated maps, duct tape, and two clamps from the LM portable utility lights',
+  fixMaterials: 'Laminated maps from the crew map set, duct tape, and two clamps from the LM movable overhead light',
   wheelDiameterCm: 81.8,
   wheelMaterial: 'Woven zinc-coated steel wire mesh with titanium chevron treads',
   dustWithoutFender: 'A rooster tail of dark dust sprays over the crew, the seats, and the batteries, soaking up sunlight and heat.',

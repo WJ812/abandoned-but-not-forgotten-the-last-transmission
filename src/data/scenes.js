@@ -167,7 +167,7 @@ const MARS = {
     {
       id: 0, rect: R(28, 112, 50, 20), title: 'Hills on the horizon',
       explorer: 'From the Pathfinder site, two hills called the Twin Peaks stood about a kilometer away. Spotting them in pictures from orbit helped scientists find exactly where the lander sat.',
-      archivist: 'Matching horizon features such as Twin Peaks and Big Crater to Viking orbiter images pinpointed the landing site. The peaks rise a few tens of meters above the plain.',
+      archivist: 'Matching horizon features such as Twin Peaks and Big Crater to Viking orbiter images pinpointed the landing site. The peaks are about a kilometer from the lander.',
     },
     {
       id: 1, rect: R(64, 162, 44, 16), title: 'Rocks from a megaflood',
@@ -191,8 +191,8 @@ const MARS = {
     },
     {
       id: 5, rect: R(300, 120, 56, 26), title: 'Big Crater',
-      explorer: 'That rim belongs to a crater the team called Big Crater, a bowl more than a kilometer wide, blasted out long ago when a space rock hit Mars.',
-      archivist: 'Big Crater lies a couple of kilometers south of the lander. Seen on the horizon, it helped locate the lander on Viking orbiter maps, together with Twin Peaks.',
+      explorer: 'That rim belongs to a crater the team called Big Crater, a bowl about 1.5 km across, blasted out long ago when a space rock hit Mars.',
+      archivist: 'Big Crater, about 1.5 km across, lies a couple of kilometers from the lander. Seen on the horizon, it helped locate the lander on Viking orbiter maps, together with Twin Peaks.',
     },
   ],
 };

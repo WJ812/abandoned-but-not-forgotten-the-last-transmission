@@ -59,7 +59,7 @@ export const BLUEPRINTS = deepFreeze({
       'Power: a 16 W gallium arsenide solar panel plus non-rechargeable lithium thionyl chloride (LiSOCl2) batteries. Brain: an Intel 80C85 CPU. All commands were relayed through the lander. g = 3.72 m/s2.',
     ],
     telemetry: [
-      { label: 'Mass', value: '10.5 kg (23 lb)' },
+      { label: 'Mass', value: 'about 10.5 kg (23 lb)' },
       { label: 'Solar panel', value: '16 W GaAs, about 0.22 m2' },
       { label: 'Backup battery', value: 'LiSOCl2, not rechargeable' },
       { label: 'Top speed', value: '1 cm/s' },

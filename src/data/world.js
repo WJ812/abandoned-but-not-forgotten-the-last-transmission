@@ -87,7 +87,7 @@ export const ENDING = deepFreeze({
     { label: 'Power', moon: 'Silver-zinc batteries', mars: '16 W solar panel + battery' },
     { label: 'Who steered', moon: 'Astronauts on board', mars: 'Itself, between commands' },
     { label: 'Signal delay', moon: 'about 1.3 s', mars: 'about 11 min' },
-    { label: 'Mass', moon: '210 kg', mars: '10.5 kg' },
+    { label: 'Mass', moon: '210 kg', mars: 'about 10.5 kg' },
     { label: 'Speed', moon: '18 km/h recorded', mars: '1 cm/s' },
     { label: 'Distance driven', moon: 'about 35.7 km', mars: 'about 100 m' },
     { label: 'Active', moon: 'Dec 11-14, 1972', mars: 'Jul 5 - Sep 27, 1997' },

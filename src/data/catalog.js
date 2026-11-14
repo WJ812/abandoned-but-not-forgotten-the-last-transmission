@@ -17,7 +17,7 @@ export const CATALOG = deepFreeze([
   entry(Mission.SURVEYOR3, Pack.LUNAR_LEGACY,
     'Surveyor 3 Scoop & Camera', 'Moon', 'Oceanus Procellarum', '1967 (visited 1969)',
     'Surveyor 3 landed in April 1967 and dug into the Moon with a small scoop to test the soil. Two and a half years later, Apollo 12 astronauts walked over to it and brought its camera home.',
-    'Landed April 20, 1967. Its surface sampler dug trenches to measure soil strength for Apollo. Apollo 12 landed about 180 m away in Nov 1969; bacteria found in the camera are now thought to be Earth contamination.'),
+    'Landed April 20, 1967. Its surface sampler dug trenches to measure soil strength for Apollo. Apollo 12 landed about 150-180 m away in Nov 1969; bacteria found in the camera are now thought to be Earth contamination.'),
   entry(Mission.APOLLO_LM_DESCENT, Pack.LUNAR_LEGACY,
     'Apollo Lunar Module Descent Stage', 'Moon', 'Six Apollo landing sites', '1969-1972',
     'Each Apollo lander came in two parts. The bottom half, the descent stage, landed the crew and then served as the launch pad for the top half. Six of them still stand on the Moon.',
