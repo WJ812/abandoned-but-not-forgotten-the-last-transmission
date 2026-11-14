@@ -383,7 +383,7 @@ export function createHardware(ids) {
   const refresh = () => {
     cards.forEach((c, n) => {
       c.el.classList.toggle('focus', n === focus);
-      const r = rowsOf(c.i).slice(0, 3);
+      const r = rowsOf(c.i).slice(0, 2);
       c.rows.replaceChildren(...r.map((x) => h('div', null, h('span', null, x.label), h('em', null, String(x.value)))));
       use(c.i); const cc = c.i.panel.controls[c.i.ctl];
       c.ctl.replaceChildren(h('span', { class: 'ctl-k' }, n === focus ? (c.i.panel.controls.length > 1 ? 'W/S Space' : 'Space') : String(n + 2)), cc ? `${cc.label}${cc.sub ? ' - ' + cc.sub : ''}` : '-');

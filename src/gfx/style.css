@@ -274,3 +274,23 @@ canvas.prop-cv { width: 100%; aspect-ratio: 240 / 135; height: auto; border: 1px
 .nb-flist { max-height: 9em; overflow: auto; } .nb-flist .grp { color: #ffd166; font-family: var(--mono); font-size: 0.8em; letter-spacing: 0.15em; margin: 0.3em 0 0.1em; }
 .nb-flist .fi { padding: 0.1em 0.5em; border: 1px solid transparent; } .nb-flist .fi.sel { border-color: #fffbe8; background: rgba(255, 251, 232, 0.14); }
 .nb-fdet { max-height: 9em; overflow: auto; } .glint { color: #ffd166; font-style: italic; margin-top: 0.5em; }
+
+/* ===== P6: Pokemon-Gold-style combined rover screens (old rules backed up in ui/_backup_rover_screen/) ===== */
+.hwgrid { gap: 0.9em; }
+.hw { font-size: max(10px, calc(var(--u) * 2.5)); font-family: var(--mono); font-weight: 700; background: #141b33; border: 2px solid #fffbe8; border-radius: 3px; padding: 0; box-shadow: 0 0 0 2px #141b33, 0 0 0 3px #6d5ca0; }
+.hw-title { background: #fffbe8; color: #1a1630; padding: 0.15em 0.5em; letter-spacing: 0.04em; text-transform: uppercase; font-size: 1em; } .hw-title b { color: #b3261e; }
+.hw.focus { border-color: #ffd166; box-shadow: 0 0 0 2px #141b33, 0 0 0 4px #ffd166; } .hw.focus .hw-title { background: #ffd166; } .hw.focus .hw-title::before { content: "\25B6 "; }
+.hw canvas.prop-cv { border: 0; border-bottom: 2px solid #fffbe8; margin-bottom: 0.2em; }
+.hw-rows { padding: 0 0.5em; line-height: 1.25; } .hw-rows span { color: #b9c3e0; } .hw-rows em { color: #8fe0ff; }
+.hw-ctl { margin: 0.15em 0.4em 0.3em; padding-top: 0.2em; border-top: 2px dotted #6d5ca0; color: #ffe08a; font-size: 1em; } .hw.focus .hw-ctl::before { content: "\25B6 "; color: #fff; } .hw.focus .hw-ctl { color: #fff; }
+.hw-ctl .ctl-k { display: none; }
+.dbox { font-family: var(--mono); font-weight: 700; font-size: max(12px, calc(var(--u) * 3.3)); letter-spacing: 0.01em; }
+.dbox .dlg-text { font-size: 1em; line-height: 1.25; }
+.dq .item { font-size: 0.92em; padding: 0.1em 0.5em; } .dq .item.sel .lb { text-decoration: none; } .dq .item .mk { width: 1em; }
+.dlg-name .who { font-family: var(--mono); font-weight: 700; font-size: max(11px, calc(var(--u) * 3)); }
+.dlg-hint { font-size: max(9px, calc(var(--u) * 2.3)); font-weight: 700; color: #fff3d6; }
+@media (max-height: 640px) {
+  .hw { font-size: 10px; } .hw-title { padding: 0.05em 0.4em; }
+  .hw canvas.prop-cv { aspect-ratio: auto; flex: 1 1 0; min-height: 0; width: 100%; height: auto; object-fit: fill; margin-bottom: 0; }
+  .hw-rows em { -webkit-line-clamp: 1; } .hw-rows { line-height: 1.1; } .hw-ctl { margin-bottom: 0.15em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}

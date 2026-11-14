@@ -98,7 +98,7 @@ export const dialogue = {
     typer = new Typer(txt, { cps: TEXT_CPS, onChar: () => ctx.audio.blip(blipId()) });
     hintEl = h('div', { class: 'dlg-hint', style: at(10, 171, 340, 8) });
     root = h('div', { class: 'screen dialogue' },
-      hw ? h('div', { class: 'hw-area', style: at(4, 6, 352, 86) }, hw.el) : null,
+      hw ? h('div', { class: 'hw-area', style: at(4, 13, 352, 79) }, hw.el) : null,
       h('div', { class: 'dlg-portrait', style: at(17, 113, 46, 46) }, portrait),
       h('div', { class: 'dlg-name', style: at(16, 96, 68, 18) }, h('span', { class: 'who' }, d.name), h('div', { class: 'eq' }, eqEls)),
       h('div', { class: 'dbox', style: at(70, 113, 272, 54) }, textBox, sigWrap, menuWrap),
