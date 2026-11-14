@@ -92,6 +92,7 @@ export const game = {
 };
 const ov = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 const hit = (p) => ({ x: p.x + PLAYER.HIT_X, y: p.y + PLAYER.HIT_Y, w: PLAYER.HIT_W, h: PLAYER.HIT_H });
+const flog = [], settings = { muted: false, reduceFlashing: false };
 let wasOnPortal = false, wasOnPad = false, stepT = 0, prevNear = null;
 const save = () => store().setItem(SAVE_KEY, JSON.stringify({ v: SAVE_VERSION, blueprints: game.blueprints, robotsTalked: game.robotsTalked, asked: game.asked, mode: game.mode, flags: game.flags }));
 
@@ -140,7 +141,7 @@ export const engine = {
     game.nearHotspot = prevNear = best;
     const onPortal = sc.hotspots.some((h) => h.kind === 'portal' && h.trigger === Trigger.STEP && ov(b, h.rect)); if (onPortal && !wasOnPortal) game.events |= EVT.ON_PORTAL; wasOnPortal = onPortal;
     const onPad = sc.hotspots.some((h) => h.kind === 'returnPad' && h.trigger === Trigger.STEP && ov(b, h.rect)); if (onPad && !wasOnPad) game.events |= EVT.ON_RETURN_PAD; wasOnPad = onPad;
-    for (const f of sc.facts) if (!(game.factsSeen & (1 << f.id)) && ov(b, f.rect)) { game.factsSeen |= 1 << f.id; game.pendingFact = f.id; game.events |= EVT.FACT; break; }
+    for (const f of sc.facts) if (!(game.factsSeen & (1 << f.id)) && ov(b, f.rect)) { game.factsSeen |= 1 << f.id; game.pendingFact = f.id; game.events |= EVT.FACT; if (!flog.some((x) => x.region === game.region && x.id === f.id)) flog.push({ region: game.region, id: f.id }); break; }
     const was = game.inShadow; game.inShadow = sc.shadows.some((s) => ov(b, s)) && !engine.isLit(b.x + 6, b.y + 4);
     if (was !== game.inShadow) game.events |= EVT.SHADOW_CHANGED;
   },
@@ -166,6 +167,9 @@ export const engine = {
   latencyTick(dt) { const l = game.latency; if (!l.active) return l.progress; l.elapsed += dt; l.progress = Math.min(1, l.elapsed / LATENCY.GAUGE_REAL_S); if (l.progress >= 1) l.active = false; return l.progress; },
   latencyProgress: () => game.latency.progress, latencyActive: () => game.latency.active,
   acknowledgeFact() { game.pendingFact = -1; },
+  factsLog: () => flog.slice(),
+  getSettings: () => ({ ...settings }),
+  setSetting(n, v) { if (n in settings && typeof v === 'boolean') { settings[n] = v; return true; } return false; },
   propOpen(p) { const s = (game.props[p] ||= initProp(p)); s.open = true; return s; },
   propState: (p) => game.props[p] || null,
   propClose(p) { if (game.props[p]) game.props[p].open = false; },

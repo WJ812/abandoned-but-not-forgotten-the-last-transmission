@@ -203,6 +203,17 @@ export function drawPlayer(g, t) {
   A.draw(g, ASTRO_BY_DIR[p.facing] || 'astro_front', 0, p.x + (lean && p.facing === Dir.RIGHT ? 0 : 0), p.y - z + bob);
 }
 
+/* ---------- Moon blueprint glint: a tiny sparkle every ~2.6 s, visible even in the dark crater ---------- */
+function drawGlint(g, scene, t) {
+  const h = scene.hotspots.find((x) => x.kind === HotspotKind.BLUEPRINT);
+  if (!h || (ctx.engine.game.blueprints & (1 << h.ref))) return;
+  const ph = t % 2.6; if (ph > 0.3) return;
+  const c = rectCenter(h.rect); const k = Math.floor(ph / 0.1);   // 3 short steps: dot, plus, dot
+  const x = Math.round(c.x + 2), y = Math.round(c.y - 2);
+  g.fillStyle = '#ffffff'; g.fillRect(x, y, 1, 1);
+  if (k === 1) { g.fillStyle = '#bfe8ff'; g.fillRect(x - 1, y, 1, 1); g.fillRect(x + 1, y, 1, 1); g.fillRect(x, y - 1, 1, 1); g.fillRect(x, y + 1, 1, 1); }
+}
+
 /* ---------- Floating [!] ---------- */
 export function drawAlert(g, cx, topY, t) {
   const b = Math.round(Math.abs(Math.sin(t * 4)) * 3);
@@ -225,7 +236,7 @@ export function renderWorld(g, dt) {
   // depth sort the astronaut against the rover by baseline
   const rv = roverSprite(scene); const pBase = game.player.y + PLAYER.H;
   if (rv && pBase < rv.base) { drawPlayer(g, t); drawRover(g, rv, scene, t); } else { if (rv) drawRover(g, rv, scene, t); drawPlayer(g, t); }
-  if (scene.region === Region.MOON) drawShadowMask(g, scene);
+  if (scene.region === Region.MOON) { drawShadowMask(g, scene); drawGlint(g, scene, t); }
   if (scene.region === Region.MARS) { updateDust(dt); drawDust(g); }
   if (near && near.rect) drawAlert(g, near.rect.x + near.rect.w / 2, near.rect.y, t);
   else if (game.pendingFact >= 0) drawAlert(g, game.player.x + 12, game.player.y - game.player.z, t);

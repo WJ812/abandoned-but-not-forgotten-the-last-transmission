@@ -257,3 +257,20 @@ canvas.prop-cv { width: 100%; aspect-ratio: 240 / 135; height: auto; border: 1px
 /* ---- fixes ---- */
 .apane .starmap { display: flex; gap: 1em; align-items: flex-start; } .apane .starmap .map-wrap { width: calc(var(--u) * 170); max-height: none; margin: 0; flex: none; } .apane .starmap .map-info { flex: 1; min-width: 0; }
 .hw-rows > div { align-items: flex-start; } .hw-rows em { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-align: right; line-height: 1.15; }
+
+/* ---- reduce flashing: gentle short fades, no strobing ---- */
+#fx.soft-cyan { animation: soft-cyan 0.8s ease-out; } #fx.soft-amber { animation: soft-amber 0.8s ease-out; } #fx.soft-red { animation: soft-red 0.8s ease-out; }
+@keyframes soft-cyan { 0% { opacity: 0.35; background: rgba(61, 214, 245, 0.18); } 100% { opacity: 0; } }
+@keyframes soft-amber { 0% { opacity: 0.35; background: rgba(255, 209, 102, 0.18); } 100% { opacity: 0; } }
+@keyframes soft-red { 0% { opacity: 0.35; background: rgba(252, 61, 33, 0.18); } 100% { opacity: 0; } }
+.reduce-flash .cursor, .reduce-flash .adv, .reduce-flash .bang, .reduce-flash .boot-cur, .reduce-flash .pxbtn.ping, .reduce-flash .tab.ping, .reduce-flash .beacon .dot, .reduce-flash .cta, .reduce-flash .prompt, .reduce-flash .scanline { animation: none !important; }
+.reduce-flash .sweep { animation-duration: 20s; }
+
+/* ---- controls card ---- */
+.controls { width: 52%; } .cc-grid { display: grid; gap: 0.5em; font-size: 1.05em; } .cc-row { display: flex; gap: 1em; align-items: center; } .cc-row .key { min-width: 5.5em; }
+
+/* ---- notebook facts ---- */
+.nb-facts { margin-top: 0.8em; border-top: 1px solid var(--line); padding-top: 0.5em; display: grid; grid-template-columns: 1fr 1.4fr; gap: 1em; font-size: 0.9em; }
+.nb-flist { max-height: 9em; overflow: auto; } .nb-flist .grp { color: #ffd166; font-family: var(--mono); font-size: 0.8em; letter-spacing: 0.15em; margin: 0.3em 0 0.1em; }
+.nb-flist .fi { padding: 0.1em 0.5em; border: 1px solid transparent; } .nb-flist .fi.sel { border-color: #fffbe8; background: rgba(255, 251, 232, 0.14); }
+.nb-fdet { max-height: 9em; overflow: auto; } .glint { color: #ffd166; font-style: italic; margin-top: 0.5em; }

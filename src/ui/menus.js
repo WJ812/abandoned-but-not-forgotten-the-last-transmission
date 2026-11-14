@@ -6,6 +6,35 @@ import { modeLabels } from './hud.js';
 
 /* ---------------- Notebook pane (used by the Archive Computer) ---------------- */
 export function buildNotebook() {
+  const nb = buildNotebookBase();
+  const E = ctx.engine, D = ctx.data;
+  let log = [];
+  try { log = (E.factsLog?.() || []); } catch { log = []; }
+  const entries = [];
+  for (const region of [Region.MOON, Region.MARS]) {
+    let facts = []; try { facts = D.getScene(region).facts || []; } catch { facts = []; }
+    for (const l of log) if (l.region === region) { const f = facts.find((x) => x.id === l.id); if (f) entries.push({ region, f }); }
+  }
+  let sel = 0;
+  const list = h('div', { class: 'nb-flist' }); const det = h('div', { class: 'nb-fdet' });
+  const render = () => {
+    list.textContent = '';
+    if (!entries.length) { list.append(h('div', { class: 'dim' }, 'No field notes yet. Explore the Moon and Mars.')); det.textContent = ''; return; }
+    let last = -1;
+    entries.forEach((e, i) => {
+      if (e.region !== last) { last = e.region; list.append(h('div', { class: 'grp' }, e.region === Region.MOON ? 'THE MOON' : 'MARS')); }
+      list.append(h('div', { class: `fi${i === sel ? ' sel' : ''}` }, e.f.title));
+    });
+    list.querySelector('.sel')?.scrollIntoView({ block: 'nearest' });
+    const f = entries[sel].f; const arch = E.game.mode === Mode.ARCHIVIST && f.archivist;
+    det.replaceChildren(h('div', { class: 'who' }, f.title), h('p', null, f.explorer), arch ? h('p', { class: 'arch-p' }, f.archivist) : null);
+  };
+  render();
+  const glint = !(E.game.blueprints & (1 << Blueprint.LRV)) ? h('div', { class: 'glint' }, 'Something glints in the shadows... try your headlamp (F)') : null;
+  const el = h('div', null, nb, glint, h('div', { class: 'nb-facts' }, h('div', null, h('div', { class: 'tbl-title' }, `FIELD NOTES ${entries.length}`), list), det));
+  return { el, move(d) { if (!entries.length) return; sel = (sel + d + entries.length) % entries.length; ctx.audio.play(Sfx.CURSOR); render(); } };
+}
+function buildNotebookBase() {
   const E = ctx.engine, D = ctx.data, game = E.game;
   const comp = E.completion();
   const moon = D.getRegionStats(Region.MOON), mars = D.getRegionStats(Region.MARS);
@@ -84,6 +113,8 @@ function pauseItems() {
     { label: 'Resume' },
     { label: game.mode === Mode.ARCHIVIST ? modeLabels()[1] : modeLabels()[0], sub: 'switch mode' },
     { label: ctx.audio.muted ? 'Sound: OFF' : 'Sound: ON', sub: 'mute' },
+    { label: ctx.reduceFlash() ? 'Reduce flashing: ON' : 'Reduce flashing: OFF', sub: 'comfort' },
+    { label: 'Controls', sub: 'how to play' },
     { label: 'Quit to title' },
   ];
 }
@@ -94,7 +125,9 @@ export const pause = {
       onPick: (i) => {
         if (i === 0) { ctx.audio.play(Sfx.CONFIRM); ctx.back(); }
         else if (i === 1) { ctx.engine.toggleMode(); ctx.audio.play(Sfx.CONFIRM); pMenu.setItems(pauseItems()); }
-        else if (i === 2) { ctx.audio.toggleMute(); ctx.audio.play(Sfx.CONFIRM); pMenu.setItems(pauseItems()); }
+        else if (i === 2) { ctx.toggleMute(); ctx.audio.play(Sfx.CONFIRM); pMenu.setItems(pauseItems()); }
+        else if (i === 3) { let cur = false; try { cur = !!ctx.engine.getSettings?.().reduceFlashing; } catch { /* none */ } ctx.setSetting('reduceFlashing', !cur); ctx.audio.play(Sfx.CONFIRM); pMenu.setItems(pauseItems()); }
+        else if (i === 4) { ctx.audio.play(Sfx.CONFIRM); ctx.go('controls', { after: Screen.PAUSE }); }
         else { ctx.audio.play(Sfx.CANCEL); ctx.go(Screen.TITLE); }
       },
     });
@@ -111,4 +144,21 @@ export const pause = {
     else if ((a === 'left' || a === 'right') && pMenu.index === 1) pMenu.pick();
     else if (a === 'pause') { ctx.audio.play(Sfx.CONFIRM); ctx.back(); }
   },
+};
+
+/* ---------------- Controls card (New Game, and from the pause menu) ---------------- */
+let ccRoot, ccAfter;
+export const controlsCard = {
+  enter(p) {
+    ccAfter = p?.after || Screen.HUB;
+    const row = (k, t) => h('div', { class: 'cc-row' }, h('span', { class: 'key' }, k), h('span', null, t));
+    ccRoot = h('div', { class: 'screen center dim' }, h('div', { class: 'card controls' },
+      h('div', { class: 'card-title' }, h('span', { class: 'chip cy' }, 'BRIEFING'), 'CONTROLS'),
+      h('div', { class: 'cc-grid' }, row('W A S D', 'move'), row('Space', 'interact'), row('F', 'headlamp (Moon)'), row('N', 'notebook'), row('P', 'pause')),
+      h('div', { class: 'foot' }, 'Arrow keys and E also work.   ', h('span', { class: 'key' }, 'Space'), ' continue')));
+    mount(ccRoot);
+  },
+  exit() { unmount(ccRoot); },
+  update() {},
+  action(a) { if (a === 'confirm' || a === 'pause') { ctx.audio.play(Sfx.CONFIRM); ctx.go(ccAfter); } },
 };

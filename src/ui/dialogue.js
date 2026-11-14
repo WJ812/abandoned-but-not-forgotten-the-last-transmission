@@ -3,7 +3,7 @@
  * question menu plus Goodbye, and the "SIGNAL ~11 min" bar before each Mars answer. Talking to a rover
  * also opens ALL of its hardware on the same screen (combined screen).
  */
-import { Robot, Mode, Sfx, LATENCY, Prop, CANVAS_W, CANVAS_H } from '../contract.js';
+import { Robot, Mode, Sfx, LATENCY, Prop, CANVAS_W, CANVAS_H, TEXT_CPS } from '../contract.js';
 import { ctx } from '../gfx/ctx.js';
 import { h, mount, unmount, spriteCanvas, redrawSprite, Typer, Menu, at, drawPanelArt } from './dom.js';
 import { createHardware } from './props.js';
@@ -95,7 +95,7 @@ export const dialogue = {
       h('div', { class: 'sig-sub' }, E.game.mode === Mode.ARCHIVIST ? `${LATENCY.LABEL_ROUND_TRIP}. Delay varied as the planets moved (about 10.6 min at landing). Compressed to ${LATENCY.GAUGE_REAL_S} s.` : `Earth-Mars light time, compressed to ${LATENCY.GAUGE_REAL_S} s.`));
     menu = new Menu({ cls: 'dq', items: [], onPick: (i) => { ctx.audio.play(Sfx.CONFIRM); pickMenu(i); } });
     menuWrap = h('div', { class: 'dq-wrap hidden' }, menu.el);
-    typer = new Typer(txt, { cps: 52, onChar: () => ctx.audio.blip(blipId()) });
+    typer = new Typer(txt, { cps: TEXT_CPS, onChar: () => ctx.audio.blip(blipId()) });
     hintEl = h('div', { class: 'dlg-hint', style: at(10, 171, 340, 8) });
     root = h('div', { class: 'screen dialogue' },
       hw ? h('div', { class: 'hw-area', style: at(4, 6, 352, 86) }, hw.el) : null,

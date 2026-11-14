@@ -58,7 +58,7 @@ export const title = {
     })) : null;
     const ng = makeBtn('btn_new_game', tt.newGameLabel || 'NEW GAME', () => {
       if (hasSave && !armed) { armed = true; notice = 'A save exists. Press New Game again to erase it and start over.'; ctx.audio.play(Sfx.CURSOR); refresh(); return; }
-      press(ng, () => { E.newGame(selMode); startGame(); });
+      press(ng, () => { E.newGame(selMode); ctx.flash('cyan'); E.enterRegion(Region.HUB); ctx.go('controls', { after: Screen.HUB }); });
     });
     const mk = (m, id) => {
       const b = makeBtn(id, tt.modeLabels[m], () => { selMode = m; notice = ''; ctx.audio.play(Sfx.CONFIRM); refresh(); });

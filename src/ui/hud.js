@@ -29,7 +29,7 @@ export function initHud() {
   });
   muteBtn = h('button', {
     class: 'hud-btn', tabindex: '-1', title: 'Mute / unmute', onmousedown: noFocus,
-    onclick: (e) => { e.currentTarget.blur(); ctx.audio.unlock(); ctx.audio.toggleMute(); if (!ctx.audio.muted) ctx.audio.play(Sfx.CONFIRM); sync(true); },
+    onclick: (e) => { e.currentTarget.blur(); ctx.audio.unlock(); ctx.toggleMute(); if (!ctx.audio.muted) ctx.audio.play(Sfx.CONFIRM); sync(true); },
   });
   root = h('div', { class: 'hud hidden' },
     h('div', { class: 'hud-left' }, regionEl, bpEl, lampEl),

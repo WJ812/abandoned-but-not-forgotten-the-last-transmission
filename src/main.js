@@ -17,6 +17,7 @@ import { dialogue } from './ui/dialogue.js';
 import { blueprintCard } from './ui/cards.js';
 import { propPanel } from './ui/props.js';
 import { pause } from './ui/menus.js';
+import { controlsCard } from './ui/menus.js';
 import { archive, notebookScreen, starMapScreen, endingScreen } from './ui/archive.js';
 
 const params = new URLSearchParams(location.search);
@@ -73,7 +74,16 @@ ctx.go = (name, p) => {
   if (breath) ctx.audio.startLoop(Sfx.BREATH); else ctx.audio.stopLoop(Sfx.BREATH);
 };
 ctx.back = () => ctx.go(ctx.worldName());
-ctx.flash = (kind = 'cyan') => { const f = ctx.fx; f.className = ''; void f.offsetWidth; f.className = `flash-${kind}`; };
+/* settings: mute is remembered; reduce-flashing = setting OR the OS reduced-motion preference */
+ctx.reduceFlash = () => {
+  let s = false; try { s = !!ctx.engine.getSettings?.().reduceFlashing; } catch { /* old engine */ }
+  let m = false; try { m = !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches; } catch { /* none */ }
+  return s || m;
+};
+ctx.applyReduce = () => ctx.stage.classList.toggle('reduce-flash', ctx.reduceFlash());
+ctx.setSetting = (name, value) => { try { ctx.engine.setSetting?.(name, value); } catch { /* old engine */ } ctx.applyReduce(); };
+ctx.toggleMute = () => { const m = ctx.audio.toggleMute(); ctx.setSetting('muted', m); return m; };
+ctx.flash = (kind = 'cyan') => { const f = ctx.fx; f.className = ''; void f.offsetWidth; f.className = ctx.reduceFlash() ? `soft-${kind}` : `flash-${kind}`; };
 ctx.toast = (text, ms = 2400) => {
   const t = h('div', { class: 'toast' }, text); ctx.stage.appendChild(t);
   requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('in')));
@@ -81,7 +91,7 @@ ctx.toast = (text, ms = 2400) => {
 };
 
 ctx.screens = {
-  confirmReturn,
+  confirmReturn, controls: controlsCard,
   [Screen.TITLE]: title, [Screen.HUB]: hubScreen, [Screen.REGION]: regionScreen, [Screen.PORTAL_MENU]: portalMenuScreen,
   [Screen.DIALOGUE]: dialogue, [Screen.FACT_POPUP]: factPopup, [Screen.BLUEPRINT_CARD]: blueprintCard,
   [Screen.PROP_PANEL]: propPanel, [Screen.NOTEBOOK]: notebookScreen, [Screen.STAR_MAP]: starMapScreen,
@@ -133,6 +143,8 @@ async function boot() {
   await assets.loadAssets((n, t) => note(`LOADING ARCHIVE ${n}/${t}`));
   ctx.stage.querySelector('.loading')?.remove();
   ctx.engine.init();
+  try { if (ctx.engine.getSettings?.().muted) ctx.audio.setMuted(true); } catch { /* sound stays on */ }
+  ctx.applyReduce();
   initHud();
   initInput((action, e) => ctx.current?.action?.(action, e));
   ctx.go(Screen.TITLE);
