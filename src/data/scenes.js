@@ -139,7 +139,7 @@ const MARS_R5 = R(254, 147, 36, 20);              // biggest rock, "Yogi"
 const MARS_R6 = R(328, 153, 10, 7);
 // R3 pebble (84-90, 150-155) is decor only: not solid, not interactive.
 const MARS_LANDER = R(110, 112, 48, 28);          // pathfinder_lander sprite (48x28)
-const MARS_ROVER = R(162, 146, 70, 22);           // bottom 70x22 of the 70x70 sprite (sprite 162-232, 98-168)
+const MARS_ROVER = R(162, 138, 70, 22);           // bottom 70x22 of the 70x70 sprite (sprite 162-232, 90-160); 18 px walk corridor below
 const MARS_BLUEPRINT = R(300, 152, 12, 12);
 const MARS_RETURN = R(4, 164, 24, 12);
 
