@@ -14,7 +14,6 @@ Everything in the game is based on real NASA mission data. Where a value is esti
 
 ## Play
 
-- **Online:** *(Netlify link goes here)*. Nothing to install. The game is about 0.5 MB and loads in a second.
 - **Locally:** requires [Node.js](https://nodejs.org/) 22 or later. There are no other dependencies.
 
   ```sh
@@ -67,7 +66,7 @@ The code is vanilla JavaScript ES modules and HTML5 Canvas, with no build step a
 
 The game is a static site, so any static host works.
 
-- **Netlify:** publish the repository root. There is no build command; [`netlify.toml`](netlify.toml) already sets this up.
+Serve the repository root as-is. There is no build step.
 
 ## Documentation
 
