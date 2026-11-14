@@ -1,0 +1,11 @@
+{
+  "name": "abandoned-but-not-forgotten-the-last-transmission",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Abandoned but not Forgotten - The Last Transmission: NASA Space Apps Beirut 2026 web game",
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test src/"
+  }
+}
