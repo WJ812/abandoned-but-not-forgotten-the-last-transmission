@@ -264,6 +264,22 @@ test('prop specs: shapes and verified hardware values', () => {
   assert.equal(drv.maxSpeedCmS, 1);
   assert.ok(drv.totalTraverseM >= 90 && drv.totalTraverseM <= 110);
   assert.equal(drv.maxFromLanderM, 12);
+  assert.equal(drv.lastContactUtc, '1997-09-27');
+  assert.ok(drv.fate.length > 0 && drv.fate.length <= TEXT_MAX);
+  assert.ok(inUnit(drv.lander));
+  assert.ok(drv.legs.length >= 3);
+  const sum = drv.legs.reduce((a, l) => a + l.distanceM, 0);
+  assert.ok(Math.abs(sum - drv.totalTraverseM) <= 10, `legs sum ${sum}`);
+  const maxFrac = 0.35 * 1.05; // 12 m ~ 0.35 of the minimap
+  drv.legs.forEach((l, i) => {
+    assert.equal(l.id, i);
+    assert.ok(l.label.length <= LABEL_MAX && l.sols.length <= LABEL_MAX);
+    assert.ok(l.path.length >= 2 && l.path.every(inUnit));
+    for (const pt of l.path) assert.ok(Math.hypot(pt.x - drv.lander.x, pt.y - drv.lander.y) <= maxFrac, 'beyond ~12 m');
+    let prev = -1;
+    for (const st of l.stops) { assert.ok(st.at >= 0 && st.at <= 1 && st.at >= prev && st.name.length <= LABEL_MAX); prev = st.at; }
+  });
+  for (const k of ['blurb', 'commandNote']) assert.doesNotMatch(drv[k], /send Sojourner|pick a spot/i);
 });
 
 test('unknown ids throw RangeError', () => {

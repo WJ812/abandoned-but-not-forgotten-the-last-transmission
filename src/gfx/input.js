@@ -14,7 +14,7 @@ const KEYS = {
   Space: ['confirm', Btn.INTERACT], Enter: ['confirm', Btn.INTERACT], NumpadEnter: ['confirm', Btn.INTERACT], KeyE: ['confirm', Btn.INTERACT],
   KeyN: ['notebook', Btn.NOTEBOOK], KeyB: ['notebook', Btn.NOTEBOOK],
   KeyP: ['pause', Btn.PAUSE], Escape: ['pause', Btn.PAUSE],
-  KeyF: ['lamp', Btn.HEADLAMP],
+  KeyF: ['lamp', Btn.HEADLAMP], Tab: ['tab', 0],
 };
 const REPEATABLE = new Set(['up', 'down', 'left', 'right']);
 

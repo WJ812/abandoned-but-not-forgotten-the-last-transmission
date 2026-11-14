@@ -69,7 +69,15 @@ export const SPECS = {
   [Prop.SOJ_HAZARD]: { laserStripes: 5, cameras: 2, wheelDiameterCm: 13, hazardHeightCm: 13, scanRangeCm: 30,
     obstacles: [{ x: 190, y: 82, w: 12, h: 16 }] },
   [Prop.SOJ_DRIVE]: { maxSpeedCmS: 1, totalTraverseM: 100, maxFromLanderM: 12, landerPos: { x: 120, y: 90 },
-    obstacles: [{ x: 190, y: 82, w: 12, h: 16 }] },
+    obstacles: [{ x: 190, y: 82, w: 12, h: 16 }], lastContactUtc: '1997-09-27', lander: { x: 0.5, y: 0.5 },
+    legs: [
+      { id: 0, label: 'Ramp to Barnacle Bill', sols: 'Sols 2-3', distanceM: 3,
+        path: [{ x: 0.5, y: 0.5 }, { x: 0.5, y: 0.25 }], stops: [{ name: 'Barnacle Bill', at: 1 }] },
+      { id: 1, label: 'To Yogi', sols: 'Sols 4-6', distanceM: 6,
+        path: [{ x: 0.5, y: 0.25 }, { x: 0.75, y: 0.25 }, { x: 1.0, y: 0.5 }], stops: [{ name: 'Yogi', at: 0.5 }] },
+      { id: 2, label: 'Rock Garden', sols: 'Sols 40-83', distanceM: 20,
+        path: [{ x: 1.0, y: 0.5 }, { x: 0.5, y: 0.75 }], stops: [] },
+    ] },
 };
 
 /** Inject fixtures, remove any storage, clear the memory save, init(). */

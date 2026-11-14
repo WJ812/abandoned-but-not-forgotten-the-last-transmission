@@ -2,7 +2,7 @@
 import { Mode, Sfx, Screen, Robot, Blueprint, MISSION_COUNT, GF, Region, CANVAS_W, CANVAS_H } from '../contract.js';
 import { MISSION_ICONS } from '../assets.js';
 import { ctx } from '../gfx/ctx.js';
-import { h, mount, unmount, spriteCanvas, Typer } from './dom.js';
+import { h, mount, unmount, spriteCanvas, Typer, at, drawPanelArt } from './dom.js';
 import { page1El, page2El } from './cards.js';
 import { buildNotebook, createStarMap } from './menus.js';
 
@@ -61,7 +61,7 @@ function build() {
 
 function renderTabs() {
   const game = ctx.engine.game;
-  tabsEl.replaceChildren(...tabs.map((t, i) => h('span', { class: `tab${i === tab ? ' sel' : ''}${t.id === 'recap' && !(game.flags & GF.ENDING_SEEN) ? ' ping' : ''}`, onclick: () => setTab(i) }, h('i', null, String(i + 1)), t.label)));
+  tabsEl.replaceChildren(...tabs.map((t, i) => h('span', { class: `pxbtn${i === tab ? ' sel' : ''}${t.id === 'recap' && !(game.flags & GF.ENDING_SEEN) ? ' ping' : ''}`, onclick: () => setTab(i) }, h('i', null, String(i + 1)), t.label)));
 }
 
 function renderBody() {
@@ -92,14 +92,18 @@ function makeComputer(initialId) {
       const want = p?.tab || initialId;
       tab = Math.max(0, tabs.findIndex((t) => t.id === want)); idx = 0;
       tabsEl = h('div', { class: 'tabs' }); bodyEl = h('div', { class: 'abody' }); hintEl = h('div', { class: 'foot' }); statusEl = h('span', { class: 'astatus' });
-      root = h('div', { class: 'screen center' },
-        h('div', { class: 'card archive crt' },
-          h('div', { class: 'card-title' }, h('span', { class: 'chip cy' }, 'TERMINAL'), 'NASA ARCHIVE COMPUTER', h('span', { class: 'boot-cur' }, '_')),
-          h('div', { class: 'astatusbar' }, statusEl), tabsEl, bodyEl, hintEl));
+      root = h('div', { class: 'screen pxterm' },
+        h('div', { class: 'term', style: at(19, 17, 322, 146) },
+          h('div', { class: 'term-head' }, h('b', null, 'NASA ARCHIVE COMPUTER'), statusEl, h('span', { class: 'boot-cur' }, '_')),
+          tabsEl, bodyEl, hintEl));
       mount(root); renderTabs(); renderBody();
     },
     exit() { unmount(root); },
     update() { map?.update(); },
+    drawOver(g) {
+      g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      drawPanelArt(g, 'ui_computer_screen', (c) => { c.fillStyle = '#fffbe8'; c.fillRect(8, 8, 344, 164); c.fillStyle = '#322a48'; c.fillRect(11, 11, 338, 158); });
+    },
     action(a, e) {
       if (a === 'left') setTab(tab - 1);
       else if (a === 'right') setTab(tab + 1);

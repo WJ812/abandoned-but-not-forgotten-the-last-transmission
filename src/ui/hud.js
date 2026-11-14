@@ -4,7 +4,7 @@ import { ctx } from '../gfx/ctx.js';
 import { h, spriteCanvas } from './dom.js';
 
 let root, regionEl, bpEl, lampEl, modeBtn, muteBtn, last = '';
-const HIDE = new Set([Screen.TITLE, Screen.ENDING]);
+const HIDE = new Set([Screen.TITLE, Screen.ENDING, Screen.ARCHIVE_COMPUTER, Screen.NOTEBOOK, Screen.STAR_MAP]);
 const MODE_FALLBACK = ['EXPLORER 9-12', 'ARCHIVIST 13-18'];
 
 export const modeLabels = () => {

@@ -9,7 +9,7 @@ import {
 } from '../contract.js';
 
 const R = (x, y, w, h) => ({ x, y, w, h });
-const hs = (id, kind, rect, ref, label, extra = {}) => ({ id, kind, rect, trigger: kind === 'returnPad' ? Trigger.STEP : Trigger.PRESS, ref, solid: false, label, ...extra });
+const hs = (id, kind, rect, ref, label, extra = {}) => ({ id, kind, rect, trigger: Trigger.PRESS, ref, solid: false, label, ...extra });
 const W = (x, y, w, h) => R(x, y, w, h);
 
 const SCENES = {
@@ -21,18 +21,14 @@ const SCENES = {
   [Region.MOON]: { region: 1, name: 'Taurus-Littrow', w: CANVAS_W, h: CANVAS_H, background: 'scene_moon', surface: Surface.REGOLITH, spawn: { x: 150, y: 120, facing: Dir.UP }, solids: [R(260, 120, 20, 12)], shadows: [R(200, 66, 100, 50), R(30, 124, 70, 40)], walkable: W(6, 56, 348, 120),
     facts: [0, 1, 2].map((i) => ({ id: i, rect: R(60 + i * 90, 100 + (i % 2) * 20, 24, 20), title: `Moon fact ${i + 1}`, explorer: 'The Moon has 1/6 of Earth gravity, so hops carry you high and slow.', archivist: 'g = 1.62 m/s2.' })),
     hotspots: [
-      hs('moon.lrv', 'robot', R(110, 56, 74, 30), Robot.LRV, 'Lunar Rover', { solid: true }),
-      hs('moon.nav', 'prop', R(112, 90, 14, 10), Prop.LRV_NAV, 'Nav console'), hs('moon.bat', 'prop', R(130, 90, 14, 10), Prop.LRV_BATTERY, 'Battery panel'),
-      hs('moon.cam', 'prop', R(148, 90, 14, 10), Prop.LRV_CAMERA, 'TV camera'), hs('moon.fender', 'prop', R(166, 90, 14, 10), Prop.LRV_FENDER, 'Fender'),
-      hs('moon.bp', 'blueprint', R(228, 82, 12, 12), Blueprint.LRV, 'LRV blueprint'), hs('moon.pad', 'returnPad', R(20, 90, 24, 12), 0, 'Return pad'),
+      hs('moon.lrv', 'robot', R(120, 80, 60, 14), Robot.LRV, 'Talk to LRV-3'),
+      hs('moon.bp', 'blueprint', R(228, 82, 12, 12), Blueprint.LRV, 'LRV blueprint'), hs('moon.pad', 'returnPad', R(20, 90, 24, 12), 0, 'Return to Hub'),
     ] },
   [Region.MARS]: { region: 2, name: 'Ares Vallis', w: CANVAS_W, h: CANVAS_H, background: 'scene_mars', surface: Surface.SAND, spawn: { x: 40, y: 120, facing: Dir.RIGHT }, solids: [R(200, 100, 20, 14), R(90, 100, 16, 10)], shadows: [], walkable: W(6, 56, 348, 120),
     facts: [0, 1, 2].map((i) => ({ id: i, rect: R(70 + i * 80, 130, 24, 20), title: `Mars fact ${i + 1}`, explorer: 'Mars has 0.38 g and a thin carbon dioxide atmosphere.', archivist: 'g = 3.72 m/s2.' })),
     hotspots: [
-      hs('mars.sojourner', 'robot', R(140, 90, 24, 14), Robot.SOJOURNER, 'Sojourner'),
-      hs('mars.solar', 'prop', R(120, 112, 14, 10), Prop.SOJ_SOLAR, 'Solar panel'), hs('mars.apxs', 'prop', R(88, 112, 14, 10), Prop.SOJ_APXS, 'Rock: Barnacle Bill'),
-      hs('mars.haz', 'prop', R(160, 112, 14, 10), Prop.SOJ_HAZARD, 'Hazard sensors'), hs('mars.drive', 'prop', R(178, 112, 14, 10), Prop.SOJ_DRIVE, 'Drive console'),
-      hs('mars.bp', 'blueprint', R(262, 124, 12, 12), Blueprint.SOJOURNER, 'Sojourner blueprint'), hs('mars.pad', 'returnPad', R(20, 90, 24, 12), 0, 'Return pad'),
+      hs('mars.sojourner', 'robot', R(150, 100, 40, 14), Robot.SOJOURNER, 'Talk to Sojourner'),
+      hs('mars.bp', 'blueprint', R(262, 124, 12, 12), Blueprint.SOJOURNER, 'Sojourner blueprint'), hs('mars.pad', 'returnPad', R(20, 90, 24, 12), 0, 'Return to Hub'),
     ] },
 };
 
@@ -65,7 +61,10 @@ const PROPSPEC = {
     { id: 0, name: 'Barnacle Bill', sol: 4, rockType: 'andesite-like', composition: [{ element: 'O', pct: 45 }, { element: 'Si', pct: 25 }, { element: 'Al', pct: 8 }, { element: 'Fe', pct: 7 }], finding: 'Silica-rich, like volcanic rock.' },
     { id: 1, name: 'Yogi', sol: 10, rockType: 'basaltic', composition: [{ element: 'O', pct: 44 }, { element: 'Si', pct: 20 }, { element: 'Fe', pct: 12 }, { element: 'Mg', pct: 8 }], finding: 'More basalt-like.' }] },
   [Prop.SOJ_HAZARD]: { title: 'Hazard Sensors', blurb: 'Five laser stripes and two cameras.', archivist: 'Onboard hazard avoidance.', laserStripes: 5, cameras: 2, wheelDiameterCm: 13, hazardHeightCm: 20, scanRangeCm: 50, decision: 'The computer compares stripe heights and picks the clear side.', obstacles: [R(170, 92, 16, 14), R(200, 100, 20, 14)] },
-  [Prop.SOJ_DRIVE]: { title: 'Drive Console', blurb: 'Pick a waypoint. Commands cross ~11 minutes of space.', archivist: 'Max speed about 1 cm/s.', maxSpeedCmS: 1, totalTraverseM: 100, maxFromLanderM: 12, landerPos: { x: 90, y: 84 }, commandNote: 'Waypoints are sent in advance.', obstacles: [R(170, 92, 16, 14), R(200, 100, 20, 14)] },
+  [Prop.SOJ_DRIVE]: { title: 'Drive Log (1997)', blurb: 'Replay the traced 1997 drives around the lander. Sojourner has been silent since its last contact.', archivist: 'Paths are traced from mission maps, not surveyed.', maxSpeedCmS: 1, totalTraverseM: 100, maxFromLanderM: 12, landerPos: { x: 90, y: 84 }, commandNote: 'Historical replay only.', lastContactUtc: '1997-09-27', fate: 'The lander stopped talking on 27 September 1997, most likely after its battery failed. The team spent months trying to reach it, but Pathfinder and Sojourner never answered again.', lander: { x: 0.5, y: 0.5 }, legs: [
+    { id: 0, label: 'Leg 1', sols: 'Sol 2-4', distanceM: 6, path: path([0.5, 0.5], [0.58, 0.45], [0.66, 0.52]), stops: [{ name: 'Barnacle Bill', at: 0.9 }] },
+    { id: 1, label: 'Leg 2', sols: 'Sol 5-8', distanceM: 14, path: path([0.5, 0.5], [0.4, 0.62], [0.3, 0.55], [0.25, 0.4]), stops: [{ name: 'Yogi', at: 0.8 }] },
+    { id: 2, label: 'Leg 3', sols: 'Sol 9-83', distanceM: 30, path: path([0.5, 0.5], [0.7, 0.3], [0.85, 0.5], [0.6, 0.75]), stops: [{ name: 'Wedge', at: 0.5 }] }], obstacles: [R(170, 92, 16, 14), R(200, 100, 20, 14)] },
 };
 
 export const data = {
@@ -140,7 +139,7 @@ export const engine = {
     if ((best?.id ?? null) !== (prevNear?.id ?? null)) game.events |= best ? EVT.ENTERED_HOTSPOT : EVT.LEFT_HOTSPOT;
     game.nearHotspot = prevNear = best;
     const onPortal = sc.hotspots.some((h) => h.kind === 'portal' && h.trigger === Trigger.STEP && ov(b, h.rect)); if (onPortal && !wasOnPortal) game.events |= EVT.ON_PORTAL; wasOnPortal = onPortal;
-    const onPad = sc.hotspots.some((h) => h.kind === 'returnPad' && ov(b, h.rect)); if (onPad && !wasOnPad) game.events |= EVT.ON_RETURN_PAD; wasOnPad = onPad;
+    const onPad = sc.hotspots.some((h) => h.kind === 'returnPad' && h.trigger === Trigger.STEP && ov(b, h.rect)); if (onPad && !wasOnPad) game.events |= EVT.ON_RETURN_PAD; wasOnPad = onPad;
     for (const f of sc.facts) if (!(game.factsSeen & (1 << f.id)) && ov(b, f.rect)) { game.factsSeen |= 1 << f.id; game.pendingFact = f.id; game.events |= EVT.FACT; break; }
     const was = game.inShadow; game.inShadow = sc.shadows.some((s) => ov(b, s)) && !engine.isLit(b.x + 6, b.y + 4);
     if (was !== game.inShadow) game.events |= EVT.SHADOW_CHANGED;
@@ -189,7 +188,7 @@ function initProp(p) {
     case Prop.SOJ_SOLAR: return { ...base, playing: false, sol: 1, solTime: 0.25, sunElevDeg: 30, dustFactor: 1, powerW: 8, onBattery: false };
     case Prop.SOJ_APXS: return { ...base, targetIndex: 0, deployed: false, progress: 0, result: null };
     case Prop.SOJ_HAZARD: return { ...base, scanning: false, progress: 0, stripes: Array.from({ length: 5 }, () => ({ hit: false, distPx: 40 })), hazard: false, detour: null };
-    default: return { ...base, phase: 'idle', signal: 0, pos: { x: soj.x + soj.w / 2, y: soj.y + soj.h / 2 }, target: null, tiltDeg: 0, odometerM: 0, speedPxS: 0 };
+    default: return { ...base, legIndex: 0, playing: false, t: 0, pos: { ...PROPSPEC[p].lander }, headingDeg: 0, rangeToLanderM: 0, distanceM: 0, sol: 'Sol 2', stop: null };
   }
 }
 function doAction(p, s, a, arg) {
@@ -202,7 +201,7 @@ function doAction(p, s, a, arg) {
   else if (a === PropAction.SOLAR_PLAY) s.playing = true; else if (a === PropAction.SOLAR_PAUSE) s.playing = false; else if (a === PropAction.SOLAR_SET_SOL) s.sol = arg;
   else if (a === PropAction.APXS_DEPLOY) { s.targetIndex = arg; s.deployed = true; s.progress = 0; s.result = null; } else if (a === PropAction.APXS_ABORT) { s.deployed = false; s.progress = 0; }
   else if (a === PropAction.HAZ_SCAN) { s.scanning = true; s.progress = 0; s.detour = null; }
-  else if (a === PropAction.DRIVE_GOTO) { s.phase = 'signal'; s.signal = 0; s.target = { ...arg }; } else if (a === PropAction.DRIVE_STOP) { s.phase = 'idle'; s.target = null; s.speedPxS = 0; }
+  else if (a === PropAction.DRIVE_SELECT) { s.legIndex = arg; s.t = 0; s.playing = false; } else if (a === PropAction.DRIVE_PLAY) s.playing = true; else if (a === PropAction.DRIVE_PAUSE) s.playing = false; else if (a === PropAction.DRIVE_RESET) { s.t = 0; s.playing = false; }
 }
 function tickProp(p, s, dt) {
   const spec = PROPSPEC[p];
@@ -228,10 +227,9 @@ function tickProp(p, s, dt) {
   } else if (p === Prop.SOJ_HAZARD) {
     if (s.scanning) { s.progress += dt / 2; s.stripes = s.stripes.map((_, i) => ({ hit: i > 1 && i < 4, distPx: 24 + ((i * 11) % 20) })); if (s.progress >= 1) { s.scanning = false; s.hazard = true; s.detour = 'left'; } }
   } else if (p === Prop.SOJ_DRIVE) {
-    if (s.phase === 'signal') { s.signal += dt / LATENCY.GAUGE_REAL_S; if (s.signal >= 1) { s.signal = 1; s.phase = 'moving'; } }
-    else if (s.phase === 'moving' && s.target) {
-      const dx = s.target.x - s.pos.x, dy = s.target.y - s.pos.y, d = Math.hypot(dx, dy), v = 18;
-      if (d < 1.5) { s.phase = 'arrived'; s.speedPxS = 0; s.target = null; } else { s.pos.x += (dx / d) * v * dt; s.pos.y += (dy / d) * v * dt; s.odometerM += 0.01 * v * dt; s.speedPxS = v; s.tiltDeg = Math.sin(s.odometerM * 40) * 10; }
-    }
+    if (s.playing) { s.t += dt / 20; if (s.t >= 1) { s.t = 1; s.playing = false; } }
+    const leg = spec.legs[s.legIndex], pts = leg.path, k = s.t * (pts.length - 1), i = Math.min(pts.length - 2, Math.floor(k)), f = k - i;
+    s.pos = { x: pts[i].x + (pts[i + 1].x - pts[i].x) * f, y: pts[i].y + (pts[i + 1].y - pts[i].y) * f };
+    s.distanceM = s.t * leg.distanceM; s.rangeToLanderM = Math.hypot(s.pos.x - spec.lander.x, s.pos.y - spec.lander.y) * 25; s.sol = leg.sols; s.stop = leg.stops.find((x) => Math.abs(x.at - s.t) < 0.1)?.name ?? null;
   }
 }

@@ -5,7 +5,7 @@
  */
 import { Prop, PropAction, Sfx, Mode, LATENCY, CANVAS_W } from '../contract.js';
 import { ctx } from '../gfx/ctx.js';
-import { drawText } from '../gfx/pixfont.js';
+import { drawText, wrapLabel } from '../gfx/pixfont.js';
 import { sojournerPos, getSceneCached } from '../gfx/renderer.js';
 import { h, mount, unmount, Menu, pixCanvas, kvTable, clamp } from './dom.js';
 
@@ -29,7 +29,12 @@ function normSpec(p, raw) {
     s.chargeHistory = arr(s.chargeHistory).filter((c) => c && typeof c.pct === 'number');
   } else if (p === Prop.LRV_CAMERA) s.liftoffSequence = arr(s.liftoffSequence);
   else if (p === Prop.SOJ_APXS) s.targets = arr(s.targets).map((t) => ({ name: '?', rockType: '', finding: '', ...(t || {}), composition: arr(t?.composition) }));
-  else if (p === Prop.SOJ_HAZARD || p === Prop.SOJ_DRIVE) s.obstacles = arr(s.obstacles);
+  else if (p === Prop.SOJ_HAZARD) s.obstacles = arr(s.obstacles);
+  else if (p === Prop.SOJ_DRIVE) {
+    s.obstacles = arr(s.obstacles); s.lander = pt(s.lander, { x: 0.5, y: 0.5 });
+    s.legs = arr(s.legs).map((l, i) => ({ label: `Leg ${i + 1}`, sols: '', distanceM: 0, ...(l || {}), path: arr(l?.path).length >= 2 ? l.path : [{ x: 0.5, y: 0.5 }, { x: 0.6, y: 0.5 }], stops: arr(l?.stops) }));
+    if (!s.legs.length) s.legs = [{ label: 'No leg data', sols: '', distanceM: 0, path: [{ x: 0.5, y: 0.5 }, { x: 0.6, y: 0.5 }], stops: [] }];
+  }
   return s;
 }
 
@@ -252,75 +257,149 @@ const PANELS = {
     draw(g, t) { drawField(g, t, spec.obstacles, st); },
   }),
   [Prop.SOJ_DRIVE]: () => ({
-    hint: [['WASD/Arrows', 'aim'], ['Space', 'send'], ['2', 'stop'], ['Esc', 'close']],
-    controls: [{ label: 'Send waypoint', sub: '1 / Space', run: () => sendDrive() }, { label: 'Stop', sub: '2', run: () => act(A.DRIVE_STOP) }],
-    rows: () => [
-      { label: 'Phase', value: st.phase }, { label: 'Signal', value: st.phase === 'signal' ? `${LATENCY.LABEL} ${f1(st.signal * 100, 0)}%` : LATENCY.LABEL },
-      { label: 'Odometer', value: `${f1(st.odometerM, 2)} m (mission ~${spec.totalTraverseM} m)` }, { label: 'Speed', value: `max ${spec.maxSpeedCmS} cm/s (scene time compressed)` },
-      { label: 'Tilt', value: `${f1(st.tiltDeg, 0)} deg` }, { label: 'Note', value: spec.commandNote },
+    // HISTORICAL replay: Sojourner has been silent since 27 Sep 1997 and never moves in the game.
+    controls: [
+      ...spec.legs.map((l, i) => ({ label: `${l.label}`, sub: l.sols || '', run: () => act(A.DRIVE_SELECT, i) })),
+      { label: 'Play / Pause', run: () => act(st.playing ? A.DRIVE_PAUSE : A.DRIVE_PLAY) },
+      { label: 'Reset', run: () => act(A.DRIVE_RESET) },
     ],
-    onKey(a) {
-      const d = { up: [0, -6], down: [0, 6], left: [-6, 0], right: [6, 0] }[a]; if (!d) return false;
-      cursor.x = clamp(cursor.x + d[0], 4, CANVAS_W - 4); cursor.y = clamp(cursor.y + d[1], 56, 176); ctx.audio.play(Sfx.CURSOR); return true;
+    hint: [['W/S', 'choose'], ['Space', 'do'], ['1-9', 'quick'], ['Esc', 'close']],
+    rows: () => {
+      const leg = spec.legs[st.legIndex || 0];
+      return [
+        { label: 'Leg', value: leg ? `${leg.label} (${leg.sols || ''})` : '-' },
+        { label: 'Sol', value: st.sol ?? '-' }, { label: 'Distance', value: `${f1(st.distanceM ?? 0, 1)} m of ${f1(leg?.distanceM ?? 0, 1)} m` },
+        { label: 'Range to lander', value: `${f1(st.rangeToLanderM ?? 0, 1)} m (max ${spec.maxFromLanderM} m)` },
+        { label: 'Stop', value: st.stop || '-' }, { label: 'Last contact', value: spec.lastContactUtc || '1997-09-27' },
+      ];
     },
-    draw(g, t) { drawField(g, t, spec.obstacles, st, true); },
+    draw(g, t) {
+      frame(g);
+      const leg = spec.legs[st.legIndex || 0]; if (!leg) return;
+      const P = (p) => [p.x * CW, p.y * CH];
+      // lander
+      const [lx, ly] = P(spec.lander); g.fillStyle = '#b07a4a'; g.fillRect(Math.round(lx) - 6, Math.round(ly) - 4, 13, 9); drawText(g, 'LANDER', Math.round(lx) - 11, Math.round(ly) + 7, '#ffd166');
+      const pts = leg.path.map(P);
+      g.strokeStyle = '#5a6f9c'; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
+      const tt = clamp(st.t ?? 0, 0, 1), seg = tt * (pts.length - 1);
+      g.strokeStyle = '#ffd166'; g.beginPath();
+      for (let i = 0; i <= Math.floor(seg) && i < pts.length; i++) (i ? g.lineTo(pts[i][0], pts[i][1]) : g.moveTo(pts[i][0], pts[i][1]));
+      const pos = st.pos ? P(st.pos) : pts[0]; g.lineTo(pos[0], pos[1]); g.stroke();
+      leg.stops.forEach((s) => {
+        const k = clamp(s.at ?? 0, 0, 1) * (pts.length - 1), a = Math.min(pts.length - 2, Math.floor(k)), p0 = pts[a], p1 = pts[a + 1];
+        const x = p0[0] + (p1[0] - p0[0]) * (k - a), y = p0[1] + (p1[1] - p0[1]) * (k - a);
+        g.fillStyle = '#5fe0a0'; g.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3);
+        drawText(g, String(s.name).slice(0, 12), Math.round(x) + 4, Math.round(y) - 7, '#5fe0a0');
+      });
+      g.fillStyle = '#fff'; g.fillRect(Math.round(pos[0]) - 2, Math.round(pos[1]) - 2, 5, 5);
+      drawText(g, '1997 TRAVERSE REPLAY (TRACED)', 4, 4, '#8fb4e8');
+      // closing card after the final leg
+      if (st.legIndex === spec.legs.length - 1 && tt >= 0.999) {
+        g.fillStyle = 'rgba(0,0,0,0.85)'; g.fillRect(14, 28, 212, 78); g.strokeStyle = '#ff6b5a'; g.strokeRect(14.5, 28.5, 211, 77);
+        drawText(g, 'LAST CONTACT 27 SEP 1997', 22, 34, '#ff6b5a', 1);
+        wrapLabel(spec.fate || 'Contact was lost and never regained.', 49).slice(0, 12).forEach((ln, i) => drawText(g, ln, 22, 46 + i * 6, '#e6edf5'));
+        if (Math.floor(t * 2) % 2) drawText(g, '_', 22, 98, '#ff6b5a');
+      }
+    },
   }),
 };
 
-function sendDrive() { act(A.DRIVE_GOTO, { x: cursor.x, y: cursor.y }); }
-
-function drawField(g, t, obstacles, s, drive) {
+function drawField(g, t, obstacles, s) {
   frame(g); g.fillStyle = '#5a2c14'; g.fillRect(0, 0, CW, CH);
   const rv = roverScene(); const X = (v) => Math.round(v * K), Y = (v) => Math.round(v * K);
   g.fillStyle = '#3a1a0c'; for (const r of obstacles || []) g.fillRect(X(r.x), Y(r.y), Math.max(2, Math.round(r.w * K)), Math.max(2, Math.round(r.h * K)));
   try { const lp = ctx.data.getPropSpec(Prop.SOJ_DRIVE).landerPos; if (lp) { g.fillStyle = '#b07a4a'; g.fillRect(X(lp.x) - 12, Y(lp.y) - 8, 24, 16); drawText(g, 'LANDER', X(lp.x) - 11, Y(lp.y) - 2, '#000'); } } catch { /* none */ }
-  const dir = 1;
-  if (s.stripes) s.stripes.forEach((sr, i) => { g.fillStyle = sr.hit ? '#ff3b3b' : '#ff9a9a'; g.globalAlpha = s.scanning ? 0.9 : 0.45; g.fillRect(X(rv.x + 12 * dir), Y(rv.y - 8 + i * 4), Math.max(2, Math.round((sr.distPx ?? 30) * K * Math.min(1, (s.progress ?? 1) * 1.4 + 0.2))), 1); g.globalAlpha = 1; });
-  if (drive) {
-    if (s.target) { g.fillStyle = '#ffd166'; g.fillRect(X(s.target.x) - 3, Y(s.target.y), 7, 1); g.fillRect(X(s.target.x), Y(s.target.y) - 3, 1, 7); }
-    g.fillStyle = Math.floor(t * 4) % 2 ? '#fff' : '#3dd6f5'; const cx = X(cursor.x), cy = Y(cursor.y);
-    g.fillRect(cx - 5, cy, 4, 1); g.fillRect(cx + 2, cy, 4, 1); g.fillRect(cx, cy - 5, 1, 4); g.fillRect(cx, cy + 2, 1, 4);
-    if (s.phase === 'signal') { bar(g, 10, 120, 100, 8, s.signal, '#3dd6f5'); drawText(g, LATENCY.LABEL, 10, 110, '#3dd6f5'); }
-  }
-  if (s.detour) { g.fillStyle = '#5fe0a0'; g.fillRect(X(rv.x + 14), Y(rv.y + (s.detour === 'left' ? -14 : 14)), 18, 2); }
+  (s.stripes || []).forEach((sr, i) => { g.fillStyle = sr.hit ? '#ff3b3b' : '#ff9a9a'; g.globalAlpha = s.scanning ? 0.9 : 0.45; g.fillRect(X(rv.x + 12), Y(rv.y - 8 + i * 4), Math.max(2, Math.round((sr.distPx ?? 30) * K * Math.min(1, (s.progress ?? 1) * 1.4 + 0.2))), 1); g.globalAlpha = 1; });
+  if (s.detour) { g.fillStyle = '#5fe0a0'; g.fillRect(X(rv.x + 14), Y(rv.y + (s.detour === 'left' ? -14 : 14)), 18, 2); drawText(g, `1997 SOFTWARE WOULD DETOUR ${String(s.detour).toUpperCase()}`, 4, 14, '#5fe0a0'); }
   g.fillStyle = '#d8a24a'; g.fillRect(X(rv.x) - 4, Y(rv.y) - 3, 9, 7);
-  drawText(g, drive ? 'ARROWS: AIM   SPACE: SEND' : 'HAZARD SCAN (TOP VIEW)', 4, 4, '#ffe9c0');
+  drawText(g, 'HAZARD SCAN (ROVER STAYS PARKED)', 4, 4, '#ffe9c0');
 }
+
+/* ---------------- instances (several panels can be live at once) ---------------- */
+function makeInst(p) {
+  const i = { prop: p, spec: normSpec(p, ctx.data.getPropSpec(p)), st: ctx.engine.propOpen(p) || {}, hist: 0, ctl: 0, panel: null, warn: false };
+  use(i); try { i.panel = PANELS[p](); } catch (e) { i.panel = { controls: [], rows: () => [], draw() {} }; console.warn('prop panel build failed', p, e); }
+  const px = pixCanvas(CW, CH, 'prop-cv'); i.cv = px; save(i);
+  return i;
+}
+function use(i) { prop = i.prop; spec = i.spec; st = i.st; hist = i.hist; panel = i.panel; }
+function save(i) { i.st = st; i.hist = hist; }
+function tickInst(i, dt) {
+  use(i);
+  try { st = ctx.engine.propTick(prop, dt) || st; panel.draw(i.cv.g, ctx.time); } catch (err) { if (!i.warn) { i.warn = true; console.warn('prop panel draw failed', err); } }
+  save(i);
+}
+function rowsOf(i) { use(i); try { return panel.rows(); } catch { return []; } }
+function runCtl(i, idx) { use(i); const c = panel.controls[idx]; if (c) c.run(); save(i); }
+function keyInst(i, a) { use(i); const r = !!panel.onKey?.(a); save(i); return r; }
+const closeInst = (i) => ctx.engine.propClose(i.prop);
 
 export const propPanel = {
   enter({ prop: p }) {
-    prop = p; spec = normSpec(p, ctx.data.getPropSpec(p)); st = ctx.engine.propOpen(p); hist = 0;
-    const rv = roverScene(); cursor = { x: Math.round(rv.x + 30), y: Math.round(rv.y) };
-    panel = PANELS[p]();
-    const px = pixCanvas(CW, CH, 'prop-cv'); cv = px;
+    P = makeInst(p); use(P);
     menu = new Menu({
       cls: 'pmenu', items: [...panel.controls.map((c) => ({ label: c.label, sub: c.sub })), { label: 'Close panel', sub: 'Esc' }],
-      onPick: (i) => { if (i >= panel.controls.length) { ctx.audio.play(Sfx.CANCEL); ctx.back(); } else panel.controls[i].run(); },
+      onPick: (i) => { if (i >= P.panel.controls.length) { ctx.audio.play(Sfx.CANCEL); ctx.back(); } else runCtl(P, i); },
     });
     rowsEl = h('div', { class: 'prow' }); rowT = 0;
     const arch = ctx.engine.game.mode === Mode.ARCHIVIST;
     root = h('div', { class: 'screen dock' }, h('div', { class: 'card prop' },
-      h('div', { class: 'card-title' }, h('span', { class: 'chip' }, 'HARDWARE'), spec.title),
-      h('p', { class: 'blurb' }, spec.blurb), arch ? h('p', { class: 'blurb arch-p' }, spec.archivist) : null,
-      h('div', { class: 'pcols' }, h('div', null, px.c, rowsEl), menu.el),
-      h('div', { class: 'foot' }, (panel.hint || [['W/S', 'choose'], ['Space', 'do'], ['1-9', 'quick'], ['Esc', 'close']]).map(([k, t]) => [h('span', { class: 'key' }, k), ` ${t}  `]))));
-    mount(root); refreshRows();
+      h('div', { class: 'card-title' }, h('span', { class: 'chip' }, 'HARDWARE'), P.spec.title),
+      h('p', { class: 'blurb' }, P.spec.blurb), arch ? h('p', { class: 'blurb arch-p' }, P.spec.archivist) : null,
+      h('div', { class: 'pcols' }, h('div', null, P.cv.c, rowsEl), menu.el),
+      h('div', { class: 'foot' }, (P.panel.hint || [['W/S', 'choose'], ['Space', 'do'], ['1-9', 'quick'], ['Esc', 'close']]).map(([k, t]) => [h('span', { class: 'key' }, k), ` ${t}  `]))));
+    mount(root); rowsEl.appendChild(kvTable(rowsOf(P)));
   },
-  exit() { ctx.engine.propClose(prop); unmount(root); },
+  exit() { closeInst(P); unmount(root); },
   update(dt) {
-    st = ctx.engine.propTick(prop, dt) || st;
-    try { panel.draw(cv.g, ctx.time); rowT -= dt; if (rowT <= 0) { rowT = 0.1; refreshRows(); } } catch (err) { if (!warned) { warned = true; console.warn('prop panel draw failed', err); } }
+    tickInst(P, dt);
+    rowT -= dt; if (rowT <= 0) { rowT = 0.1; rowsEl.replaceChildren(kvTable(rowsOf(P))); }
   },
   action(a, e) {
-    if (panel.onKey?.(a)) return;
+    if (keyInst(P, a)) return;
     if (a === 'up') menu.move(-1); else if (a === 'down') menu.move(1);
-    else if (a === 'confirm') { if (prop === Prop.SOJ_DRIVE) sendDrive(); else menu.pick(); }
-    else if (a === 'num' && e.digit <= panel.controls.length) { menu.index = e.digit - 1; menu.render(); menu.pick(); }
+    else if (a === 'confirm') menu.pick();
+    else if (a === 'num' && e.digit <= P.panel.controls.length) { menu.index = e.digit - 1; menu.render(); menu.pick(); }
     else if (a === 'pause' || a === 'notebook') { ctx.audio.play(Sfx.CANCEL); ctx.back(); }
   },
 };
 
-function refreshRows() {
-  const rows = panel.rows(); rowsEl.textContent = '';
-  rowsEl.appendChild(kvTable(rows));
+/**
+ * Combined hardware grid (all panels of one robot visible together). Keyboard focus is owned by the
+ * caller: setFocus(i) highlights panel i; action() drives the focused panel
+ * (W/S choose a control, Space runs it, A/D panel-specific).
+ */
+export function createHardware(ids) {
+  const insts = ids.map(makeInst);
+  const cards = insts.map((i, n) => {
+    const title = h('div', { class: 'hw-title' }, h('b', null, String(n + 2)), ' ', i.spec.title);
+    const rows = h('div', { class: 'hw-rows' }); const ctl = h('div', { class: 'hw-ctl' });
+    return { i, el: h('div', { class: 'hw' }, title, i.cv.c, rows, ctl), rows, ctl };
+  });
+  let focus = -1, t = 0;
+  const refresh = () => {
+    cards.forEach((c, n) => {
+      c.el.classList.toggle('focus', n === focus);
+      const r = rowsOf(c.i).slice(0, 3);
+      c.rows.replaceChildren(...r.map((x) => h('div', null, h('span', null, x.label), h('em', null, String(x.value)))));
+      use(c.i); const cc = c.i.panel.controls[c.i.ctl];
+      c.ctl.replaceChildren(h('span', { class: 'ctl-k' }, n === focus ? 'W/S Space' : String(n + 2)), cc ? `${cc.label}${cc.sub ? ' - ' + cc.sub : ''}` : '-');
+    });
+  };
+  refresh();
+  return {
+    el: h('div', { class: 'hwgrid' }, cards.map((c) => c.el)),
+    count: cards.length,
+    update(dt) { insts.forEach((i) => tickInst(i, dt)); t -= dt; if (t <= 0) { t = 0.12; refresh(); } },
+    setFocus(n) { focus = n; refresh(); },
+    action(a) {
+      const c = cards[focus]; if (!c) return;
+      if (keyInst(c.i, a)) { refresh(); return; }
+      use(c.i); const n = c.i.panel.controls.length; if (!n) return;
+      if (a === 'up' || a === 'down') { c.i.ctl = (c.i.ctl + (a === 'up' ? -1 : 1) + n) % n; ctx.audio.play(Sfx.CURSOR); }
+      else if (a === 'confirm') runCtl(c.i, c.i.ctl);
+      refresh();
+    },
+    close() { insts.forEach(closeInst); },
+  };
 }

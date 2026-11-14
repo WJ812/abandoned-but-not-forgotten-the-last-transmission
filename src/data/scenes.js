@@ -53,25 +53,23 @@ const HUB = {
 };
 
 /* =====================================================================
- * MOON: Taurus-Littrow, Apollo 17. Massifs painted above y=56.
- * LRV drawn ~2x hero scale (3.1 m * 12 px/m * 2 = ~74 px long).
- * Its interactables sit around the body, one per side/corner, spaced so
- * that only one is in range at a time.
+ * MOON: Taurus-Littrow. REAL ART: 'Artwork/Scenes/moon_location.png', 360x180.
+ * Horizon at y~80 (Earth in the sky). Crater dark interiors are SHADOW zones
+ * (walkable; black until the headlamp is on). LRV = 'rover_lrv' 70x70 sprite,
+ * drawn bottom-aligned on its hotspot; its footprint is solid and is the ONE
+ * LRV hotspot (dialogue + nav/battery/camera/fender on one combined screen).
+ * Clickables: LRV, blueprint (inside the right-lower crater shadow), return pad.
  * ===================================================================== */
-const MOON_WALKABLE = R(4, 56, 312, 120);
-const MOON_LRV_BODY = R(152, 98, 72, 28);         // chassis + wheels (solid)
-const MOON_LRV_TALK = R(140, 100, 12, 24);        // front end: the rover "faces" left
-const MOON_LRV_NAV = R(152, 88, 20, 10);          // console, top-left of the body
-const MOON_LRV_CAMERA = R(204, 88, 20, 10);       // GCTA mast, top-right
-const MOON_LRV_BATTERY = R(152, 126, 20, 10);     // battery panel, bottom-left
-const MOON_LRV_FENDER = R(204, 126, 20, 10);      // right-rear fender, bottom-right
-const MOON_BLUEPRINT = R(250, 140, 12, 12);
-const MOON_RETURN = R(16, 152, 24, 12);
-const MOON_BOULDER = R(108, 140, 22, 14);         // split boulder (North Massif debris)
-const MOON_ROCK_A = R(284, 150, 18, 12);
-const MOON_ROCK_B = R(12, 64, 14, 10);
-const MOON_CRATER_BIG = R(36, 62, 60, 30);        // shadowed crater, walkable
-const MOON_CRATER_SMALL = R(272, 112, 38, 24);    // "Shorty"-style crater, walkable
+const MOON_WALKABLE = R(4, 92, 352, 86);
+const MOON_LRV = R(200, 116, 70, 24);             // bottom 70x24 of the 70x70 sprite
+const MOON_BLUEPRINT = R(300, 147, 12, 12);       // inside the right-lower crater shadow
+const MOON_RETURN = R(170, 162, 24, 12);
+const MOON_SH_BIG = R(22, 125, 83, 35);           // big crater interior (rim 15-150, 115-165)
+const MOON_SH_TOPLEFT = R(37, 90, 43, 10);
+const MOON_SH_TOPMID = R(135, 95, 35, 8);
+const MOON_SH_MID = R(110, 125, 30, 23);
+const MOON_SH_RIGHTLOW = R(283, 144, 47, 18);
+const MOON_SH_FARRIGHT = R(318, 84, 32, 8);
 
 const MOON = {
   region: Region.MOON,
@@ -79,39 +77,45 @@ const MOON = {
   w: CANVAS_W, h: CANVAS_H,
   background: 'scene_moon',
   surface: Surface.REGOLITH,
-  spawn: { x: 52, y: 136, facing: Dir.RIGHT },
+  spawn: { x: 200, y: 148, facing: Dir.UP },
   walkable: MOON_WALKABLE,
-  solids: [MOON_LRV_BODY, MOON_BOULDER, MOON_ROCK_A, MOON_ROCK_B],
-  shadows: [MOON_CRATER_BIG, MOON_CRATER_SMALL, R(152, 126, 72, 4) /* LRV underbody */],
+  solids: [],
+  shadows: [MOON_SH_BIG, MOON_SH_TOPLEFT, MOON_SH_TOPMID, MOON_SH_MID, MOON_SH_RIGHTLOW, MOON_SH_FARRIGHT],
   hotspots: [
-    hs('moon.lrv', K.ROBOT, MOON_LRV_TALK, T.PRESS, Robot.LRV, false, 'Talk to LRV-3'),
-    hs('moon.lrv.nav', K.PROP, MOON_LRV_NAV, T.PRESS, Prop.LRV_NAV, false, 'Nav console'),
-    hs('moon.lrv.camera', K.PROP, MOON_LRV_CAMERA, T.PRESS, Prop.LRV_CAMERA, false, 'TV camera (GCTA)'),
-    hs('moon.lrv.battery', K.PROP, MOON_LRV_BATTERY, T.PRESS, Prop.LRV_BATTERY, false, 'Battery panel'),
-    hs('moon.lrv.fender', K.PROP, MOON_LRV_FENDER, T.PRESS, Prop.LRV_FENDER, false, 'Repaired fender'),
+    hs('moon.lrv', K.ROBOT, MOON_LRV, T.PRESS, Robot.LRV, true, 'LRV-3'),
     hs('moon.blueprint', K.BLUEPRINT, MOON_BLUEPRINT, T.PRESS, Blueprint.LRV, false, 'Scan LRV blueprint'),
-    hs('moon.return', K.RETURN_PAD, MOON_RETURN, T.STEP, 0, false, 'Return to Hub'),
+    hs('moon.return', K.RETURN_PAD, MOON_RETURN, T.PRESS, 0, false, 'Return to Hub'),
   ],
   facts: [
     {
-      id: 0, rect: R(44, 66, 44, 22), title: 'Darker than night',
-      explorer: 'With no air to scatter sunlight, shadows on the Moon are pitch black. Press F to switch on your headlamp and see what hides inside.',
-      archivist: 'On Earth, air scatters sunlight into every shadow. In the Moon\'s near-vacuum, shadows only get light reflected off nearby ground, so they look black next to the 120 C sunlit regolith.',
-    },
-    {
-      id: 1, rect: R(96, 128, 50, 44), title: 'Boulders from the mountains',
-      explorer: 'Boulders like this one rolled down from the North Massif. At Station 6 the crew sampled a giant boulder that had split apart.',
-      archivist: 'The North Massif boulders are breccias: older rocks smashed and welded together by huge impacts. Their ages helped date the impact that formed the Serenitatis basin.',
-    },
-    {
-      id: 2, rect: R(262, 106, 54, 36), title: 'Orange soil',
-      explorer: 'At Shorty crater, Jack Schmitt shouted that the ground was orange! The color came from tiny beads of volcanic glass, sprayed out by ancient fire fountains.',
-      archivist: 'Shorty is about 110 m across. Its orange and black glass beads formed in volcanic fire fountains about 3.6 billion years ago; the impact that made Shorty dug them up.',
-    },
-    {
-      id: 3, rect: R(232, 56, 64, 20), title: 'Earth in the sky',
-      explorer: 'Look up! From here, Earth hangs in nearly the same spot in the sky all the time, because the Moon always keeps the same face turned toward us.',
+      id: 0, rect: R(276, 96, 40, 16), title: 'Earth in a black sky',
+      explorer: 'With no air to scatter sunlight, the sky is black even in daytime. Earth hangs in nearly the same spot all the time, because the Moon always keeps the same face toward us.',
       archivist: 'Tidal locking: the Moon spins once per orbit, every 27.3 days. From Taurus-Littrow, on the near side, Earth stays high in the sky and only wobbles slightly.',
+    },
+    {
+      id: 1, rect: R(30, 130, 60, 24), title: 'A big impact crater',
+      explorer: 'Craters like this one were blasted out by asteroids and comets. With no wind or rain to wear them down, they can last for billions of years.',
+      archivist: 'At Taurus-Littrow the crew sampled craters of many sizes. Impacts dig up deeper material; Shorty crater, about 110 m across, exposed buried orange volcanic glass.',
+    },
+    {
+      id: 2, rect: R(112, 128, 26, 18), title: 'Darker than night',
+      explorer: 'With no air to scatter sunlight, shadows on the Moon are pitch black. Press F to switch on your headlamp and see what hides inside.',
+      archivist: 'On Earth, air scatters sunlight into every shadow. In the Moon\'s near-vacuum, shadows only get light reflected off nearby ground, so they look black beside the sunlit regolith.',
+    },
+    {
+      id: 3, rect: R(38, 93, 40, 12), title: 'Craters on craters',
+      explorer: 'Space rocks hit the Moon all the time, leaving craters of every size, from bowls you could step over to basins hundreds of kilometers wide.',
+      archivist: 'Constant small impacts slowly churn the top layer of soil, called gardening. Counting craters tells scientists roughly how old a surface is: more craters, older surface.',
+    },
+    {
+      id: 4, rect: R(146, 108, 44, 18), title: 'Regolith',
+      explorer: 'The gray ground is regolith: rock dust and broken pieces made by billions of years of impacts. It is fine like flour, sharp, and clings to everything, including spacesuits.',
+      archivist: 'Regolith grains stay jagged because no wind or water rounds them. Apollo crews found the dust scratched visors, clogged seals, and stuck to every surface it touched.',
+    },
+    {
+      id: 5, rect: R(236, 150, 40, 22), title: 'Taurus-Littrow valley',
+      explorer: 'This valley is walled by mountains called massifs, taller than the Grand Canyon is deep. Apollo 17 landed here in December 1972 to study old mountain rock and volcanic soil.',
+      archivist: 'The massifs are crust uplifted by the impact that formed the Serenitatis basin. The valley floor is dark volcanic basalt about 3.7 to 3.8 billion years old.',
     },
   ],
 };
@@ -119,12 +123,11 @@ const MOON = {
 /* =====================================================================
  * MARS: Ares Vallis. REAL ART: 'Artwork/Scenes/mars_location.png', 360x180.
  * Painted: left ridge, open dunes, Big Crater rim (right), rocks R1-R6.
- * NOT painted (drawn as sprites): Pathfinder lander, Sojourner, return pad,
- * blueprint. Clickables per the user: Sojourner (talk), its hardware panels
- * (solar and hazard ride on the rover; drive is the fixed lander relay; APXS on two rocks), the
- * blueprint, and the return pad. Nothing else.
- * Barnacle Bill -> R2, Yogi -> R5 (game mapping; the real rocks sat a few m
- * from the lander).
+ * NOT painted (drawn as sprites): Pathfinder lander, Sojourner ('rover_sojourner'
+ * 70x70, bottom-aligned on its hotspot), return pad, blueprint.
+ * Clickables: Sojourner (ONE combined screen: dialogue + solar, APXS, hazard,
+ * drive log), the blueprint, and the return pad (PRESS). Nothing else.
+ * Rock names used by the APXS panel: Barnacle Bill ~ R2, Yogi ~ R5.
  * ===================================================================== */
 const MARS_WALKABLE = R(4, 110, 352, 68);         // ground band; sky/slopes above
 const MARS_RIDGE_BASE = R(0, 105, 45, 15);        // left ridge meets the ground
@@ -136,14 +139,9 @@ const MARS_R5 = R(254, 147, 36, 20);              // biggest rock, "Yogi"
 const MARS_R6 = R(328, 153, 10, 7);
 // R3 pebble (84-90, 150-155) is decor only: not solid, not interactive.
 const MARS_LANDER = R(110, 112, 48, 28);          // pathfinder_lander sprite (48x28)
-const MARS_ROVER = R(184, 140, 24, 14);           // sojourner_body sprite start
-const MARS_SOLAR = R(184, 132, 24, 8);            // panel on top of the rover
-const MARS_HAZARD = R(208, 140, 6, 14);           // front laser windows (right)
-const MARS_DRIVE = R(158, 124, 6, 14);            // lander relay (fixed): waypoint drive
-const MARS_BB_APXS = R(82, 140, 8, 20);           // R2 right (near) edge
-const MARS_YOGI_APXS = R(254, 139, 36, 8);        // R5 top (near) edge
-const MARS_BLUEPRINT = R(214, 120, 12, 12);
-const MARS_RETURN = R(16, 160, 24, 12);
+const MARS_ROVER = R(162, 146, 70, 22);           // bottom 70x22 of the 70x70 sprite (sprite 162-232, 98-168)
+const MARS_BLUEPRINT = R(300, 152, 12, 12);
+const MARS_RETURN = R(4, 164, 24, 12);
 
 /** Lander + solid rocks the hazard scan and drive planner see (shared with props.js). */
 export const MARS_OBSTACLES = deepFreeze([MARS_LANDER, MARS_R1, MARS_R2, MARS_R4, MARS_R5, MARS_R6]);
@@ -156,19 +154,14 @@ const MARS = {
   w: CANVAS_W, h: CANVAS_H,
   background: 'scene_mars',
   surface: Surface.SAND,
-  spawn: { x: 40, y: 148, facing: Dir.RIGHT },
+  spawn: { x: 34, y: 150, facing: Dir.RIGHT },
   walkable: MARS_WALKABLE,
   solids: [MARS_RIDGE_BASE, MARS_CRATER_RIM, MARS_R1, MARS_R2, MARS_R4, MARS_R5, MARS_R6, MARS_LANDER],
   shadows: [],
   hotspots: [
-    hs('mars.sojourner', K.ROBOT, MARS_ROVER, T.PRESS, Robot.SOJOURNER, false, 'Talk to Sojourner', { facing: Dir.UP }),
-    hs('mars.solar', K.PROP, MARS_SOLAR, T.PRESS, Prop.SOJ_SOLAR, false, 'Solar panel', { facing: Dir.DOWN }),
-    hs('mars.hazard', K.PROP, MARS_HAZARD, T.PRESS, Prop.SOJ_HAZARD, false, 'Hazard lasers', { facing: Dir.LEFT }),
-    hs('mars.drive', K.PROP, MARS_DRIVE, T.PRESS, Prop.SOJ_DRIVE, false, 'Lander relay: drive rover', { facing: Dir.LEFT }),
-    hs('mars.apxs.bb', K.PROP, MARS_BB_APXS, T.PRESS, Prop.SOJ_APXS, false, 'APXS: Barnacle Bill', { arg: 0 }),
-    hs('mars.apxs.yogi', K.PROP, MARS_YOGI_APXS, T.PRESS, Prop.SOJ_APXS, false, 'APXS: Yogi', { arg: 1 }),
+    hs('mars.sojourner', K.ROBOT, MARS_ROVER, T.PRESS, Robot.SOJOURNER, true, 'Sojourner'),
     hs('mars.blueprint', K.BLUEPRINT, MARS_BLUEPRINT, T.PRESS, Blueprint.SOJOURNER, false, 'Scan Sojourner blueprint'),
-    hs('mars.return', K.RETURN_PAD, MARS_RETURN, T.STEP, 0, false, 'Return to Hub'),
+    hs('mars.return', K.RETURN_PAD, MARS_RETURN, T.PRESS, 0, false, 'Return to Hub'),
   ],
   facts: [
     {
@@ -182,7 +175,7 @@ const MARS = {
       archivist: 'Ares Vallis is an outflow channel. Lander images showed imbricated rocks, stacked and tilted in the downstream direction, a classic sign of catastrophic flooding.',
     },
     {
-      id: 2, rect: R(124, 160, 56, 18), title: 'Freezing cold',
+      id: 2, rect: R(110, 152, 44, 14), title: 'Freezing cold',
       explorer: 'Even on summer afternoons the air here stayed below freezing, and nights fell to about minus 75 degrees Celsius. Thin air cannot hold on to the day\'s heat.',
       archivist: 'Pathfinder carried thermometers at three heights on its weather mast. They showed the air could change by many degrees over just one meter, and swing about 60 C from day to night.',
     },

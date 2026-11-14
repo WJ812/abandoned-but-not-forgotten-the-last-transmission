@@ -1,11 +1,11 @@
 /** Hub / Region screens (the walkable world) plus fact pop-up and portal menu. */
 import {
-  CANVAS_W, CANVAS_H, EVT, Screen, Region, HotspotKind, Station, Sfx, Surface, Mode, HOP_REGIONS, GRAVITY_G,
+  CANVAS_W, CANVAS_H, EVT, Screen, Region, HotspotKind, Station, Sfx, Surface, Mode, Prop, Robot, HOP_REGIONS, GRAVITY_G,
 } from '../contract.js';
 import { ctx } from '../gfx/ctx.js';
 import { takeFrame } from '../gfx/input.js';
 import { getSceneCached } from '../gfx/renderer.js';
-import { h, mount, unmount, Menu, Typer } from './dom.js';
+import { h, mount, unmount, Menu, Typer, spriteCanvas, at } from './dom.js';
 
 let prompt = null, promptId = '', sceneRef = null, pendingEvt = 0;
 
@@ -50,10 +50,15 @@ export function interact(hot) {
       else if (hot.ref === Station.NOTEBOOK) { A.play(Sfx.NOTEBOOK); ctx.go(Screen.ARCHIVE_COMPUTER, { tab: 'notebook' }); }
       else ctx.toast(hot.caption || hot.label);
       break;
-    case HotspotKind.PROP: A.play(Sfx.PROP_OPEN); ctx.go(Screen.PROP_PANEL, { prop: hot.ref }); break;
+    case HotspotKind.PROP:
+      A.play(Sfx.PROP_OPEN);
+      if (hot.ref <= Prop.LRV_FENDER) ctx.go(Screen.DIALOGUE, { robot: Robot.LRV });          // hardware lives on the combined rover screen
+      else if (hot.ref === Prop.SOJ_APXS || hot.ref === Prop.SOJ_SOLAR || hot.ref === Prop.SOJ_HAZARD || hot.ref === Prop.SOJ_DRIVE) ctx.go(Screen.DIALOGUE, { robot: Robot.SOJOURNER });
+      else ctx.go(Screen.PROP_PANEL, { prop: hot.ref });
+      break;
     case HotspotKind.DECOR: A.play(Sfx.CURSOR); ctx.toast(hot.caption || hot.label); break;
     case HotspotKind.PORTAL: A.play(Sfx.PORTAL); ctx.go(Screen.PORTAL_MENU); break;
-    case HotspotKind.RETURN_PAD: returnToHub(); break;
+    case HotspotKind.RETURN_PAD: A.play(Sfx.CONFIRM); ctx.go('confirmReturn'); break;
     default: break;
   }
 }
@@ -124,39 +129,61 @@ export const factPopup = {
   },
 };
 
-/* ---------------- Portal dropdown ---------------- */
-let portalRoot, portalMenu, portalStats;
+/* ---------------- Return-to-hub confirmation ---------------- */
+let rcRoot, rcMenu;
+export const confirmReturn = {
+  enter() {
+    rcMenu = new Menu({ cls: 'big', items: [{ label: 'Yes, return to the Hub' }, { label: 'No, stay here' }], onPick: (i) => { if (i === 0) returnToHub(); else { ctx.audio.play(Sfx.CANCEL); ctx.back(); } } });
+    rcMenu.index = 1; rcMenu.render();
+    rcRoot = h('div', { class: 'screen center dim' }, h('div', { class: 'card pause' }, h('div', { class: 'card-title' }, h('span', { class: 'chip cy' }, 'RETURN PAD'), 'RETURN TO HUB?'), rcMenu.el,
+      h('div', { class: 'foot' }, h('span', { class: 'key' }, 'W/S'), ' choose ', h('span', { class: 'key' }, 'Space'), ' confirm ', h('span', { class: 'key' }, 'Esc'), ' cancel')));
+    mount(rcRoot);
+  },
+  exit() { unmount(rcRoot); },
+  update() {},
+  action(a) {
+    if (a === 'up') rcMenu.move(-1); else if (a === 'down') rcMenu.move(1); else if (a === 'confirm') rcMenu.pick();
+    else if (a === 'pause') { ctx.audio.play(Sfx.CANCEL); ctx.back(); }
+  },
+};
+
+/* ---------------- Portal dropdown (image buttons) ---------------- */
+let portalRoot, portalIdx, portalBtns, portalStats;
 const PORTAL_REGIONS = [Region.MOON, Region.MARS];
+const PORTAL_ART = ['btn_portal_moon', 'btn_portal_mars'];
+function portalRender() { portalBtns.forEach((b, i) => b.classList.toggle('sel', i === portalIdx)); }
+function portalGo() {
+  ctx.audio.play(Sfx.PORTAL); ctx.flash('cyan');
+  ctx.engine.enterRegion(PORTAL_REGIONS[portalIdx]);
+  ctx.go(Screen.REGION);
+}
 export const portalMenuScreen = {
   enter() {
-    portalStats = PORTAL_REGIONS.map((r) => ctx.data.getRegionStats(r));
-    portalMenu = new Menu({
-      cls: 'drop-list',
-      items: portalStats.map((s, i) => ({ label: `${i + 1}. ${s.name.toUpperCase()}`, sub: s.site })),
-      onPick: (i) => {
-        ctx.audio.play(Sfx.PORTAL); ctx.flash('cyan');
-        ctx.engine.enterRegion(PORTAL_REGIONS[i]);
-        ctx.go(Screen.REGION);
-      },
-    });
+    portalStats = PORTAL_REGIONS.map((r) => ctx.data.getRegionStats(r)); portalIdx = 0;
+    portalBtns = PORTAL_ART.map((id, i) => h('li', { class: 'pbtn', onclick: () => { portalIdx = i; portalRender(); portalGo(); }, onmouseenter: () => { portalIdx = i; portalRender(); } },
+      spriteCanvas(id, 0, 'pbtn-art'), h('span', { class: 'pbtn-cap' }, `${i + 1}. ${portalStats[i].site}`)));
     const sc = getSceneCached(Region.HUB);
     const hot = sc.hotspots.find((x) => x.kind === HotspotKind.PORTAL);
     const r = hot ? hot.rect : { x: CANVAS_W / 2 - 20, y: 30, w: 40, h: 24 };
-    const cx = Math.max(16, Math.min(84, ((r.x + r.w / 2) / CANVAS_W) * 100));
+    // anchored beside the portal (below it when there is room), always fully on screen
+    const below = r.y + r.h + 3 < CANVAS_H * 0.5;
+    const left = below ? Math.max(4, Math.min(66, ((r.x + r.w / 2) / CANVAS_W) * 100 - 15)) : Math.min(66, ((r.x + r.w) / CANVAS_W) * 100 + 1);
+    const top = below ? ((r.y + r.h + 3) / CANVAS_H) * 100 : Math.max(10, Math.min(44, (r.y / CANVAS_H) * 100));
     portalRoot = h('div', { class: 'screen dropwrap' },
-      h('div', { class: 'dropdown', style: { left: `${cx}%`, top: `${((r.y + r.h + 3) / CANVAS_H) * 100}%` } },
+      h('div', { class: 'dropdown', style: { left: `${left}%`, top: `${top}%`, transform: 'none' } },
         h('div', { class: 'drop-head' }, h('span', null, 'DESTINATION'), h('span', { class: 'drop-caret' }, '▼')),
-        portalMenu.el,
+        h('ul', { class: 'pbtns' }, portalBtns),
         h('div', { class: 'foot' }, h('span', { class: 'key' }, 'W/S'), ' choose ', h('span', { class: 'key' }, 'Space'), ' go ', h('span', { class: 'key' }, 'Esc'), ' close')));
-    mount(portalRoot);
+    mount(portalRoot); portalRender();
   },
   exit() { unmount(portalRoot); },
   update() {},
   action(a, e) {
-    if (a === 'up') portalMenu.move(-1);
-    else if (a === 'down') portalMenu.move(1);
-    else if (a === 'confirm') portalMenu.pick();
-    else if (a === 'num' && e.digit <= PORTAL_REGIONS.length) { portalMenu.index = e.digit - 1; portalMenu.render(); portalMenu.pick(); }
+    const n = PORTAL_REGIONS.length;
+    if (a === 'up') { portalIdx = (portalIdx + n - 1) % n; ctx.audio.play(Sfx.CURSOR); portalRender(); }
+    else if (a === 'down') { portalIdx = (portalIdx + 1) % n; ctx.audio.play(Sfx.CURSOR); portalRender(); }
+    else if (a === 'confirm') portalGo();
+    else if (a === 'num' && e.digit <= n) { portalIdx = e.digit - 1; portalRender(); portalGo(); }
     else if (a === 'pause') { ctx.audio.play(Sfx.CANCEL); ctx.back(); }
   },
 };

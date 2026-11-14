@@ -6,9 +6,9 @@ These are open issues, deliberate limitations, and areas where bugs are likely i
 
 | Area | Issue | Status |
 |---|---|---|
-| Sojourner | We are changing Sojourner so it never moves, which matches reality: it has been silent since its last contact on 27 Sep 1997. Its drive panel will become a replay of its real 1997 drives. The change is half-done and has not been committed yet. | In progress |
-| Art | Several slots still show labeled placeholders until their art is supplied: the Pathfinder lander, return pads, the blueprint pickup, robot portraits, the title screen and buttons, HUD icons, the montage frames, and catalog icons. | Waiting on art |
-| Moon scene | The Moon's collision, shadow, and fact-zone layout is placeholder geometry. It doesn't match the new Moon art yet. | Next up |
+| Art | Several slots still show labeled placeholders until their art is supplied: the Pathfinder lander, return pads, the blueprint pickup, the LRV fender close-up, robot portraits, the title screen and buttons, HUD icons, the ending montage frames, and catalog icons. | Waiting on art |
+| Testing | No complete keyboard playthrough (title to ending) has been run in a browser yet. Each system is tested separately. | Next up |
+| Readability | The text in the rover hardware panels is small when the browser window is small. | Open |
 
 ## Expected bugs: areas to test closely
 

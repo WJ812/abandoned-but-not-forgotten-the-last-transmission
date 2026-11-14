@@ -68,7 +68,10 @@ function drawShadowMask(g, scene) {
   m.globalCompositeOperation = 'source-over';
   m.clearRect(0, 0, CANVAS_W, CANVAS_H);
   m.fillStyle = '#000';
-  for (const r of scene.shadows) m.fillRect(r.x, r.y, r.w, r.h);
+  // Crater floors are round in the scene art: fill each shadow rect as an inscribed ellipse.
+  for (const r of scene.shadows) {
+    m.beginPath(); m.ellipse(r.x + r.w / 2, r.y + r.h / 2, r.w / 2, r.h / 2, 0, 0, 6.2832); m.fill();
+  }
   const cone = ctx.engine.headlampCone();
   m.globalCompositeOperation = 'destination-out';
   m.fillStyle = '#000';
@@ -111,7 +114,7 @@ function drawHotspots(g, scene, bgReal, t) {
     if (h.kind === HotspotKind.RETURN_PAD) {
       const c = rectCenter(r); A.draw(g, 'return_pad', Math.floor(t * 3) % 2, c.x - 12, c.y - 6); continue;
     }
-    if (h.kind === HotspotKind.ROBOT && h.ref === Robot.SOJOURNER) continue;   // sprite drawn in drawRovers
+    if (h.kind === HotspotKind.ROBOT) continue;   // 70x70 rover sprite drawn by drawRover
     let asset = null;
     if (h.kind === HotspotKind.PORTAL) asset = 'station_portal';
     else if (h.kind === HotspotKind.STATION && STATION_ASSET[h.ref]) asset = STATION_ASSET[h.ref];
@@ -134,74 +137,59 @@ function drawHotspots(g, scene, bgReal, t) {
   }
 }
 
-/* ---------- Rover overlays (driven by prop state) ---------- */
+/* ---------- Rovers: 70x70 sprites, bottom-aligned and centered on the ROBOT hotspot ---------- */
+/** Sojourner has been silent since 27 Sep 1997: it is ALWAYS drawn at its hotspot and never moves. */
 export function sojournerPos(scene) {
-  const drive = ctx.engine.propState(Prop.SOJ_DRIVE);
   const h = findHotspot(scene, (x) => x.kind === HotspotKind.ROBOT && x.ref === Robot.SOJOURNER);
-  if (drive?.pos && (drive.phase !== 'idle' || drive.odometerM > 0)) return { x: drive.pos.x, y: drive.pos.y, hot: h };
   if (h) { const c = rectCenter(h.rect); return { x: c.x, y: c.y, hot: h }; }
   return null;
 }
-
-let lastSojX = 0, sojFlip = false;
-function drawRovers(g, scene, t) {
-  const E = ctx.engine; const A = ctx.assets; const region = scene.region;
-  if (region === Region.MOON) {
-    const lrv = findHotspot(scene, (x) => x.kind === HotspotKind.ROBOT && x.ref === Robot.LRV);
-    if (lrv) {
-      const cam = E.propState(Prop.LRV_CAMERA);
-      const pan = cam ? cam.panDeg : 0;
-      const frame = ((Math.round(pan / 45) % 8) + 8) % 8;
-      const r = lrv.rect;
-      A.draw(g, 'lrv_gcta', frame, r.x + r.w - 18, r.y - 7);
-      const fe = E.propState(Prop.LRV_FENDER);
-      if (fe && fe.dustIntensity > 0.05) {
-        for (let i = 0; i < 14; i++) {
-          const k = (t * 1.6 + i / 14) % 1;
-          g.fillStyle = `rgba(190,190,195,${(1 - k) * fe.dustIntensity})`;
-          g.fillRect(Math.round(r.x + 8 - k * 26), Math.round(r.y + r.h - 4 - Math.sin(k * 3.14) * (8 + 14 * fe.dustIntensity)), 2, 2);
-        }
+function roverSprite(scene) {
+  const robot = scene.region === Region.MOON ? Robot.LRV : scene.region === Region.MARS ? Robot.SOJOURNER : -1;
+  const h = robot < 0 ? null : findHotspot(scene, (x) => x.kind === HotspotKind.ROBOT && x.ref === robot);
+  if (!h) return null;
+  const id = robot === Robot.LRV ? 'rover_lrv' : 'rover_sojourner'; const s = ctx.assets.slotOf(id);
+  const base = h.rect.y + h.rect.h;
+  return { id, x: h.rect.x + h.rect.w / 2 - s.w / 2, y: base - s.h, base, cx: h.rect.x + h.rect.w / 2, robot };
+}
+function drawRover(g, r, scene, t) {
+  const A = ctx.assets; const E = ctx.engine;
+  pixEllipse(g, r.cx, r.base - 1, 26, 3, '#000', 0.28);
+  A.draw(g, r.id, 0, r.x, r.y);
+  if (r.robot === Robot.LRV) {
+    if (!A.isReal(r.id)) {   // placeholder only: the real 70x70 sprite carries its own camera head
+      const cam = E.propState(Prop.LRV_CAMERA); const frame = ((Math.round((cam ? cam.panDeg : 0) / 45) % 8) + 8) % 8;
+      A.draw(g, 'lrv_gcta', frame, r.cx + 14, r.y - 4);
+    }
+    const fe = E.propState(Prop.LRV_FENDER);
+    if (fe && fe.dustIntensity > 0.05) {
+      for (let i = 0; i < 14; i++) {
+        const k = (t * 1.6 + i / 14) % 1;
+        g.fillStyle = `rgba(190,190,195,${(1 - k) * fe.dustIntensity})`;
+        g.fillRect(Math.round(r.cx - 20 - k * 26), Math.round(r.base - 8 - Math.sin(k * 3.14) * (8 + 14 * fe.dustIntensity)), 2, 2);
       }
     }
-  } else if (region === Region.MARS) {
-    const sp = sojournerPos(scene);
-    if (sp) {
-      const drive = E.propState(Prop.SOJ_DRIVE);
-      const apxs = E.propState(Prop.SOJ_APXS);
-      const haz = E.propState(Prop.SOJ_HAZARD);
-      if (drive?.target && drive.phase === 'moving') sojFlip = drive.target.x < sp.x;
-      else if (sp.x < lastSojX - 0.01) sojFlip = true; else if (sp.x > lastSojX + 0.01) sojFlip = false;
-      lastSojX = sp.x;
-      const tilt = drive && Math.abs(drive.tiltDeg || 0) > 6 ? 1 : 0;
-      const bx = Math.round(sp.x - 12), by = Math.round(sp.y - 7);
-      // hazard laser stripes
-      if (haz && (haz.scanning || haz.progress > 0)) {
-        const dir = sojFlip ? -1 : 1; const fx = sp.x + dir * 12;
-        g.save(); g.globalAlpha = 0.5 + 0.4 * Math.sin(t * 30);
-        haz.stripes?.forEach((s, i) => {
-          const y = sp.y - 8 + i * 4; const len = Math.max(4, (s.distPx ?? 40) * Math.min(1, haz.progress * 1.5 + 0.2));
-          g.fillStyle = s.hit ? '#ff3b3b' : '#ff8080'; g.fillRect(Math.round(dir > 0 ? fx : fx - len), Math.round(y), Math.round(len), 1);
-          if (s.hit) g.fillRect(Math.round(dir > 0 ? fx + len : fx - len - 1), Math.round(y) - 1, 2, 3);
-        });
-        g.restore();
-      }
-      pixEllipse(g, sp.x, sp.y + 7, 11, 2, '#000', 0.3);
-      A.draw(g, 'sojourner_body', tilt, bx, by, { flip: sojFlip });
-      if (apxs) A.draw(g, 'sojourner_apxs', apxs.deployed ? 1 : 0, sp.x + (sojFlip ? -16 : 8), sp.y - 1 + (apxs.deployed ? 2 : 0));
-      if (drive?.target && (drive.phase === 'moving' || drive.phase === 'signal')) {
-        g.fillStyle = '#ffd166'; const k = Math.floor(t * 4) % 2;
-        g.fillRect(Math.round(drive.target.x) - 3, Math.round(drive.target.y), 7, 1); g.fillRect(Math.round(drive.target.x), Math.round(drive.target.y) - 3 + k, 1, 7);
-      }
+  } else {
+    const haz = E.propState(Prop.SOJ_HAZARD);
+    if (haz && (haz.scanning || haz.progress > 0)) {   // laser stripes from the PARKED rover; it never turns
+      const fx = r.cx + 28;
+      g.save(); g.globalAlpha = 0.5 + 0.4 * Math.sin(t * 30);
+      (haz.stripes || []).forEach((s, i) => {
+        const y = r.base - 30 + i * 4; const len = Math.max(4, (s.distPx ?? 40) * Math.min(1, (haz.progress || 0) * 1.5 + 0.2));
+        g.fillStyle = s.hit ? '#ff3b3b' : '#ff8080'; g.fillRect(Math.round(fx), Math.round(y), Math.round(len), 1);
+        if (s.hit) g.fillRect(Math.round(fx + len), Math.round(y) - 1, 2, 3);
+      });
+      g.restore();
     }
-    // lander (optional scenery)
-    try {
-      const sp2 = ctx.data.getPropSpec(Prop.SOJ_DRIVE);
-      const lp = sp2?.landerPos;
-      // Always drawn: the lander is a solid in the scene data, so it must be visible
-      // (placeholder until its sprite exists). Centered on its 48x28 solid rect.
-      if (lp) { const s = A.slotOf('pathfinder_lander'); A.draw(g, 'pathfinder_lander', 0, lp.x - s.w / 2, lp.y - s.h / 2); }
-    } catch { /* spec unavailable */ }
+    const apxs = E.propState(Prop.SOJ_APXS);
+    if (apxs?.deployed && !A.isReal(r.id)) A.draw(g, 'sojourner_apxs', 1, r.cx + 26, r.base - 10);
   }
+}
+function drawLander(g) {
+  try {
+    const lp = ctx.data.getPropSpec(Prop.SOJ_DRIVE)?.landerPos;
+    if (lp) { const s = ctx.assets.slotOf('pathfinder_lander'); ctx.assets.draw(g, 'pathfinder_lander', 0, lp.x - s.w / 2, lp.y - s.h / 2); }
+  } catch { /* spec unavailable */ }
 }
 
 /* ---------- Player ---------- */
@@ -232,10 +220,12 @@ export function renderWorld(g, dt) {
     for (const r of scene.solids || []) { g.fillRect(r.x, r.y, r.w, r.h); }
   }
   drawHotspots(g, scene, bgReal, t);
-  drawRovers(g, scene, t);
+  if (scene.region === Region.MARS) drawLander(g);
   const near = game.nearHotspot;
+  // depth sort the astronaut against the rover by baseline
+  const rv = roverSprite(scene); const pBase = game.player.y + PLAYER.H;
+  if (rv && pBase < rv.base) { drawPlayer(g, t); drawRover(g, rv, scene, t); } else { if (rv) drawRover(g, rv, scene, t); drawPlayer(g, t); }
   if (scene.region === Region.MOON) drawShadowMask(g, scene);
-  drawPlayer(g, t);
   if (scene.region === Region.MARS) { updateDust(dt); drawDust(g); }
   if (near && near.rect) drawAlert(g, near.rect.x + near.rect.w / 2, near.rect.y, t);
   else if (game.pendingFact >= 0) drawAlert(g, game.player.x + 12, game.player.y - game.player.z, t);

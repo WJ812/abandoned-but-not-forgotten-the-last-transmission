@@ -86,10 +86,9 @@ for (const region of REGIONS) {
       assert.ok(Object.values(Trigger).includes(h.trigger));
       assert.ok(Number.isInteger(h.ref) && typeof h.solid === 'boolean');
       assert.ok(h.label.length > 0 && h.label.length <= LABEL_MAX, h.label);
-      // Hub portal is PRESS (user decision, 360x180 art); region return pads are STEP.
-      const step = h.kind === HotspotKind.RETURN_PAD;
-      assert.equal(h.trigger, step ? Trigger.STEP : Trigger.PRESS, h.id);
-      if (step) assert.equal(h.solid, false);
+      // User decision: every clickable is PRESS (Hub portal and return pads too).
+      assert.equal(h.trigger, Trigger.PRESS, h.id);
+      if (h.kind === HotspotKind.RETURN_PAD) assert.equal(h.solid, false);
       if (h.kind === HotspotKind.DECOR) assert.ok(h.caption && h.caption.length <= TEXT_MAX);
     }
     const kinds = s.hotspots.map((h) => h.kind);
@@ -112,6 +111,9 @@ for (const region of REGIONS) {
     const hb = hit(s.spawn.x, s.spawn.y);
     for (const h of s.hotspots) if (h.trigger === Trigger.STEP) assert.ok(!overlap(hb, h.rect), h.id);
     for (const f of s.facts) assert.ok(!overlap(hb, f.rect), `fact ${f.id}`);
+    for (const h of s.hotspots) {
+      if (h.trigger === Trigger.PRESS) assert.ok(gap(hb, h.rect) > INTERACT_RANGE_PX, `spawn in range of ${h.id}`);
+    }
   });
 
   test(`scene ${s.name}: every hotspot and fact zone is reachable from spawn`, () => {
@@ -127,15 +129,35 @@ for (const region of REGIONS) {
   });
 }
 
-test('every Prop has exactly one region scene hotspot family', () => {
-  const props = [Region.MOON, Region.MARS].flatMap((r) =>
-    getScene(r).hotspots.filter((h) => h.kind === HotspotKind.PROP).map((h) => h.ref));
-  for (const p of Object.values(Prop)) assert.ok(props.includes(p), `no hotspot for prop ${p}`);
+test('exact clickable sets per scene', () => {
+  const ids = (r) => getScene(r).hotspots.map((h) => h.id).sort();
+  assert.deepEqual(ids(Region.HUB), ['hub.computer', 'hub.portal']);
+  assert.deepEqual(ids(Region.MOON), ['moon.blueprint', 'moon.lrv', 'moon.return']);
+  assert.deepEqual(ids(Region.MARS), ['mars.blueprint', 'mars.return', 'mars.sojourner']);
+  for (const r of [Region.MOON, Region.MARS]) {
+    const s = getScene(r);
+    const robot = s.hotspots.find((h) => h.kind === HotspotKind.ROBOT);
+    assert.ok(robot.solid && robot.rect.w === 70, 'rover footprint is the 70 px wide solid talk rect');
+    // 70x70 sprite drawn bottom-aligned on the footprint stays on canvas and clear of other solids.
+    const sprite = { x: robot.rect.x, y: robot.rect.y + robot.rect.h - 70, w: 70, h: 70 };
+    assert.ok(inside(sprite, CANVAS));
+    for (const o of s.solids) assert.ok(!overlap(sprite, o), `sprite overlaps ${JSON.stringify(o)}`);
+  }
+});
+
+test('Moon: blueprint sits inside a crater shadow; facts separate', () => {
+  const s = getScene(Region.MOON);
+  const bp = s.hotspots.find((h) => h.id === 'moon.blueprint').rect;
+  assert.ok(s.shadows.some((r) => inside(bp, r)));
+  assert.ok(s.facts.length <= FACTS_MAX);
+  for (let i = 0; i < s.facts.length; i++) {
+    for (let j = i + 1; j < s.facts.length; j++) assert.ok(!overlap(s.facts[i].rect, s.facts[j].rect), `facts ${i}/${j} overlap`);
+  }
 });
 
 test('Mars prop obstacles are scene solids inside the canvas', () => {
   const s = getScene(Region.MARS);
-  for (const p of [Prop.SOJ_HAZARD, Prop.SOJ_DRIVE]) {
+  for (const p of [Prop.SOJ_HAZARD]) {
     for (const r of getPropSpec(p).obstacles) {
       assert.ok(isRect(r) && inside(r, CANVAS));
       assert.ok(s.solids.some((b) => b.x === r.x && b.y === r.y && b.w === r.w && b.h === r.h));
@@ -145,13 +167,8 @@ test('Mars prop obstacles are scene solids inside the canvas', () => {
   assert.ok(lp.x >= 0 && lp.x <= CANVAS_W && lp.y >= 0 && lp.y <= CANVAS_H);
 });
 
-test('APXS hotspots preselect their rock; lander is an obstacle', () => {
-  const s = getScene(Region.MARS);
-  const targets = getPropSpec(Prop.SOJ_APXS).targets.map((t) => t.name);
-  const arg = (id) => s.hotspots.find((h) => h.id === id).arg;
-  assert.equal(targets[arg('mars.apxs.bb')], 'Barnacle Bill');
-  assert.equal(targets[arg('mars.apxs.yogi')], 'Yogi');
-  for (const p of [Prop.SOJ_HAZARD, Prop.SOJ_DRIVE]) {
+test('lander is a hazard-scan obstacle', () => {
+  for (const p of [Prop.SOJ_HAZARD]) {
     assert.ok(getPropSpec(p).obstacles.some((r) => r.x === 110 && r.y === 112 && r.w === 48 && r.h === 28));
   }
 });
@@ -166,9 +183,6 @@ test('Mars art: every painted rock is solid; facts are separate and clear of spa
   for (let i = 0; i < s.facts.length; i++) {
     for (let j = i + 1; j < s.facts.length; j++) assert.ok(!overlap(s.facts[i].rect, s.facts[j].rect), `facts ${i}/${j} overlap`);
   }
-  const ids = s.hotspots.map((h) => h.id).sort();
-  assert.deepEqual(ids, ['mars.apxs.bb', 'mars.apxs.yogi', 'mars.blueprint', 'mars.drive', 'mars.hazard',
-    'mars.return', 'mars.solar', 'mars.sojourner'].sort());
 });
 
 test('unknown region throws', () => {

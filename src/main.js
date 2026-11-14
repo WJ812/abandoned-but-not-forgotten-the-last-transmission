@@ -12,7 +12,7 @@ import { renderWorld } from './gfx/renderer.js';
 import { initHud, sync as syncHud } from './ui/hud.js';
 import { h } from './ui/dom.js';
 import { title } from './ui/title.js';
-import { hubScreen, regionScreen, factPopup, portalMenuScreen } from './ui/world.js';
+import { hubScreen, regionScreen, factPopup, portalMenuScreen, confirmReturn } from './ui/world.js';
 import { dialogue } from './ui/dialogue.js';
 import { blueprintCard } from './ui/cards.js';
 import { propPanel } from './ui/props.js';
@@ -81,6 +81,7 @@ ctx.toast = (text, ms = 2400) => {
 };
 
 ctx.screens = {
+  confirmReturn,
   [Screen.TITLE]: title, [Screen.HUB]: hubScreen, [Screen.REGION]: regionScreen, [Screen.PORTAL_MENU]: portalMenuScreen,
   [Screen.DIALOGUE]: dialogue, [Screen.FACT_POPUP]: factPopup, [Screen.BLUEPRINT_CARD]: blueprintCard,
   [Screen.PROP_PANEL]: propPanel, [Screen.NOTEBOOK]: notebookScreen, [Screen.STAR_MAP]: starMapScreen,
@@ -98,6 +99,7 @@ function startLoop() {
     while (acc >= DT && n++ < 10) { ctx.time += DT; acc -= DT; ctx.current.update?.(DT); }
     g.clearRect(0, 0, CANVAS_W, CANVAS_H);
     if (!ctx.current.drawBackdrop?.(g)) renderWorld(g, dt);
+    ctx.current.drawOver?.(g);
     syncHud(false);
   };
   requestAnimationFrame(frame);
@@ -109,15 +111,16 @@ function devJump(go) {
   const E = ctx.engine;
   E.newGame(params.get('mode') === '1' ? 1 : 0);
   if (go === 'ending' || go === 'archive') { E.collectBlueprint(0); E.collectBlueprint(1); }
-  const reg = go === 'moon' || go === 'bp' || go.endsWith('moon') || (go.startsWith('prop') && +go.slice(4) < 4) ? Region.MOON : (go === 'hub' || ['notebook', 'starmap', 'archive', 'pause', 'portal', 'ending'].includes(go) ? Region.HUB : Region.MARS);
+  const reg = go === 'moon' || go === 'ret' || go.startsWith('bp') || go.endsWith('moon') || (go.startsWith('prop') && +go.slice(4) < 4) ? Region.MOON : (go === 'hub' || ['notebook', 'starmap', 'archive', 'pause', 'portal', 'ending'].includes(go) ? Region.HUB : Region.MARS);
   E.enterRegion(reg);
   const to = (s, p) => ctx.go(s, p);
   if (go === 'hub' || go === 'moon' || go === 'mars') to(reg === Region.HUB ? Screen.HUB : Screen.REGION);
   else if (go.startsWith('dialogue')) to(Screen.DIALOGUE, { robot: reg === Region.MOON ? 0 : 1 });
   else if (go === 'notebook') to(Screen.NOTEBOOK); else if (go === 'starmap') to(Screen.STAR_MAP); else if (go === 'archive') to(Screen.ARCHIVE_COMPUTER);
   else if (go === 'pause') to(Screen.PAUSE); else if (go === 'ending') to(Screen.ENDING); else if (go === 'portal') to(Screen.PORTAL_MENU);
+  else if (go === 'ret') to('confirmReturn');
   else if (go === 'fact') to(Screen.FACT_POPUP, { fact: ctx.data.getScene(reg).facts[0] });
-  else if (go === 'bp') to(Screen.BLUEPRINT_CARD, { bp: 0, result: 1 });
+  else if (go === 'bp' || go === 'bp2' || go === 'bp3') to(Screen.BLUEPRINT_CARD, { bp: go === 'bp3' ? 1 : 0, result: go === 'bp' ? 1 : 0 });
   else if (go.startsWith('prop')) to(Screen.PROP_PANEL, { prop: +go.slice(4) });
 }
 

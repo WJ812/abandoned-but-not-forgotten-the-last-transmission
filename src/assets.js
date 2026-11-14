@@ -36,9 +36,9 @@ export const ASSETS = Object.freeze({
   /* ---- Scenes: full 320x180 backgrounds with props painted in.
    *      Artwork/Scenes/ is empty as of 2026-11-14; filenames below are the
    *      expected ones. ---- */
-  scene_hub:  { src: `${A}Scenes/The Hub (INTERACTIVE).png`, w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#0b3d91', label: 'NASA ARCHIVES HUB' } },
-  scene_moon: { src: `${A}Scenes/moon_taurus_littrow.png`, w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#5a5e66', label: 'MOON - TAURUS-LITTROW' } },
-  scene_mars: { src: `${A}Scenes/mars_location.png`,        w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#9a4a1e', label: 'MARS - ARES VALLIS' } },
+  scene_hub:  { src: `${A}Scenes/hub_location.png`, w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#0b3d91', label: 'NASA ARCHIVES HUB' } },
+  scene_moon: { src: `${A}Scenes/moon_location.png`, w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#5a5e66', label: 'MOON - TAURUS-LITTROW' } },
+  scene_mars: { src: `${A}Scenes/mars_location (1).png`,        w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#9a4a1e', label: 'MARS - ARES VALLIS' } },
 
   /* ---- Title screen (art supplied by the user; buttons coded by frontend).
    *      Button strips: 3 states stacked vertically = normal, focused, pressed. ---- */
@@ -63,6 +63,14 @@ export const ASSETS = Object.freeze({
   lrv_fender:      { src: `${A}Sprites/Robots/lrv_fender.png`,      w: 16, h: 8,  frames: 2, layout: 'h', kind: 'sprite', placeholder: { color: '#d9dde2', label: 'FE' }, note: 'frame 0 original fender, frame 1 taped-map repair' },
   sojourner_body:  { src: `${A}Sprites/Robots/sojourner.png`,       w: 24, h: 14, frames: 2, layout: 'h', kind: 'sprite', placeholder: { color: '#d8a24a', label: 'SOJ' }, note: 'frame 0 level, frame 1 rocker-bogie tilted over a rock; facing right, flipped in code' },
   sojourner_apxs:  { src: `${A}Sprites/Robots/sojourner_apxs.png`,  w: 8,  h: 8,  frames: 2, layout: 'h', kind: 'sprite', placeholder: { color: '#e0c38a', label: 'X' }, note: 'APXS head stowed / deployed' },
+  // User-supplied UI/sprite art (2026-11-14)
+  rover_lrv:          { src: `${A}Sprites/Moon rover interactive.png`,  w: 70, h: 70, frames: 1, layout: 'h', kind: 'sprite', placeholder: { color: '#9aa0a8', label: 'LRV' } },
+  rover_sojourner:    { src: `${A}Sprites/Mars rover interactive.png`,  w: 70, h: 70, frames: 1, layout: 'h', kind: 'sprite', placeholder: { color: '#c86a3a', label: 'SOJOURNER' } },
+  ui_dialogue_box:    { src: `${A}Scenes/dialogue_box.png`,             w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#5a2a4a', label: 'DIALOGUE BOX' }, note: 'overlay: box x10-350 y108-170, name tab x14-86 y94-116, rest transparent' },
+  ui_computer_screen: { src: `${A}Sprites/Computer image interacted interactive.png`, w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#322a48', label: 'COMPUTER' }, note: 'blank terminal panel; buttons and content drawn on top' },
+  ui_blueprint_scroll:{ src: `${A}Sprites/Blueprint interacted.png`,   w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#2a2a5a', label: 'BLUEPRINT' }, note: 'scroll with BLUEPRINT header; schematic drawn on top in pixel style' },
+  btn_portal_moon:    { src: `${A}Sprites/Moon portal button.png`,       w: 40, h: 20, frames: 1, layout: 'h', kind: 'ui', placeholder: { color: '#5a5e66', label: 'MOON' } },
+  btn_portal_mars:    { src: `${A}Sprites/Portal Button Mars.png`,       w: 40, h: 20, frames: 1, layout: 'h', kind: 'ui', placeholder: { color: '#9a4a1e', label: 'MARS' } },
   pathfinder_lander: { src: `${A}Sprites/Robots/pathfinder_lander.png`, w: 48, h: 28, frames: 1, layout: 'h', kind: 'sprite', placeholder: { color: '#b07a4a', label: 'PATHFINDER' }, note: 'optional scenery if not painted into the Mars background' },
 
   /* ---- Blueprint schematics: wireframe on transparent, drawn on the UI's grid. ---- */

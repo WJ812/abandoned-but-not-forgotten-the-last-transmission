@@ -10,3 +10,4 @@ desktop.ini
 # Local AI-assistant configuration (not part of the open-source project)
 .claude/
 CLAUDE.md
+docs/PLAN.md

@@ -1,13 +1,14 @@
 /** Regression tests for QA findings (drive vs lander, rover-attached prompts, save fallback). */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Prop, PropAction as A, DT, Region, Dir, HotspotKind, Trigger, Robot, Mode, Blueprint, SAVE_KEY, LATENCY } from '../contract.js';
+import { Btn, Prop, PropAction as A, DT, Region, Dir, HotspotKind, Trigger, Robot, Mode, Blueprint, SAVE_KEY, LATENCY } from '../contract.js';
 import {
   game, init, newGame, enterRegion, update, propOpen, propAction, propTick, propState, findInteract,
   collectBlueprint, hasSave, loadSave, eraseSave, _resetMemorySave,
   latencyStart, latencyTick, latencyProgress, latencyActive,
 } from './core.js';
-import { overlaps, MAX_TICK_DT } from './geom.js';
+import { MAX_TICK_DT } from './geom.js';
+import { PROP_TUNING } from './props.js';
 import { setup, SCENES, SPECS, fakeStorage } from './test_fixtures.js';
 
 /* Mars fixture mirroring the real layout: lander SOLID in scene.solids only. */
@@ -40,52 +41,6 @@ const specs = {
 const roverRect = (pos) => ({ x: pos.x - ROVER.w / 2, y: pos.y - ROVER.h / 2, w: ROVER.w, h: ROVER.h });
 const inside = (r, b) => r.x >= b.x - 1e-9 && r.y >= b.y - 1e-9 && r.x + r.w <= b.x + b.w + 1e-9 && r.y + r.h <= b.y + b.h + 1e-9;
 
-test('QA1: Sojourner never drives into the lander (scene solid) and stays reachable', () => {
-  setup({ scenes, specs });
-  enterRegion(Region.MARS);
-  const s = propOpen(Prop.SOJ_DRIVE);
-  propAction(Prop.SOJ_DRIVE, A.DRIVE_GOTO, { x: 66, y: 83 });       // lander center
-  assert.ok(!overlaps(roverRect(s.target), LANDER), `target snapped out of the lander ${JSON.stringify(s.target)}`);
-  for (let i = 0; i < 60 * 120 && (s.phase === 'signal' || s.phase === 'moving'); i++) {
-    propTick(Prop.SOJ_DRIVE, DT);
-    const r = roverRect(s.pos);
-    assert.ok(!overlaps(r, LANDER) && !overlaps(r, ROCK), `inside a solid at ${JSON.stringify(s.pos)}`);
-    assert.ok(inside(r, MARS.walkable), 'stays in the walkable area');
-  }
-  assert.equal(s.phase, 'arrived');
-  // The player can walk up to the rover and talk to it.
-  const p = game.player;
-  let found = null;
-  for (const [dx, dy, face] of [[0, ROVER.h / 2 + 2, Dir.UP], [0, -(ROVER.h / 2) - 10, Dir.DOWN], [ROVER.w / 2 + 2, 0, Dir.LEFT]]) {
-    p.x = s.pos.x + dx - 12; p.y = s.pos.y + dy - 16; p.facing = face;
-    update(0, 0);
-    const h = findInteract();
-    if (h && h.id === 'mars.sojourner') { found = h; break; }
-  }
-  assert.ok(found, 'rover hotspot reachable after the drive');
-});
-
-test('QA1: huge / invalid dt never tunnels the rover through a rock or poisons state', () => {
-  setup({ scenes, specs });
-  enterRegion(Region.MARS);
-  const s = propOpen(Prop.SOJ_DRIVE);
-  propAction(Prop.SOJ_DRIVE, A.DRIVE_GOTO, { x: 242, y: 127 });     // straight through ROCK
-  for (const bad of [NaN, Infinity, -Infinity, -1, 0, 'x', null]) propTick(Prop.SOJ_DRIVE, bad);
-  assert.equal(s.phase, 'signal');
-  assert.equal(s.signal, 0, 'invalid dt advances nothing');
-  propTick(Prop.SOJ_DRIVE, 1e4);
-  assert.ok(Math.abs(s.signal - MAX_TICK_DT / LATENCY.GAUGE_REAL_S) < 1e-9, 'huge dt clamped to MAX_TICK_DT');
-  // Every huge tick is clamped and sub-stepped (<= 2 px, each collision-checked).
-  let prev = { ...s.pos };
-  for (let i = 0; i < 2000 && s.phase !== 'arrived' && s.phase !== 'blocked'; i++) {
-    propTick(Prop.SOJ_DRIVE, 1e4);
-    assert.ok(!overlaps(roverRect(s.pos), ROCK), `tunnelled into the rock at ${JSON.stringify(s.pos)}`);
-    assert.ok(Math.hypot(s.pos.x - prev.x, s.pos.y - prev.y) <= MAX_TICK_DT * s.speedPxS + 1e-6 || s.speedPxS === 0);
-    prev = { ...s.pos };
-  }
-  assert.equal(s.phase, 'arrived');
-});
-
 test('QA-low: NaN/Infinity/negative dt cannot lock the SIGNAL bar or break the camera/fender', () => {
   setup({ scenes, specs });
   latencyStart();
@@ -111,40 +66,44 @@ test('QA-low: NaN/Infinity/negative dt cannot lock the SIGNAL bar or break the c
   assert.ok(Number.isFinite(fen.dustIntensity));
 });
 
-test('QA2: solar + hazard prompts ride with the rover; relay and APXS spots stay put', () => {
+test('Sojourner never moves: rover position and hotspots unchanged across every prop action', () => {
   setup({ scenes, specs });
   enterRegion(Region.MARS);
-  const s = propOpen(Prop.SOJ_DRIVE);
-  propAction(Prop.SOJ_DRIVE, A.DRIVE_GOTO, { x: 190, y: 150 });
-  for (let i = 0; i < 60 * 30; i++) update(0, 0);
-  assert.equal(s.phase, 'arrived');
-  const dx = s.pos.x - s.start.x, dy = s.pos.y - s.start.y;
-  assert.ok(Math.abs(dx) + Math.abs(dy) > 10);
+  const snap = () => JSON.stringify(MARS.hotspots.map((h) => h.rect));
+  const before = snap();
+  const roverId = 'mars.sojourner';
+  const actions = Object.values(A);
+  const args = [undefined, 0, 1, 2, -1, 99, { x: 10, y: 10 }, NaN];
+  for (let p = 0; p < 8; p++) propOpen(p);
+  for (let k = 0; k < 400; k++) {
+    const p = k % 8;
+    propAction(p, actions[(k * 7) % actions.length], args[k % args.length]);
+    for (let i = 0; i < 10; i++) propTick(p, DT);
+    update(k % 3 ? Btn.RIGHT : Btn.UP, 0);
+  }
+  assert.equal(snap(), before, 'scene hotspots never move');
+  const s = propState(Prop.SOJ_DRIVE);
+  for (const k of ['phase', 'target', 'odometerM', 'tiltDeg', 'signal', 'stopSignal'])
+    assert.ok(!(k in s), `no drive-movement field ${k}`);
+  // the prompt is always found at the original rover rect
+  const rect = MARS.hotspots.find((h) => h.id === roverId).rect;
   const p = game.player;
-  const probe = (id, rect, face) => {
-    // stand just outside the rect on the side matching `face`, then look it up
-    if (face === Dir.DOWN) { p.x = rect.x + rect.w / 2 - 12; p.y = rect.y - 8 - 2 - 16; }
-    if (face === Dir.LEFT) { p.x = rect.x + rect.w + 2 - 6; p.y = rect.y + rect.h / 2 - 4 - 16; }
-    if (face === Dir.UP) { p.x = rect.x + rect.w / 2 - 12; p.y = rect.y + rect.h + 2 - 16; }
-    p.facing = face;
-    update(0, 0);
-    const h = findInteract();
-    return h && h.id === id ? h : null;
-  };
-  const moved = (r) => ({ x: r.x + dx, y: r.y + dy, w: r.w, h: r.h });
-  const solar = probe('mars.solar', moved(MARS.hotspots[1].rect), Dir.DOWN);
-  assert.ok(solar, 'solar prompt found at the moved rover');
-  assert.deepEqual(solar.rect, moved(MARS.hotspots[1].rect));
-  const haz = probe('mars.hazard', moved(MARS.hotspots[2].rect), Dir.LEFT);
-  assert.ok(haz, 'hazard prompt found at the moved rover');
-  assert.deepEqual(haz.rect, moved(MARS.hotspots[2].rect));
-  // relay and APXS rock spots unchanged, and APXS keeps its arg
-  const relay = probe('mars.drive', MARS.hotspots[5].rect, Dir.UP);
-  assert.ok(relay && relay.rect === MARS.hotspots[5].rect);
-  const yogi = probe('mars.apxs.yogi', MARS.hotspots[4].rect, Dir.UP);
-  assert.ok(yogi, 'yogi APXS spot found at its fixed rect');
-  assert.equal(yogi.arg, 1);
-  assert.equal(yogi.rect, MARS.hotspots[4].rect);
+  p.x = rect.x + rect.w / 2 - 12; p.y = rect.y + rect.h + 2 - 16; p.facing = Dir.UP;
+  update(0, 0);
+  assert.equal(findInteract()?.id, roverId);
+  assert.equal(findInteract().rect, rect);
+});
+
+test('hazard scan never rotates the rover (fixed heading)', () => {
+  setup({ scenes, specs });
+  const s = propOpen(Prop.SOJ_HAZARD);
+  propAction(Prop.SOJ_DRIVE, A.DRIVE_SELECT, 1); propAction(Prop.SOJ_DRIVE, A.DRIVE_PLAY);
+  for (let i = 0; i < 300; i++) propTick(Prop.SOJ_DRIVE, DT);
+  propAction(Prop.SOJ_HAZARD, A.HAZ_SCAN);
+  for (let i = 0; i < 120; i++) propTick(Prop.SOJ_HAZARD, DT);
+  assert.equal(s.headingDeg, PROP_TUNING.HAZ_HEADING_DEG);
+  const c = { x: ROVER.x + ROVER.w / 2, y: ROVER.y + ROVER.h / 2 };
+  assert.ok(Math.abs(s.origin.y - c.y) < 1e-9 && s.origin.x > c.x, 'origin at the parked rover front');
 });
 
 test('QA3a: setItem throws but getItem returns null -> hasSave true this session', () => {

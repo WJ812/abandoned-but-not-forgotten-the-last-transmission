@@ -470,9 +470,11 @@ export const PropAction = Object.freeze({
   APXS_ABORT: 'apxsAbort',
   // SOJ_HAZARD
   HAZ_SCAN: 'hazScan',
-  // SOJ_DRIVE
-  DRIVE_GOTO: 'driveGoto',     // arg = {x, y} scene px target; starts SIGNAL bar first
-  DRIVE_STOP: 'driveStop',
+  // SOJ_DRIVE: HISTORICAL TRAVERSE REPLAY. Sojourner has been silent since its last
+  // contact (Sept 27, 1997) and NEVER moves in the game; the panel replays its real
+  // 1997 drives on a mini-map, like LRV_NAV.
+  DRIVE_SELECT: 'driveSelect', // arg = leg index into spec.legs
+  DRIVE_PLAY: 'drivePlay', DRIVE_PAUSE: 'drivePause', DRIVE_RESET: 'driveReset',
 });
 
 /**
@@ -526,12 +528,17 @@ export const PropAction = Object.freeze({
  *   laserStripes: 5, cameras: 2, wheelDiameterCm: 13, hazardHeightCm: number,
  *   scanRangeCm: number, decision: string (how the onboard computer chose a detour),
  *   obstacles: Rect[] (scene px rock rects near the rover used by the scan)
+ *   The scan is a demonstration of the 1997 system: the parked rover does NOT turn or move.
  * }
  * SOJ_DRIVE {
  *   prop, title, blurb, archivist,
  *   maxSpeedCmS: 1, totalTraverseM: number (~100), maxFromLanderM: number,
  *   landerPos: Point (scene px), commandNote: string,
- *   obstacles: Rect[] (scene px; same rocks as SOJ_HAZARD)
+ *   lastContactUtc: '1997-09-27', fate: string (contingency mode, never heard again; verified wording),
+ *   lander: Point (minimap fraction 0..1),
+ *   legs: [{ id, label, sols: string, distanceM, path: Point[] (minimap fractions, >= 2),
+ *            stops: [{name, at:number (0..1 along path)}] }] (>= 3; traced shapes may be
+ *            approximate and must be labelled so in archivist text)
  * }
  */
 
@@ -547,10 +554,10 @@ export const PropAction = Object.freeze({
  * SOJ_SOLAR   { playing, sol, solTime (0..1), sunElevDeg, dustFactor, powerW, onBattery }
  * SOJ_APXS    { targetIndex, deployed, progress, result:{name, rockType, composition, finding}|null }
  * SOJ_HAZARD  { scanning, progress, stripes:[{hit, distPx}] x5, hazard, detour:'left'|'right'|null }
- * SOJ_DRIVE   { phase:'idle'|'signal'|'moving'|'blocked'|'arrived', signal (0..1),
- *               pos:Point, target:Point|null, tiltDeg, odometerM, speedPxS }
- *   Rover position: SOJ_DRIVE.pos starts at the 'mars.sojourner' hotspot rect
- *   center and is the authoritative draw position once the player has driven it.
+ *               (detour = what the 1997 software WOULD choose; the rover never turns)
+ * SOJ_DRIVE   { legIndex, playing, t (0..1 along leg), pos:Point (minimap fraction),
+ *               headingDeg, rangeToLanderM, distanceM, sol:string, stop:string|null }
+ *   The rover sprite is ALWAYS drawn at the 'mars.sojourner' hotspot; it never moves.
  */
 
 /* ========================================================================

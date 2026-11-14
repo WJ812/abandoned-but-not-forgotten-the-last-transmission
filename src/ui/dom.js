@@ -116,3 +116,12 @@ export function kvTable(rows, cls = '') {
 
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const popcount = (n) => { let c = 0; while (n) { c += n & 1; n >>= 1; } return c; };
+
+/** Absolute placement in logical canvas px (360x180) as percentage style. */
+export function at(x, y, w, hh, extra = {}) {
+  return { position: 'absolute', left: `${(x / 360) * 100}%`, top: `${(y / 180) * 100}%`, width: `${(w / 360) * 100}%`, height: `${(hh / 180) * 100}%`, ...extra };
+}
+/** Draw a full-screen UI art overlay (real art or a plain fallback panel for placeholders). */
+export function drawPanelArt(g, id, fallback) {
+  if (ctx.assets.isReal(id)) ctx.assets.draw(g, id, 0, 0, 0); else fallback?.(g);
+}

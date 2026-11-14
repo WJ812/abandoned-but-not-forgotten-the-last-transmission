@@ -14,7 +14,7 @@ import {
   Mode, Trigger, HotspotKind, Prop, PROP_COUNT, propRegion, SAVE_KEY, SAVE_VERSION, CANVAS_W, CANVAS_H,
 } from '../contract.js';
 import { overlaps, pointIn, rectGap, rectCenter, angleDiff, popcount, sanitizeDt } from './geom.js';
-import { createPropState, propActionImpl, propTickImpl, mergeSpec, isRoverPart } from './props.js';
+import { createPropState, propActionImpl, propTickImpl, mergeSpec } from './props.js';
 
 /* ========================================================================
  * Physics tuning. The contract allows WALK and HOP_TAKEOFF +/-25%; gravity is
@@ -41,7 +41,6 @@ export function _setDataProvider(p) {
   provider.getPropSpec = p && typeof p.getPropSpec === 'function' ? p.getPropSpec : null;
   sceneCache.clear();
   specCache.clear();
-  liveCache.clear();
 }
 
 const R = (r, d) => (r && [r.x, r.y, r.w, r.h].every((v) => typeof v === 'number' && Number.isFinite(v)) ? r : d);
@@ -111,7 +110,6 @@ function resetSession() {
   game.headlampOn = false; game.inShadow = false; game.nearHotspot = null; game.pendingFact = -1; game.factsSeen = 0;
   game.latency = { active: false, progress: 0, elapsed: 0 };
   game.props = {};
-  liveCache.clear();
 }
 
 /* ========================================================================
@@ -124,29 +122,8 @@ export function hitbox(p = game.player) {
 const DIR_VEC = { [Dir.DOWN]: [0, 1], [Dir.UP]: [0, -1], [Dir.LEFT]: [-1, 0], [Dir.RIGHT]: [1, 0] };
 const DIR_ANGLE = { [Dir.RIGHT]: 0, [Dir.DOWN]: 90, [Dir.LEFT]: 180, [Dir.UP]: 270 };
 
-/**
- * Hotspots that are part of Sojourner (see props.isRoverPart: its ROBOT hotspot,
- * the solar panel and hazard-laser prompts) follow SOJ_DRIVE.pos. The lander
- * relay and the APXS rock spots stay fixed. Returns the hotspot itself when
- * unmoved, else a cached shallow clone (all fields, e.g. `arg`, kept) with a
- * moved rect.
- */
-const liveCache = new Map();
-function liveHotspot(h, scene) {
-  if (scene.region !== Region.MARS) return h;
-  const d = game.props[Prop.SOJ_DRIVE];
-  if (!d) return h;
-  const dx = d.pos.x - d.start.x, dy = d.pos.y - d.start.y;
-  if (dx === 0 && dy === 0) return h;
-  if (!isRoverPart(h, scene)) return h;
-  const c = liveCache.get(h.id);
-  if (c && c.rect.x === h.rect.x + dx && c.rect.y === h.rect.y + dy) return c;
-  const clone = { ...h, rect: { x: h.rect.x + dx, y: h.rect.y + dy, w: h.rect.w, h: h.rect.h } };
-  liveCache.set(h.id, clone);
-  return clone;
-}
-
-function liveHotspots(scene) { return scene.hotspots.map((h) => liveHotspot(h, scene)); }
+/** Hotspots are static (Sojourner never moves); kept as a helper for clarity. */
+function liveHotspots(scene) { return scene.hotspots; }
 
 function blockers(scene) {
   const out = scene.solids.slice();

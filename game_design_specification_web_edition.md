@@ -17,7 +17,7 @@
 
 ### 2.1 Viewport & Retro Pixel-Art Style
 
-* **Native Canvas Resolution:** Crisp pixel-art canvas at a `320×180` (16:9) internal logical resolution, integer-scaled with `image-rendering: pixelated` to fill the browser window. Each scene is a single 320×180 screen.
+* **Native Canvas Resolution:** Crisp pixel-art canvas at a `360×180` internal logical resolution (matching the scene art), integer-scaled with `image-rendering: pixelated` to fill the browser window. Each scene is a single 360×180 screen.
 * **Rover Scale:** Rovers are drawn at about 2× true scale next to the astronaut so they are readable and interactable. Archivist pages state their real dimensions.
 * **Regional Color Palettes:**
   * **NASA Archives Hub:** Crisp cyan-white, deep navy (`#0b3d91`), and slate gray
@@ -60,23 +60,16 @@ Accessible anytime via `P` / `Esc` or the top HUD bar:
 
 ## 3. The Hub Architecture (NASA Archives)
 
-Rendered as an interactive orbital observation room containing four interactive stations and one decorative Expansion Bay:
+Rendered from the team's painted scene: an archive room with bookshelves, a swirling portal (left) and a curved computer desk (right). Only **two things are interactive**:
 
-```
-+----------------------------------------------+
-| [STAR MAP]      [PORTAL]     [ARCHIVE COMP]  |
-|                                              |
-|                (ASTRONAUT)                   |
-|                                              |
-| [NOTEBOOK]                   [EXPANSION BAY] |
-+----------------------------------------------+
-```
-
-1. **The Teleportation Portal (Top Center):** Stepping onto the teleporter pad opens the destination selector (`1. THE MOON — Taurus-Littrow`, `2. MARS — Ares Vallis`).
-2. **Interactive Star Map (Top Left):** Displays a pixel Solar System map showing active launch missions (`MOON: LRV`, `MARS: SOJOURNER`) and locked expansion beacons.
-3. **Archive Computer (Top Right):** Displays unlocked 2-page blueprint schematics, full rover dialogue transcripts, and the **Expansion Roadmap Archive** previewing upcoming missions (*Surveyor 3, Apollo ALSEP/LM, Pathfinder, InSight, Ingenuity, NEAR Shoemaker, Voyager 1*). Triggers the ending montage once both core blueprints are recovered.
-4. **Explorer Notebook (`N` Key / Bottom Left):** Tracks core mission progress (`0/2` -> `2/2` Core Blueprints), side-by-side Moon vs. Mars gravity/atmosphere stats, and expansion status.
-5. **Expansion Bay (Bottom Right):** Decorative only: sealed "coming soon" crates for the three expansion packs, with no menu. The expansion catalog itself lives in the Archive Computer.
+1. **The Portal (left):** Press to open the destination buttons, **MOON** (Taurus-Littrow) and **MARS** (Ares Vallis), and travel there.
+2. **The Archive Computer (desk, right):** Opens a terminal with buttons for:
+   * **Notebook:** core progress (`0/2` → `2/2` blueprints), the side-by-side Moon vs. Mars gravity and atmosphere stats, and completion %. The `N` key also opens it directly.
+   * **Star Map:** a pixel Solar System showing the active missions and the locked expansion beacons.
+   * **Blueprints:** the recovered schematic cards.
+   * **Transcripts:** the rover conversations.
+   * **Expansions:** the roadmap of the 8 upcoming missions (*Surveyor 3, Apollo LM, ALSEP, Pathfinder, InSight, Ingenuity, NEAR Shoemaker, Voyager 1*).
+   * **Recap:** unlocks the ending once both core blueprints are recovered.
 
 ## 4. Core Playable Expeditions, Physics & Rover Dialogues
 
@@ -85,12 +78,18 @@ Rendered as an interactive orbital observation room containing four interactive 
 * **Planetary Physics & Mechanics:**
   * **Lunar Gravity (`0.166g` / `1.62 m/s²`):** While walking, the astronaut automatically bounds in animated low-gravity hops: higher and floatier than on Mars, derived from real gravity. There is no jump key.
   * **Crater Shadows & Headlamp:** Shaded crater zones render pure black until the player presses `F` to illuminate a dynamic radial flashlight cone.
-  * **Surface Fact Pop-ups:** 3–4 short facts trigger when walking near terrain features.
+  * **Surface Fact Pop-ups:** up to 6 short facts trigger as the player walks across the terrain (once per visit).
+* **Interactive objects:** the LRV, the blueprint pickup (hidden in a dark crater, so the headlamp is needed), and the return pad (press to go back to the Hub).
 * **Collectible Core Blueprint (1):**
   1. **Lunar Roving Vehicle (LRV) Mobility & Battery System**
 * **Interactive Robot (1):**
   * **Lunar Roving Vehicle (LRV — Apollo 17):**
-    * *Not drivable:* its non-rechargeable batteries read 0%. Players explore its real hardware instead: nav-console replays of the actual Apollo 17 drives, panning its TV camera, its battery panel, and its repaired fender.
+    * *Not drivable:* its non-rechargeable batteries read 0%.
+    * *One combined screen:* interacting opens a single screen that holds both the conversation and all of its real hardware, with no clicking through to separate screens:
+      * a nav-console replay of the actual Apollo 17 drives;
+      * the battery panel, with a graph of charge over time (1972 to today; estimated points drawn dashed);
+      * the TV camera, which obeys the 1.3 s Earth–Moon command delay;
+      * the repaired fender.
     * *Greeting:* `"Telemetry static... Wheel encoders idle since December 14, 1972. Welcome to Taurus-Littrow, Explorer."`
     * *Question Menu (Pokémon-style):* 5–6 questions plus "Goodbye", asked in any order and repeatable. It includes:
       * *"How far did you carry the astronauts?":* Explains driving 35.9 km across lunar craters and mountains during Apollo 17, carrying two astronauts, tools, and 110 kg of moon rocks.
@@ -101,11 +100,18 @@ Rendered as an interactive orbital observation room containing four interactive 
 * **Planetary Physics & Mechanics:**
   * **Martian Gravity (`0.38g` / `3.72 m/s²`):** Faster stride than Earth-bound gear but heavier than the Moon, paired with drifting red dust particle effects across the canvas.
   * **Communication Latency Gauge:** After each question the player picks, a `SIGNAL ~11 min` Earth-Mars light-time bar fills (compressed to ~2 s) before Sojourner answers. Archivist Mode explains that the delay varied as Earth and Mars moved (about 10.6 min at landing).
-  * **Surface Fact Pop-ups:** 3–4 short facts trigger when walking near terrain features.
+  * **Surface Fact Pop-ups:** up to 6 short facts trigger as the player walks across the terrain (once per visit).
+* **Interactive objects:** Sojourner, the blueprint pickup, and the return pad (press to go back to the Hub).
 * **Collectible Core Blueprint (2):**
   2. **Sojourner Rover 6-Wheeled Rocker-Bogie Mobility System**
 * **Interactive Robot (1):**
   * **Sojourner Mars Rover:**
+    * *Never moves:* Sojourner has been silent since its last contact on 27 September 1997, when the Pathfinder lander, its only relay to Earth, fell silent.
+    * *One combined screen:* the conversation plus its real hardware, all on one screen:
+      * solar panel power;
+      * the APXS analyses of Barnacle Bill and Yogi;
+      * the hazard lasers, scanning from the parked rover;
+      * a replay of its real 1997 drives (about 100 m within about 12 m of the lander), ending with the last contact.
     * *Greeting:* `"Beep... Earth signal latency: 11 mins... Wait—a human archivist right here in Ares Vallis!"`
     * *Question Menu (Pokémon-style):* 5–6 questions plus "Goodbye", asked in any order and repeatable. It includes:
       * *"What was it like being Mars' first rover?":* Explains landing on July 4, 1997, rolling down the Pathfinder ramp on July 5, and exploring for 83 sols—12 times longer than its planned 7-sol mission.

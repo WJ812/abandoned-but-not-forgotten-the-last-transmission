@@ -210,8 +210,8 @@ const SOJ_APXS = {
 const SOJ_HAZARD = {
   prop: Prop.SOJ_HAZARD,
   title: 'Laser Hazard Detection',
-  blurb: 'Five lasers paint stripes on the ground and two cameras watch them. If a stripe bends or breaks, something is in the way, and Sojourner decides for itself how to go around.',
-  archivist: 'Five laser stripe projectors and two black-and-white front cameras measured the terrain ahead. Hazard height and scan range here are approximate (about one wheel diameter, about one rover length).',
+  blurb: 'In 1997, five lasers painted stripes on the ground and two cameras watched them. A bent stripe meant a rock, and Sojourner chose its own way around. See how a scan worked; the parked rover stays put.',
+  archivist: 'Five laser stripe projectors and two black-and-white front cameras measured the terrain ahead. Hazard height and scan range here are approximate (about one wheel diameter, about half a rover length).',
   laserStripes: 5,
   cameras: 2,
   wheelDiameterCm: 13,
@@ -221,18 +221,50 @@ const SOJ_HAZARD = {
   obstacles: MARS_OBSTACLES,
 };
 
-/* ---------- SOJ_DRIVE ---------- */
+/* ---------- SOJ_DRIVE: HISTORICAL TRAVERSE REPLAY (the rover never moves) ----------
+ * Minimap: lander at the center; 12 m from the lander ~ 0.35 of the map.
+ * Leg order follows the 1997 record (ramp -> Barnacle Bill -> Yogi and the
+ * rocks west of the lander -> Rock Garden -> last drives near the lander).
+ * Paths, per-leg distances, and sol ranges are TRACED/APPROXIMATE; the
+ * archivist text says so. Stop `at` = fraction of path length at a vertex. */
+const SOJ_LANDER = { x: 0.5, y: 0.5 };
+function leg(id, label, sols, distanceM, path, stopAt) {
+  const cum = [0];
+  for (let i = 1; i < path.length; i++) cum.push(cum[i - 1] + Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y));
+  const total = cum[cum.length - 1];
+  const stops = stopAt.map(([name, idx]) => ({ name, at: Math.round((cum[idx] / total) * 1000) / 1000 }));
+  return { id, label, sols, distanceM, path, stops };
+}
+const P = (x, y) => ({ x, y });
+const SOJ_LEGS = [
+  leg(0, 'Down the ramp to Barnacle Bill', 'Sols 2-4', 5,
+    [P(0.5, 0.5), P(0.5, 0.6), P(0.48, 0.64), P(0.45, 0.67)],
+    [['Ramp foot', 1], ['Barnacle Bill', 3]]),
+  leg(1, 'Yogi and the nearby rocks', 'about Sols 5-30', 35,
+    [P(0.45, 0.67), P(0.37, 0.63), P(0.3, 0.54), P(0.31, 0.44), P(0.38, 0.36), P(0.46, 0.33)],
+    [['Yogi', 2], ['Scooby Doo', 3], ['Wedge', 5]]),
+  leg(2, 'The Rock Garden', 'about Sols 30-70', 35,
+    [P(0.46, 0.33), P(0.56, 0.26), P(0.66, 0.27), P(0.74, 0.36), P(0.75, 0.47)],
+    [['Shark', 2], ['Half Dome', 3], ['Chimp', 4]]),
+  leg(3, 'Last drives near the lander', 'about Sols 70-83', 25,
+    [P(0.75, 0.47), P(0.72, 0.6), P(0.64, 0.7), P(0.56, 0.71), P(0.53, 0.64)],
+    [['Last commanded drive (approx.)', 4]]),
+];
+
 const SOJ_DRIVE = {
   prop: Prop.SOJ_DRIVE,
-  title: 'Drive Command Relay',
-  blurb: 'Pick a spot and send Sojourner a waypoint. The command crosses about 11 minutes of space first, then the rover crawls there at 1 centimeter per second.',
-  archivist: 'Drivers at JPL chose waypoints in 3-D views built from the lander stereo camera. Over 83 sols Sojourner drove about 100 m in all and never went more than about 12 m from the lander.',
+  title: 'Drive Log (1997)',
+  blurb: 'Sojourner has been silent since September 27, 1997, and it will never move again. Replay its real drives instead: four legs around the lander, about 100 meters in 83 sols.',
+  archivist: 'Leg paths, per-leg distances, and sol ranges are traced from the 1997 traverse map and are approximate. Totals: about 100 m driven, never more than about 12 m from the lander, at up to 1 cm/s.',
   maxSpeedCmS: 1,
   totalTraverseM: 100,
   maxFromLanderM: 12,
   landerPos: MARS_LANDER_POS,
-  commandNote: 'Commands went from Earth to the lander, then by UHF radio modem to the rover. No live steering: one plan per sol.',
-  obstacles: MARS_OBSTACLES,
+  commandNote: 'In 1997, drivers at JPL picked waypoints in 3-D views from the lander camera. Each plan went to the lander, then by radio modem to the rover, which drove it on its own.',
+  lastContactUtc: '1997-09-27',
+  fate: 'Pathfinder last sent data on September 27, 1997. Sojourner could only talk through the lander. It was programmed to drive back toward the lander and wait if contact was lost; nobody knows how long it tried.',
+  lander: SOJ_LANDER,
+  legs: SOJ_LEGS,
 };
 
 export const PROP_SPECS = deepFreeze({
