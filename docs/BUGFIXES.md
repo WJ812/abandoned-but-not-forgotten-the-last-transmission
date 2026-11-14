@@ -64,11 +64,11 @@ The full game was played from the title screen to the ending using only key inpu
 
 | # | Severity | Area | Bug | Fix | Commit |
 |---|---|---|---|---|---|
-| 20 | Medium | Dialogue | While an answer typed out, and during the SIGNAL bar, the key hint was out of date, and Esc did something different from what it said. | The hint now follows the dialogue's state. | WIP |
-| 21 | Medium | Archive Computer | The "Recap" tab blinked fully invisible, which hid the ending. | It now glows steadily instead of disappearing. | WIP |
-| 22 | Medium | Mars | The player froze once and could not move. This was not reproduced. | Input is reset on every return to the world, and a guard moves the astronaut free if it is ever wedged inside a solid. | WIP |
-| 23 | Low | Star Map | Its content overflowed the screen and hid the info panel. | Reorganized into a side-by-side layout with no scrolling. | WIP |
-| 24 | Low | Hardware panels | Long text was cut off, and labels on the drive log and battery chart overlapped. | Long text wraps, the labels are staggered, and the chart tooltip moved clear of the other labels. | WIP |
-| 25 | Low | Replays | Pressing Space selected the EVA instead of starting the replay. | Play is now the default control. | WIP |
+| 20 | Medium | Dialogue | While an answer typed out, and during the SIGNAL bar, the key hint was out of date, and Esc did something different from what it said. | The hint now follows the dialogue's state. | `98d20d3` |
+| 21 | Medium | Archive Computer | The "Recap" tab blinked fully invisible, which hid the ending. | It now glows steadily instead of disappearing. | `98d20d3` |
+| 22 | Medium | Mars | The player froze once and could not move. This was not reproduced. | Input is reset on every return to the world, and a guard moves the astronaut free if it is ever wedged inside a solid. | `98d20d3` |
+| 23 | Low | Star Map | Its content overflowed the screen and hid the info panel. | Reorganized into a side-by-side layout with no scrolling. | `98d20d3` |
+| 24 | Low | Hardware panels | Long text was cut off, and labels on the drive log and battery chart overlapped. | Long text wraps, the labels are staggered, and the chart tooltip moved clear of the other labels. | `98d20d3` |
+| 25 | Low | Replays | Pressing Space selected the EVA instead of starting the replay. | Play is now the default control. | `98d20d3` |
 | 26 | Low | Usability | The walkway under Sojourner was only 10 px wide. The world prompt showed "E" while every other hint said "Space". | The walkway is now 18 px, and the prompt says "Space". | `16a271e` |
 | 27 | Low | Moon | Crater shadows were drawn as rectangles over round craters. | They are now drawn as ellipses that match the crater floors. | `d640ca2` |
