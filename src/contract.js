@@ -46,10 +46,10 @@ export const PACKAGE_SLUG = 'abandoned-but-not-forgotten-the-last-transmission';
 
 /* ========================================================================
  * 1. VIEW & TIME
- * One 320x180 (16:9) logical canvas, integer-scaled with crisp pixels.
+ * One 360x180 (2:1) logical canvas (matches the Hub art), integer-scaled with crisp pixels.
  * The HTML/CSS UI overlays it. Scenes are single screens, no scrolling.
  * ====================================================================== */
-export const CANVAS_W = 320;
+export const CANVAS_W = 360;
 export const CANVAS_H = 180;
 export const FPS = 60;
 export const DT = 1 / FPS;             // engine fixed step, seconds
@@ -147,6 +147,8 @@ export const Trigger = Object.freeze({ PRESS: 'press', STEP: 'step' });
  * @property {number}  [facing] Dir the player must face (omit = any)
  * @property {string}  label    <= LABEL_MAX, shown as the floating prompt
  * @property {string}  [caption] DECOR only: one line shown on press
+ * @property {*}       [arg]    optional prop argument to preselect (e.g. APXS target index);
+ *                              findInteract() passes it through unchanged
  */
 
 /**
@@ -214,7 +216,9 @@ export const Trigger = Object.freeze({ PRESS: 'press', STEP: 'step' });
  * falls silent. Greeting text from the spec is used verbatim.
  * @typedef {Object} Question
  * @property {number}   id          index 0..QUESTIONS_MAX-1 (bit in game.asked[robot])
- * @property {string}   label       <= LABEL_MAX
+ * @property {string}   label       <= LABEL_MAX (menu text; may be a shortened form)
+ * @property {string}   [prompt]    full question wording verbatim from the spec, when
+ *                                  it is longer than LABEL_MAX (shown as the asked line)
  * @property {string[]} answer      1..4 pages <= TEXT_MAX
  * @property {string[]} archivist   0..2 extra pages shown after answer in Archivist mode
  *
@@ -269,7 +273,7 @@ export const Trigger = Object.freeze({ PRESS: 'press', STEP: 'step' });
 /* ========================================================================
  * 6. PHYSICS
  * Scale is anchored on the 24x24 astronaut sprite = a 2.0 m suited astronaut,
- * so PX_PER_M = 12. TIME_SCALE compresses time so a 320 px scene is crossed in
+ * so PX_PER_M = 12. TIME_SCALE compresses time so a 360 px scene is crossed in
  * ~7 s; it multiplies velocities once and accelerations twice, so hop HEIGHTS
  * are physically exact in px and the Moon/Mars ratios are the real ones.
  *
@@ -486,7 +490,8 @@ export const PropAction = Object.freeze({
  * LRV_BATTERY {
  *   prop, title, blurb, archivist,
  *   count: 2, voltageV: 36, capacityAh: 121, chemistry: 'silver-zinc', rechargeable: false,
- *   energyWh: number, motors: {count: 4, hp: 0.25, watts: number}, topSpeedKmh: 18,
+ *   energyWh: number, motors: {count: 4, hp: 0.25, watts: number (per motor)}, topSpeedKmh: 18 (recorded),
+ *   [designSpeedKmh]: 13,
  *   evaDrawWh: number[] (per EVA, for the load test), whyDead: string
  * }
  * LRV_CAMERA {

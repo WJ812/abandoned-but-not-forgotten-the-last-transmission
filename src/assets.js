@@ -36,13 +36,13 @@ export const ASSETS = Object.freeze({
   /* ---- Scenes: full 320x180 backgrounds with props painted in.
    *      Artwork/Scenes/ is empty as of 2026-11-14; filenames below are the
    *      expected ones. ---- */
-  scene_hub:  { src: `${A}Scenes/hub.png`,                 w: 320, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#0b3d91', label: 'NASA ARCHIVES HUB' } },
-  scene_moon: { src: `${A}Scenes/moon_taurus_littrow.png`, w: 320, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#5a5e66', label: 'MOON - TAURUS-LITTROW' } },
-  scene_mars: { src: `${A}Scenes/mars_ares_vallis.png`,    w: 320, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#9a4a1e', label: 'MARS - ARES VALLIS' } },
+  scene_hub:  { src: `${A}Scenes/The Hub (INTERACTIVE).png`, w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#0b3d91', label: 'NASA ARCHIVES HUB' } },
+  scene_moon: { src: `${A}Scenes/moon_taurus_littrow.png`, w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#5a5e66', label: 'MOON - TAURUS-LITTROW' } },
+  scene_mars: { src: `${A}Scenes/mars_ares_vallis.png`,    w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#9a4a1e', label: 'MARS - ARES VALLIS' } },
 
   /* ---- Title screen (art supplied by the user; buttons coded by frontend).
    *      Button strips: 3 states stacked vertically = normal, focused, pressed. ---- */
-  title_bg:            { src: `${A}UI/title_bg.png`,            w: 320, h: 180, frames: 1, layout: 'v', kind: 'scene',  placeholder: { color: '#061a3a', label: 'TITLE' } },
+  title_bg:            { src: `${A}UI/title_bg.png`,            w: 360, h: 180, frames: 1, layout: 'v', kind: 'scene',  placeholder: { color: '#061a3a', label: 'TITLE' } },
   title_logo:          { src: `${A}UI/title_logo.png`,          w: 240, h: 64,  frames: 1, layout: 'v', kind: 'ui',     placeholder: { color: '#0b3d91', label: 'ABANDONED BUT NOT FORGOTTEN / THE LAST TRANSMISSION' }, note: 'optional if the logo is painted into title_bg' },
   btn_continue:        { src: `${A}UI/btn_continue.png`,        w: 96,  h: 18,  frames: 3, layout: 'v', kind: 'button', placeholder: { color: '#1f4e9a', label: 'CONTINUE' } },
   btn_new_game:        { src: `${A}UI/btn_new_game.png`,        w: 96,  h: 18,  frames: 3, layout: 'v', kind: 'button', placeholder: { color: '#1f4e9a', label: 'NEW GAME' } },
@@ -95,8 +95,8 @@ export const ASSETS = Object.freeze({
   icon_voyager1:           { src: `${A}Icons/voyager1.png`,           w: 16, h: 16, frames: 1, layout: 'h', kind: 'icon', placeholder: { color: '#4a5568', label: 'V1' } },
 
   /* ---- Ending montage: 2 full frames ---- */
-  montage_lrv:       { src: `${A}Montage/lrv_taurus_littrow.png`,     w: 320, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#3a3d44', label: 'LRV PARKED IN TAURUS-LITTROW' } },
-  montage_sojourner: { src: `${A}Montage/sojourner_beside_pathfinder.png`, w: 320, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#7a3a14', label: 'SOJOURNER BESIDE PATHFINDER' } },
+  montage_lrv:       { src: `${A}Montage/lrv_taurus_littrow.png`,     w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#3a3d44', label: 'LRV PARKED IN TAURUS-LITTROW' } },
+  montage_sojourner: { src: `${A}Montage/sojourner_beside_pathfinder.png`, w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#7a3a14', label: 'SOJOURNER BESIDE PATHFINDER' } },
 
   /* ---- HUD ---- */
   hud_icons: { src: `${A}UI/hud_icons.png`, w: 10, h: 10, frames: 6, layout: 'h', kind: 'icon', placeholder: { color: '#e6edf5', label: 'H' }, note: 'frames: blueprint, notebook, headlamp, mute, explorer, archivist' },

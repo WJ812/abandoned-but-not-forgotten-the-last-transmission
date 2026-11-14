@@ -14,7 +14,7 @@ import {
   Mode, Trigger, HotspotKind, Prop, PROP_COUNT, propRegion, SAVE_KEY, SAVE_VERSION, CANVAS_W, CANVAS_H,
 } from '../contract.js';
 import { overlaps, pointIn, rectGap, rectCenter, angleDiff, popcount } from './geom.js';
-import { createPropState, propActionImpl, propTickImpl, mergeSpec, findRoverHotspot } from './props.js';
+import { createPropState, propActionImpl, propTickImpl, mergeSpec, isRoverPart } from './props.js';
 
 /* ========================================================================
  * Physics tuning. The contract allows WALK and HOP_TAKEOFF +/-25%; gravity is
@@ -125,9 +125,11 @@ const DIR_VEC = { [Dir.DOWN]: [0, 1], [Dir.UP]: [0, -1], [Dir.LEFT]: [-1, 0], [D
 const DIR_ANGLE = { [Dir.RIGHT]: 0, [Dir.DOWN]: 90, [Dir.LEFT]: 180, [Dir.UP]: 270 };
 
 /**
- * Hotspots that ride on Sojourner (its own ROBOT hotspot plus any hotspot whose
- * rect overlapped the rover's original rect) follow SOJ_DRIVE.pos. Returns the
- * hotspot itself when unmoved, else a cached shallow clone with a moved rect.
+ * Hotspots that are part of Sojourner (see props.isRoverPart: its ROBOT hotspot,
+ * the solar panel and hazard-laser prompts) follow SOJ_DRIVE.pos. The lander
+ * relay and the APXS rock spots stay fixed. Returns the hotspot itself when
+ * unmoved, else a cached shallow clone (all fields, e.g. `arg`, kept) with a
+ * moved rect.
  */
 const liveCache = new Map();
 function liveHotspot(h, scene) {
@@ -136,8 +138,7 @@ function liveHotspot(h, scene) {
   if (!d) return h;
   const dx = d.pos.x - d.start.x, dy = d.pos.y - d.start.y;
   if (dx === 0 && dy === 0) return h;
-  const rover = findRoverHotspot(scene);
-  if (!rover || !(h === rover || overlaps(h.rect, rover.rect))) return h;
+  if (!isRoverPart(h, scene)) return h;
   const c = liveCache.get(h.id);
   if (c && c.rect.x === h.rect.x + dx && c.rect.y === h.rect.y + dy) return c;
   const clone = { ...h, rect: { x: h.rect.x + dx, y: h.rect.y + dy, w: h.rect.w, h: h.rect.h } };
@@ -428,7 +429,8 @@ export function latencyStart() {
 export function latencyTick(dt = DT) {
   const L = game.latency;
   if (!L.active) return L.progress;
-  L.elapsed += Math.max(0, dt);
+  const step = dt === Infinity ? LATENCY.GAUGE_REAL_S : (Number.isFinite(dt) ? Math.max(0, dt) : 0);
+  L.elapsed += step;
   L.progress = Math.min(1, L.elapsed / LATENCY.GAUGE_REAL_S);
   if (L.progress >= 1 - 1e-9) {
     L.progress = 1;
@@ -547,10 +549,15 @@ export function propState(prop) { return validProp(prop) ? (game.props[prop] ?? 
  * globalThis.localStorage. If storage is missing or throws, an in-memory
  * fallback keeps the save working for the session.
  * ====================================================================== */
+/** Last save written this session. It mirrors every write and takes priority
+ *  over storage when reading, so a failed or quota-limited setItem can neither
+ *  hide (hasSave false) nor roll back (stale stored string) this session's
+ *  progress. A page reload starts with memSave = null and reads storage. */
 let memSave = null;
+let memErased = false;   // eraseSave() ran this session (even if removeItem threw)
 
 /** Test hook: forget the in-memory fallback save. */
-export function _resetMemorySave() { memSave = null; }
+export function _resetMemorySave() { memSave = null; memErased = false; }
 
 function storage() {
   try {
@@ -561,6 +568,8 @@ function storage() {
 }
 
 function readRaw() {
+  if (memSave !== null) return memSave;
+  if (memErased) return null;
   const s = storage();
   if (s) {
     try { return s.getItem(SAVE_KEY); } catch { /* fall through */ }
@@ -606,17 +615,19 @@ export function writeSave() {
     v: SAVE_VERSION, blueprints: game.blueprints, robotsTalked: game.robotsTalked,
     asked: game.asked.slice(0, ROBOT_COUNT).map((n) => n | 0), mode: game.mode, flags: game.flags,
   });
+  memSave = raw;
+  memErased = false;
   const s = storage();
   if (s) {
-    try { s.setItem(SAVE_KEY, raw); return; } catch { /* quota / disabled: fall back */ }
+    try { s.setItem(SAVE_KEY, raw); } catch { /* quota / private mode: memSave keeps the session */ }
   }
-  memSave = raw;
 }
 
 export function eraseSave() {
+  memSave = null;
+  memErased = true;
   const s = storage();
   if (s && typeof s.removeItem === 'function') {
     try { s.removeItem(SAVE_KEY); } catch { /* ignore */ }
   }
-  memSave = null;
 }

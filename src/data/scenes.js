@@ -146,8 +146,8 @@ const MARS_ROCK_C = R(130, 160, 12, 8);
 const MARS_BLUEPRINT = R(276, 146, 12, 12);
 const MARS_RETURN = R(16, 156, 24, 12);
 
-/** Rocks the hazard scan and drive planner see (shared with props.js). */
-export const MARS_OBSTACLES = deepFreeze([MARS_BARNACLE_BILL, MARS_ROCK_FRONT, MARS_YOGI, MARS_ROCK_B, MARS_ROCK_C]);
+/** Lander + rocks the hazard scan and drive planner see (shared with props.js). */
+export const MARS_OBSTACLES = deepFreeze([MARS_LANDER, MARS_BARNACLE_BILL, MARS_ROCK_FRONT, MARS_YOGI, MARS_ROCK_B, MARS_ROCK_C]);
 /** Lander center (drive range is measured from here). */
 export const MARS_LANDER_POS = deepFreeze({ x: MARS_LANDER.x + MARS_LANDER.w / 2, y: MARS_LANDER.y + MARS_LANDER.h / 2 });
 
@@ -165,8 +165,8 @@ const MARS = {
     hs('mars.sojourner', K.ROBOT, MARS_ROVER, T.PRESS, Robot.SOJOURNER, false, 'Talk to Sojourner', { facing: Dir.UP }),
     hs('mars.solar', K.PROP, MARS_SOLAR, T.PRESS, Prop.SOJ_SOLAR, false, 'Solar panel', { facing: Dir.DOWN }),
     hs('mars.hazard', K.PROP, MARS_HAZARD, T.PRESS, Prop.SOJ_HAZARD, false, 'Hazard lasers', { facing: Dir.LEFT }),
-    hs('mars.apxs.bb', K.PROP, MARS_BB_APXS, T.PRESS, Prop.SOJ_APXS, false, 'APXS: Barnacle Bill'),
-    hs('mars.apxs.yogi', K.PROP, MARS_YOGI_APXS, T.PRESS, Prop.SOJ_APXS, false, 'APXS: Yogi'),
+    hs('mars.apxs.bb', K.PROP, MARS_BB_APXS, T.PRESS, Prop.SOJ_APXS, false, 'APXS: Barnacle Bill', { arg: 0 }),
+    hs('mars.apxs.yogi', K.PROP, MARS_YOGI_APXS, T.PRESS, Prop.SOJ_APXS, false, 'APXS: Yogi', { arg: 1 }),
     hs('mars.drive', K.PROP, MARS_RELAY, T.PRESS, Prop.SOJ_DRIVE, false, 'Lander relay: drive rover'),
     hs('mars.blueprint', K.BLUEPRINT, MARS_BLUEPRINT, T.PRESS, Blueprint.SOJOURNER, false, 'Scan Sojourner blueprint'),
     hs('mars.return', K.RETURN_PAD, MARS_RETURN, T.STEP, 0, false, 'Return to Hub'),
@@ -185,7 +185,7 @@ const MARS = {
     {
       id: 2, rect: R(140, 60, 72, 20), title: 'Twin Peaks',
       explorer: 'The two hills on the horizon are the Twin Peaks, about a kilometer away. Spotting them in pictures from orbit helped scientists find exactly where Pathfinder landed.',
-      archivist: 'Matching horizon features like Twin Peaks and Big Crater to Viking orbiter images placed the lander to within about 100 m. The peaks are a few tens of meters tall.',
+      archivist: 'Matching horizon features such as Twin Peaks and Big Crater to Viking orbiter images pinpointed the landing site. The peaks rise a few tens of meters above the plain.',
     },
     {
       id: 3, rect: R(252, 106, 56, 32), title: 'Thin, cold air',

@@ -48,7 +48,9 @@ export const PROP_TUNING = Object.freeze({
   ROVER_HALF_LEN_PX: 12,      // sojourner_body is 24 px long
   ROVER_FOOT_W: 16, ROVER_FOOT_H: 8,
   DRIVE_TIME_COMPRESS: 20,    // on top of TIME_SCALE: 1 cm/s -> 6 px/s on screen
-  DRIVE_STALL_S: 8,           // no progress for this long -> 'blocked'
+  DRIVE_STALL_S: 8,
+  DRIVE_SUBSTEP_S: 1 / 60,    // large ticks are split so the rover cannot tunnel
+  DRIVE_MAX_TICK_S: 120,      // cap on one propTick's simulated time           // no progress for this long -> 'blocked'
   DRIVE_RIPPLE_DEG: 3,        // rocker-bogie rocking over small stones
   DRIVE_RIPPLE_M: 0.35,       // wavelength of that rocking
   DRIVE_ROCK_TILT_DEG: 12,    // extra tilt when a wheel climbs beside a rock
@@ -173,7 +175,7 @@ export function propActionImpl(s, spec, action, arg, ctx) {
     case Prop.SOJ_HAZARD:
       if (action === A.HAZ_SCAN) hazardStart(s, spec, ctx);
       return s;
-    case Prop.SOJ_DRIVE: return driveAction(s, spec, action, arg);
+    case Prop.SOJ_DRIVE: return driveAction(s, spec, action, arg, ctx);
     default: return s;
   }
 }
@@ -183,7 +185,7 @@ export function propActionImpl(s, spec, action, arg, ctx) {
  * ====================================================================== */
 export function propTickImpl(s, spec, dt, ctx) {
   s.changed = false;
-  if (!(dt > 0)) return s;
+  if (!(dt > 0) || !Number.isFinite(dt)) return s;   // ignore 0, negative, NaN, Infinity
   switch (s.prop) {
     case Prop.LRV_NAV: return navTick(s, spec, dt, ctx);
     case Prop.LRV_BATTERY: return batteryTick(s, spec, dt);
@@ -192,7 +194,7 @@ export function propTickImpl(s, spec, dt, ctx) {
     case Prop.SOJ_SOLAR: return solarTick(s, spec, dt);
     case Prop.SOJ_APXS: return apxsTick(s, spec, dt);
     case Prop.SOJ_HAZARD: return hazardTick(s, spec, dt);
-    case Prop.SOJ_DRIVE: return driveTick(s, spec, dt);
+    case Prop.SOJ_DRIVE: return driveTick(s, spec, dt, ctx);
     default: return s;
   }
 }
@@ -501,7 +503,6 @@ function roverPose(ctx) {
   return { pos: roverStartPos(ctx, ds), headingDeg: 0, driven: false };
 }
 
-const footRect = (x, y) => ({ x: x - T.ROVER_FOOT_W / 2, y: y - T.ROVER_FOOT_H / 2, w: T.ROVER_FOOT_W, h: T.ROVER_FOOT_H });
 
 /* ------------------------------------------------------------------------
  * SOJ_HAZARD: five laser stripes fanned ahead of the rover, ray-cast against
@@ -603,9 +604,73 @@ export function driveSpeedPxS(spec) {
   return num(spec.maxSpeedCmS, 1) / 100 * PX_PER_M * TIME_SCALE * T.DRIVE_TIME_COMPRESS;
 }
 
-function clampTarget(spec, p) {
-  let x = clamp(num(p.x, 0), T.ROVER_FOOT_W / 2, CANVAS_W - T.ROVER_FOOT_W / 2);
-  let y = clamp(num(p.y, 0), T.ROVER_FOOT_H / 2, CANVAS_H - T.ROVER_FOOT_H / 2);
+/** Hotspots that are physically part of Sojourner and ride with it: the rover's
+ *  own ROBOT hotspot, ids 'mars.sojourner*' / 'mars.solar*' / 'mars.hazard*',
+ *  and PROP hotspots for SOJ_SOLAR / SOJ_HAZARD. The lander relay (SOJ_DRIVE)
+ *  and the APXS rock spots (SOJ_APXS) stay fixed. */
+const ROVER_PART_PROPS = Object.freeze([Prop.SOJ_SOLAR, Prop.SOJ_HAZARD]);
+export function isRoverPart(h, scene) {
+  if (!h) return false;
+  if (h === findRoverHotspot(scene)) return true;
+  if (typeof h.id === 'string' && /^mars\.(sojourner|solar|hazard)(\.|$)/.test(h.id)) return true;
+  return h.kind === HotspotKind.PROP && ROVER_PART_PROPS.includes(h.ref);
+}
+
+const finiteRect = (r) => !!r && [r.x, r.y, r.w, r.h].every((v) => typeof v === 'number' && Number.isFinite(v));
+
+/** What the drive planner collides with: spec rocks + every scene solid + solid
+ *  hotspots that are not part of the rover. Footprint = the rover's own rect;
+ *  bounds = the walkable area (so the player can always walk up to it). */
+function driveWorld(spec, ctx) {
+  let scene = null;
+  try { scene = ctx.scene(Region.MARS); } catch { scene = null; }
+  const obs = [];
+  for (const r of (Array.isArray(spec.obstacles) ? spec.obstacles : [])) if (finiteRect(r)) obs.push(r);
+  if (scene) {
+    for (const r of (scene.solids || [])) if (finiteRect(r)) obs.push(r);
+    for (const h of (scene.hotspots || [])) if (h && h.solid && !isRoverPart(h, scene) && finiteRect(h.rect)) obs.push(h.rect);
+  }
+  const rover = findRoverHotspot(scene);
+  const foot = rover && finiteRect(rover.rect) ? { w: rover.rect.w, h: rover.rect.h } : { w: T.ROVER_FOOT_W, h: T.ROVER_FOOT_H };
+  const bounds = scene && finiteRect(scene.walkable) ? scene.walkable : { x: 0, y: 0, w: CANVAS_W, h: CANVAS_H };
+  return { obs, foot, bounds };
+}
+
+const footAt = (world, x, y) => ({ x: x - world.foot.w / 2, y: y - world.foot.h / 2, w: world.foot.w, h: world.foot.h });
+
+function inBounds(world, f) {
+  const b = world.bounds;
+  return f.x >= b.x - 1e-9 && f.y >= b.y - 1e-9 && f.x + f.w <= b.x + b.w + 1e-9 && f.y + f.h <= b.y + b.h + 1e-9;
+}
+
+/** Fully free spot: inside bounds, touching no obstacle. */
+function spotFree(world, x, y) {
+  const f = footAt(world, x, y);
+  return inBounds(world, f) && !world.obs.some((o) => overlaps(f, o));
+}
+
+/** Move from -> to is allowed: inside bounds and no NEW obstacle overlap
+ *  (an obstacle already overlapped at `from` may be left, never entered). */
+function driveFree(world, from, to) {
+  const f = footAt(world, to.x, to.y);
+  if (!inBounds(world, f)) return false;
+  const cur = footAt(world, from.x, from.y);
+  for (const o of world.obs) if (overlaps(f, o) && !overlaps(cur, o)) return false;
+  return true;
+}
+
+function withinRange(spec, x, y) {
+  const lp = spec.landerPos;
+  const R = num(spec.maxFromLanderM, 12) * PX_PER_M;
+  return !(lp && R > 0) || Math.hypot(x - lp.x, y - lp.y) <= R + 1e-9;
+}
+
+/** Clamp a commanded waypoint to the walkable area and radio range, then snap
+ *  it to the nearest spot where the whole rover fits (never inside a solid). */
+function clampTarget(spec, world, p, fallback) {
+  const b = world.bounds;
+  let x = clamp(num(p.x, fallback.x), b.x + world.foot.w / 2, b.x + b.w - world.foot.w / 2);
+  let y = clamp(num(p.y, fallback.y), b.y + world.foot.h / 2, b.y + b.h - world.foot.h / 2);
   const lp = spec.landerPos;
   const R = num(spec.maxFromLanderM, 12) * PX_PER_M;
   if (lp && R > 0) {
@@ -613,13 +678,22 @@ function clampTarget(spec, p) {
     const d = Math.hypot(dx, dy);
     if (d > R) { x = lp.x + (dx / d) * R; y = lp.y + (dy / d) * R; }
   }
-  return { x, y };
+  if (spotFree(world, x, y)) return { x, y };
+  for (let r = 1; r <= 200; r++) {
+    const n = Math.max(8, Math.ceil(2 * Math.PI * r));
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * 2 * Math.PI;
+      const cx = x + Math.cos(a) * r, cy = y + Math.sin(a) * r;
+      if (withinRange(spec, cx, cy) && spotFree(world, cx, cy)) return { x: cx, y: cy };
+    }
+  }
+  return { ...fallback };
 }
 
-function driveAction(s, spec, action, arg) {
+function driveAction(s, spec, action, arg, ctx) {
   if (action === A.DRIVE_GOTO) {
     if (!arg || typeof arg !== 'object') return s;
-    s.target = clampTarget(spec, arg);
+    s.target = clampTarget(spec, driveWorld(spec, ctx), arg, s.pos);
     s.phase = 'signal'; s.signal = 0; s.stopSignal = -1; s.speedPxS = 0;
     s.detourSide = 0; s.stall = 0; s.bestDist = Infinity;
     s.changed = true;
@@ -631,15 +705,21 @@ function driveAction(s, spec, action, arg) {
   return s;
 }
 
-function driveFree(spec, obs, from, to) {
-  const f = footRect(to.x, to.y);
-  if (f.x < 0 || f.y < 0 || f.x + f.w > CANVAS_W || f.y + f.h > CANVAS_H) return false;
-  const cur = footRect(from.x, from.y);
-  for (const o of obs) if (overlaps(f, o) && !overlaps(cur, o)) return false;
-  return true;
+/** Large dt is split into sub-steps so the rover can never jump over a rock. */
+function driveTick(s, spec, dt, ctx) {
+  const world = driveWorld(spec, ctx);
+  let remaining = Math.min(dt, T.DRIVE_MAX_TICK_S);
+  while (remaining > 1e-12) {
+    const h = Math.min(remaining, T.DRIVE_SUBSTEP_S);
+    driveStep(s, spec, h, world);
+    remaining -= h;
+    if (s.stopSignal < 0 && s.phase !== 'signal' && s.phase !== 'moving') break;
+  }
+  if (s.phase !== 'moving') s.speedPxS = 0;
+  return s;
 }
 
-function driveTick(s, spec, dt) {
+function driveStep(s, spec, dt, world) {
   const gauge = LATENCY.GAUGE_REAL_S;
   if (s.stopSignal >= 0) {
     s.stopSignal = Math.min(1, s.stopSignal + dt / gauge);
@@ -653,22 +733,22 @@ function driveTick(s, spec, dt) {
   if (s.phase === 'signal') {
     s.signal = Math.min(1, s.signal + dt / gauge);
     if (s.signal >= 1 - 1e-9) { s.signal = 1; s.phase = 'moving'; s.changed = true; }
-    return s;
+    return;
   }
-  if (s.phase !== 'moving' || !s.target) { s.speedPxS = 0; return s; }
+  if (s.phase !== 'moving' || !s.target) { s.speedPxS = 0; return; }
 
-  const obs = Array.isArray(spec.obstacles) ? spec.obstacles : [];
+  const obs = world.obs;
   const speed = driveSpeedPxS(spec);
   const dx = s.target.x - s.pos.x, dy = s.target.y - s.pos.y;
   const dist = Math.hypot(dx, dy);
   const step = Math.min(speed * dt, dist);
-  if (dist < 1e-6) { s.phase = 'arrived'; s.speedPxS = 0; s.changed = true; return s; }
+  if (dist < 1e-6) { s.pos = { ...s.target }; s.phase = 'arrived'; s.speedPxS = 0; s.changed = true; return; }
 
   const desired = Math.atan2(dy, dx) / DEG;
   const tryAt = (offDeg) => {
     const a = (desired + offDeg) * DEG;
     const to = { x: s.pos.x + Math.cos(a) * step, y: s.pos.y + Math.sin(a) * step };
-    return driveFree(spec, obs, s.pos, to) ? to : null;
+    return driveFree(world, s.pos, to) ? to : null;
   };
   let moved = tryAt(0);
   let usedOff = 0;
@@ -676,7 +756,7 @@ function driveTick(s, spec, dt) {
     if (!s.detourSide) {
       // Turn away from the blocking rock (positive offset = clockwise = right).
       const probe = { x: s.pos.x + Math.cos(desired * DEG) * Math.max(step, 1), y: s.pos.y + Math.sin(desired * DEG) * Math.max(step, 1) };
-      const pf = footRect(probe.x, probe.y);
+      const pf = footAt(world, probe.x, probe.y);
       const rock = obs.find((o) => overlaps(pf, o));
       if (rock) {
         const c = rectCenter(rock);
@@ -694,35 +774,32 @@ function driveTick(s, spec, dt) {
     }
   }
 
-  if (!moved) {
-    s.phase = 'blocked'; s.speedPxS = 0; s.changed = true;
-    return s;
-  }
+  if (!moved) { s.phase = 'blocked'; s.speedPxS = 0; s.changed = true; return; }
   const movedPx = Math.hypot(moved.x - s.pos.x, moved.y - s.pos.y);
   s.pos = moved;
   s.headingDeg = norm360(desired + usedOff);
   s.speedPxS = speed;
   s.odometerM += movedPx / PX_PER_M;
   s.realTimeS = s.odometerM / Math.max(1e-6, num(spec.maxSpeedCmS, 1) / 100);
-  driveTilt(s, obs, dt);
+  driveTilt(s, world, dt);
 
   const left = Math.hypot(s.target.x - s.pos.x, s.target.y - s.pos.y);
   if (left <= 1e-3) {
     s.pos = { ...s.target };
     s.phase = 'arrived'; s.speedPxS = 0; s.changed = true;
-    return s;
+    return;
   }
   if (left < s.bestDist - 0.5) { s.bestDist = left; s.stall = 0; }
   else {
     s.stall += dt;
     if (s.stall >= T.DRIVE_STALL_S) { s.phase = 'blocked'; s.speedPxS = 0; s.changed = true; }
   }
-  return s;
 }
 
-function driveTilt(s, obs, dt) {
+function driveTilt(s, world, dt) {
+  const obs = world.obs;
   let target = T.DRIVE_RIPPLE_DEG * Math.sin((s.odometerM / T.DRIVE_RIPPLE_M) * 2 * Math.PI);
-  const f = footRect(s.pos.x, s.pos.y);
+  const f = footAt(world, s.pos.x, s.pos.y);
   const h = s.headingDeg * DEG;
   let rock = 0;
   for (const o of obs) {
