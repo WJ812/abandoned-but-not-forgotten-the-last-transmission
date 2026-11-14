@@ -197,7 +197,9 @@ function drawRovers(g, scene, t) {
     try {
       const sp2 = ctx.data.getPropSpec(Prop.SOJ_DRIVE);
       const lp = sp2?.landerPos;
-      if (lp && (!ctx.assets.isReal(scene.background) || ctx.assets.isReal('pathfinder_lander'))) A.draw(g, 'pathfinder_lander', 0, lp.x - 24, lp.y - 20);
+      // Always drawn: the lander is a solid in the scene data, so it must be visible
+      // (placeholder until its sprite exists). Centered on its 48x28 solid rect.
+      if (lp) { const s = A.slotOf('pathfinder_lander'); A.draw(g, 'pathfinder_lander', 0, lp.x - s.w / 2, lp.y - s.h / 2); }
     } catch { /* spec unavailable */ }
   }
 }

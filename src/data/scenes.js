@@ -117,29 +117,36 @@ const MOON = {
 };
 
 /* =====================================================================
- * MARS: Ares Vallis, Mars Pathfinder. Twin Peaks painted above y=60.
- * Sojourner is a SPRITE (sojourner_body), not painted in; its hotspots below
- * mark its starting position near the lander ramp. Solar / hazard props are
- * on the rover itself and are told apart by the facing the player needs.
+ * MARS: Ares Vallis. REAL ART: 'Artwork/Scenes/mars_location.png', 360x180.
+ * Painted: left ridge, open dunes, Big Crater rim (right), rocks R1-R6.
+ * NOT painted (drawn as sprites): Pathfinder lander, Sojourner, return pad,
+ * blueprint. Clickables per the user: Sojourner (talk), its hardware panels
+ * (solar and hazard ride on the rover; drive is the fixed lander relay; APXS on two rocks), the
+ * blueprint, and the return pad. Nothing else.
+ * Barnacle Bill -> R2, Yogi -> R5 (game mapping; the real rocks sat a few m
+ * from the lander).
  * ===================================================================== */
-const MARS_WALKABLE = R(4, 60, 312, 116);
-const MARS_LANDER = R(36, 66, 60, 34);            // Pathfinder + petals (solid)
-const MARS_RELAY = R(96, 84, 10, 14);             // lander side: drive command relay
-const MARS_ROVER = R(160, 120, 24, 14);           // Sojourner start (sprite area)
-const MARS_SOLAR = R(160, 112, 24, 8);            // top of rover, seen from above
-const MARS_HAZARD = R(184, 120, 6, 14);           // front laser windows
-const MARS_BARNACLE_BILL = R(112, 104, 16, 12);   // right by the ramp, as on sol 3
-const MARS_BB_APXS = R(112, 116, 16, 8);
-const MARS_YOGI = R(232, 78, 28, 18);             // larger rock a few m away
-const MARS_YOGI_APXS = R(232, 96, 28, 8);
-const MARS_ROCK_FRONT = R(206, 122, 12, 10);      // rock ahead of the rover (hazard demo)
-const MARS_ROCK_B = R(196, 152, 14, 10);
-const MARS_ROCK_C = R(130, 160, 12, 8);
-const MARS_BLUEPRINT = R(276, 146, 12, 12);
-const MARS_RETURN = R(16, 156, 24, 12);
+const MARS_WALKABLE = R(4, 110, 352, 68);         // ground band; sky/slopes above
+const MARS_RIDGE_BASE = R(0, 105, 45, 15);        // left ridge meets the ground
+const MARS_CRATER_RIM = R(265, 80, 95, 38);       // Big Crater rim, intrudes to y=118
+const MARS_R1 = R(6, 125, 21, 12);
+const MARS_R2 = R(51, 140, 31, 20);               // "Barnacle Bill"
+const MARS_R4 = R(242, 157, 10, 9);
+const MARS_R5 = R(254, 147, 36, 20);              // biggest rock, "Yogi"
+const MARS_R6 = R(328, 153, 10, 7);
+// R3 pebble (84-90, 150-155) is decor only: not solid, not interactive.
+const MARS_LANDER = R(110, 112, 48, 28);          // pathfinder_lander sprite (48x28)
+const MARS_ROVER = R(184, 140, 24, 14);           // sojourner_body sprite start
+const MARS_SOLAR = R(184, 132, 24, 8);            // panel on top of the rover
+const MARS_HAZARD = R(208, 140, 6, 14);           // front laser windows (right)
+const MARS_DRIVE = R(158, 124, 6, 14);            // lander relay (fixed): waypoint drive
+const MARS_BB_APXS = R(82, 140, 8, 20);           // R2 right (near) edge
+const MARS_YOGI_APXS = R(254, 139, 36, 8);        // R5 top (near) edge
+const MARS_BLUEPRINT = R(214, 120, 12, 12);
+const MARS_RETURN = R(16, 160, 24, 12);
 
-/** Lander + rocks the hazard scan and drive planner see (shared with props.js). */
-export const MARS_OBSTACLES = deepFreeze([MARS_LANDER, MARS_BARNACLE_BILL, MARS_ROCK_FRONT, MARS_YOGI, MARS_ROCK_B, MARS_ROCK_C]);
+/** Lander + solid rocks the hazard scan and drive planner see (shared with props.js). */
+export const MARS_OBSTACLES = deepFreeze([MARS_LANDER, MARS_R1, MARS_R2, MARS_R4, MARS_R5, MARS_R6]);
 /** Lander center (drive range is measured from here). */
 export const MARS_LANDER_POS = deepFreeze({ x: MARS_LANDER.x + MARS_LANDER.w / 2, y: MARS_LANDER.y + MARS_LANDER.h / 2 });
 
@@ -149,40 +156,50 @@ const MARS = {
   w: CANVAS_W, h: CANVAS_H,
   background: 'scene_mars',
   surface: Surface.SAND,
-  spawn: { x: 48, y: 136, facing: Dir.RIGHT },
+  spawn: { x: 40, y: 148, facing: Dir.RIGHT },
   walkable: MARS_WALKABLE,
-  solids: [MARS_LANDER, MARS_BARNACLE_BILL, MARS_YOGI, MARS_ROCK_FRONT, MARS_ROCK_B, MARS_ROCK_C],
+  solids: [MARS_RIDGE_BASE, MARS_CRATER_RIM, MARS_R1, MARS_R2, MARS_R4, MARS_R5, MARS_R6, MARS_LANDER],
   shadows: [],
   hotspots: [
     hs('mars.sojourner', K.ROBOT, MARS_ROVER, T.PRESS, Robot.SOJOURNER, false, 'Talk to Sojourner', { facing: Dir.UP }),
     hs('mars.solar', K.PROP, MARS_SOLAR, T.PRESS, Prop.SOJ_SOLAR, false, 'Solar panel', { facing: Dir.DOWN }),
     hs('mars.hazard', K.PROP, MARS_HAZARD, T.PRESS, Prop.SOJ_HAZARD, false, 'Hazard lasers', { facing: Dir.LEFT }),
+    hs('mars.drive', K.PROP, MARS_DRIVE, T.PRESS, Prop.SOJ_DRIVE, false, 'Lander relay: drive rover', { facing: Dir.LEFT }),
     hs('mars.apxs.bb', K.PROP, MARS_BB_APXS, T.PRESS, Prop.SOJ_APXS, false, 'APXS: Barnacle Bill', { arg: 0 }),
     hs('mars.apxs.yogi', K.PROP, MARS_YOGI_APXS, T.PRESS, Prop.SOJ_APXS, false, 'APXS: Yogi', { arg: 1 }),
-    hs('mars.drive', K.PROP, MARS_RELAY, T.PRESS, Prop.SOJ_DRIVE, false, 'Lander relay: drive rover'),
     hs('mars.blueprint', K.BLUEPRINT, MARS_BLUEPRINT, T.PRESS, Blueprint.SOJOURNER, false, 'Scan Sojourner blueprint'),
     hs('mars.return', K.RETURN_PAD, MARS_RETURN, T.STEP, 0, false, 'Return to Hub'),
   ],
   facts: [
     {
-      id: 0, rect: R(14, 102, 44, 24), title: 'Landing on airbags',
-      explorer: 'Pathfinder landed wrapped in giant airbags. It bounced across the ground about 15 times before rolling to a stop, then pulled in the bags and opened its petals.',
-      archivist: 'Pathfinder flew straight into the atmosphere from its cruise path, slowed with a heat shield, parachute, and retrorockets, then cut loose inside 24 Vectran airbag lobes.',
+      id: 0, rect: R(28, 112, 50, 20), title: 'Hills on the horizon',
+      explorer: 'From the Pathfinder site, two hills called the Twin Peaks stood about a kilometer away. Spotting them in pictures from orbit helped scientists find exactly where the lander sat.',
+      archivist: 'Matching horizon features such as Twin Peaks and Big Crater to Viking orbiter images pinpointed the landing site. The peaks rise a few tens of meters above the plain.',
     },
     {
-      id: 1, rect: R(112, 136, 72, 30), title: 'A flood plain',
+      id: 1, rect: R(64, 162, 44, 16), title: 'Rocks from a megaflood',
       explorer: 'Billions of years ago, giant floods roared through Ares Vallis. They left rounded pebbles and rocks tilted the same way, like books knocked over by a rushing river.',
       archivist: 'Ares Vallis is an outflow channel. Lander images showed imbricated rocks, stacked and tilted in the downstream direction, a classic sign of catastrophic flooding.',
     },
     {
-      id: 2, rect: R(140, 60, 72, 20), title: 'Twin Peaks',
-      explorer: 'The two hills on the horizon are the Twin Peaks, about a kilometer away. Spotting them in pictures from orbit helped scientists find exactly where Pathfinder landed.',
-      archivist: 'Matching horizon features such as Twin Peaks and Big Crater to Viking orbiter images pinpointed the landing site. The peaks rise a few tens of meters above the plain.',
+      id: 2, rect: R(124, 160, 56, 18), title: 'Freezing cold',
+      explorer: 'Even on summer afternoons the air here stayed below freezing, and nights fell to about minus 75 degrees Celsius. Thin air cannot hold on to the day\'s heat.',
+      archivist: 'Pathfinder carried thermometers at three heights on its weather mast. They showed the air could change by many degrees over just one meter, and swing about 60 C from day to night.',
     },
     {
-      id: 3, rect: R(252, 106, 56, 32), title: 'Thin, cold air',
-      explorer: 'Mars air is very thin and mostly carbon dioxide. Even on summer afternoons here it stayed below freezing, and nights fell to about minus 75 degrees Celsius.',
-      archivist: 'Pathfinder\'s weather mast measured a surface pressure of about 6.7 millibars, under 1% of Earth\'s, and detected dust devils sweeping past the lander.',
+      id: 3, rect: R(168, 112, 56, 16), title: 'Dunes and dust',
+      explorer: 'Mars air is very thin and mostly carbon dioxide, under 1% as thick as Earth\'s. Even so, the wind piles sand into dunes and lifts fine dust, and dust storms can cover the whole planet.',
+      archivist: 'Pathfinder\'s weather mast measured a surface pressure of about 6.7 millibars and detected dust devils sweeping past the lander. Dust settling on solar panels cut their power sol by sol.',
+    },
+    {
+      id: 4, rect: R(226, 167, 70, 11), title: 'A grab bag of rocks',
+      explorer: 'Floods carried big rocks like this one down Ares Vallis from the old highlands far upstream. Scientists picked this spot so a tiny rover could study rocks from many places at once.',
+      archivist: 'The site was chosen because the floods should have dumped a mix of rocks from upstream, letting one small rover sample the highlands without driving there.',
+    },
+    {
+      id: 5, rect: R(300, 120, 56, 26), title: 'Big Crater',
+      explorer: 'That rim belongs to a crater the team called Big Crater, a bowl more than a kilometer wide, blasted out long ago when a space rock hit Mars.',
+      archivist: 'Big Crater lies a couple of kilometers south of the lander. Seen on the horizon, it helped locate the lander on Viking orbiter maps, together with Twin Peaks.',
     },
   ],
 };

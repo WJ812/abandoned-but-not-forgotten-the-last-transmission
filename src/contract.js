@@ -114,7 +114,7 @@ export const VALUE_MAX = 32;          // telemetry values
 export const QUESTIONS_MIN = 5;       // per robot (plus the implicit "Goodbye")
 export const QUESTIONS_MAX = 6;
 export const FACTS_MIN = 3;           // fact pop-ups per expedition region
-export const FACTS_MAX = 4;
+export const FACTS_MAX = 6;
 /** All text is UTF-8 prose; keep to common punctuation so the pixel font renders it. */
 
 /* ========================================================================

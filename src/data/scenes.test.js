@@ -152,8 +152,23 @@ test('APXS hotspots preselect their rock; lander is an obstacle', () => {
   assert.equal(targets[arg('mars.apxs.bb')], 'Barnacle Bill');
   assert.equal(targets[arg('mars.apxs.yogi')], 'Yogi');
   for (const p of [Prop.SOJ_HAZARD, Prop.SOJ_DRIVE]) {
-    assert.ok(getPropSpec(p).obstacles.some((r) => r.x === 36 && r.y === 66 && r.w === 60 && r.h === 34));
+    assert.ok(getPropSpec(p).obstacles.some((r) => r.x === 110 && r.y === 112 && r.w === 48 && r.h === 28));
   }
+});
+
+test('Mars art: every painted rock is solid; facts are separate and clear of spawn', () => {
+  const s = getScene(Region.MARS);
+  const same = (a, b) => a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
+  const rocks = [{ x: 6, y: 125, w: 21, h: 12 }, { x: 51, y: 140, w: 31, h: 20 }, { x: 242, y: 157, w: 10, h: 9 },
+    { x: 254, y: 147, w: 36, h: 20 }, { x: 328, y: 153, w: 10, h: 7 }];
+  for (const r of rocks) assert.ok(s.solids.some((b) => same(b, r)), JSON.stringify(r));
+  assert.ok(s.facts.length <= FACTS_MAX);
+  for (let i = 0; i < s.facts.length; i++) {
+    for (let j = i + 1; j < s.facts.length; j++) assert.ok(!overlap(s.facts[i].rect, s.facts[j].rect), `facts ${i}/${j} overlap`);
+  }
+  const ids = s.hotspots.map((h) => h.id).sort();
+  assert.deepEqual(ids, ['mars.apxs.bb', 'mars.apxs.yogi', 'mars.blueprint', 'mars.drive', 'mars.hazard',
+    'mars.return', 'mars.solar', 'mars.sojourner'].sort());
 });
 
 test('unknown region throws', () => {

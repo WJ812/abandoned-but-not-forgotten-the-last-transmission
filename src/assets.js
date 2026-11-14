@@ -38,7 +38,7 @@ export const ASSETS = Object.freeze({
    *      expected ones. ---- */
   scene_hub:  { src: `${A}Scenes/The Hub (INTERACTIVE).png`, w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#0b3d91', label: 'NASA ARCHIVES HUB' } },
   scene_moon: { src: `${A}Scenes/moon_taurus_littrow.png`, w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#5a5e66', label: 'MOON - TAURUS-LITTROW' } },
-  scene_mars: { src: `${A}Scenes/mars_ares_vallis.png`,    w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#9a4a1e', label: 'MARS - ARES VALLIS' } },
+  scene_mars: { src: `${A}Scenes/mars_location.png`,        w: 360, h: 180, frames: 1, layout: 'h', kind: 'scene', placeholder: { color: '#9a4a1e', label: 'MARS - ARES VALLIS' } },
 
   /* ---- Title screen (art supplied by the user; buttons coded by frontend).
    *      Button strips: 3 states stacked vertically = normal, focused, pressed. ---- */
