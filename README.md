@@ -14,8 +14,22 @@ Everything in the game is based on real NASA mission data. Where a value is esti
 
 ## Play
 
-- **Online:** **https://wj812.github.io/abandoned-but-not-forgotten-the-last-transmission/**. It's hosted on GitHub Pages. Nothing to install, and the game is only about 0.5 MB.
-- **Locally:** requires [Node.js](https://nodejs.org/) 22 or later. There are no other dependencies.
+- **Online:** **https://wj812.github.io/abandoned-but-not-forgotten-the-last-transmission/**. It's hosted on GitHub Pages.
+
+### Fully web-based: players need only a browser
+
+- **Nothing to install.** There is no download, app, plugin, or account. It runs in any modern desktop browser: Chrome, Edge, Firefox, or Safari.
+- **No dependencies on local software.**
+  - The game uses no outside libraries, frameworks, or packages, and loads nothing from other websites. It uses the computer's built-in fonts.
+  - The sound is generated live in the browser.
+  - There is no server-side code: GitHub Pages simply serves the files.
+- **About 0.5 MB in total.** It loads like a normal webpage, and nothing is saved to the computer as a file.
+- **Progress saves in the browser's own storage,** not as a file. The only file a player can ever get is the optional Notes `.txt`, and only if they click **Download** themselves.
+- **Works offline once loaded.** After the page has opened, it needs no internet connection.
+
+### For developers only (not needed to play)
+
+- **Run locally:** requires [Node.js](https://nodejs.org/) 22 or later. Node.js is used only for the local test server and the automated tests. There are no npm packages to install.
 
   ```sh
   npm start      # serves the game at http://localhost:8080
