@@ -317,7 +317,7 @@ function drawField(g, t, obstacles, s) {
   frame(g); g.fillStyle = '#5a2c14'; g.fillRect(0, 0, CW, CH);
   const rv = roverScene(); const X = (v) => Math.round(v * K), Y = (v) => Math.round(v * K);
   g.fillStyle = '#3a1a0c'; for (const r of obstacles || []) g.fillRect(X(r.x), Y(r.y), Math.max(2, Math.round(r.w * K)), Math.max(2, Math.round(r.h * K)));
-  try { const lp = ctx.data.getPropSpec(Prop.SOJ_DRIVE).landerPos; if (lp) { g.fillStyle = '#b07a4a'; g.fillRect(X(lp.x) - 12, Y(lp.y) - 8, 24, 16); drawText(g, 'LANDER', X(lp.x) - 11, Y(lp.y) - 2, '#000'); } } catch { /* none */ }
+  try { const lp = ctx.data.getPropSpec(Prop.SOJ_DRIVE).landerPos; if (lp) ctx.assets.draw(g, 'pathfinder_lander', 0, X(lp.x) - 16, Y(lp.y) - 9, { w: 32, h: 19 }); } catch { /* none */ }
   (s.stripes || []).forEach((sr, i) => { g.fillStyle = sr.hit ? '#ff3b3b' : '#ff9a9a'; g.globalAlpha = s.scanning ? 0.9 : 0.45; g.fillRect(X(rv.x + 12), Y(rv.y - 8 + i * 4), Math.max(2, Math.round((sr.distPx ?? 30) * K * Math.min(1, (s.progress ?? 1) * 1.4 + 0.2))), 1); g.globalAlpha = 1; });
   if (s.detour) { g.fillStyle = '#5fe0a0'; g.fillRect(X(rv.x + 14), Y(rv.y + (s.detour === 'left' ? -14 : 14)), 18, 2); drawText(g, `1997 SOFTWARE WOULD DETOUR ${String(s.detour).toUpperCase()}`, 4, 14, '#5fe0a0'); }
   g.fillStyle = '#d8a24a'; g.fillRect(X(rv.x) - 4, Y(rv.y) - 3, 9, 7);

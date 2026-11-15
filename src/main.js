@@ -125,7 +125,7 @@ function devJump(go) {
   E.enterRegion(reg);
   const to = (s, p) => ctx.go(s, p);
   if (go === 'hub' || go === 'moon' || go === 'mars') to(reg === Region.HUB ? Screen.HUB : Screen.REGION);
-  else if (go.startsWith('dialogue')) to(Screen.DIALOGUE, { robot: reg === Region.MOON ? 0 : 1 });
+  else if (go.startsWith('dialogue')) { to(Screen.DIALOGUE, { robot: reg === Region.MOON ? 0 : 1 }); if (params.get('menu')) ctx.current.action('pause'); }
   else if (go === 'notebook') to(Screen.NOTEBOOK); else if (go === 'starmap') to(Screen.STAR_MAP); else if (go === 'archive') to(Screen.ARCHIVE_COMPUTER);
   else if (go === 'pause') to(Screen.PAUSE); else if (go === 'ending') to(Screen.ENDING); else if (go === 'portal') to(Screen.PORTAL_MENU);
   else if (go === 'ret') to('confirmReturn');
