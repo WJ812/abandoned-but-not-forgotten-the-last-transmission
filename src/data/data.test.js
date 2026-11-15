@@ -131,6 +131,21 @@ test('region stats', () => {
   assert.equal(data.getRegionStats(Region.MARS).site, 'Ares Vallis');
 });
 
+test('Moon vs Mars stat rows are keyed and line up row for row', () => {
+  const moon = data.getRegionStats(Region.MOON).rows;
+  const mars = data.getRegionStats(Region.MARS).rows;
+  assert.deepEqual(moon.map((r) => r.key), mars.map((r) => r.key));
+  assert.deepEqual(moon.map((r) => r.label), mars.map((r) => r.label));
+  for (let i = 0; i < moon.length; i++) {
+    assert.ok(moon[i].value.length > 0 && mars[i].value.length > 0, moon[i].key);
+  }
+  const m = Object.fromEntries(mars.map((r) => [r.key, r.value]));
+  assert.match(m.temperature, /C/);
+  assert.match(m.distance, /km/);
+  assert.match(m.pressure, /millibar/);
+  assert.equal(new Set(moon.map((r) => r.key)).size, moon.length);
+});
+
 test('star map: fractions in 0..1, beacons reference real regions/packs', () => {
   const { bodies } = data.getStarMap();
   assert.ok(bodies.length >= 4);

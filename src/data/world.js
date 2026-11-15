@@ -18,8 +18,8 @@ export const REGION_STATS = deepFreeze({
     atmosphere: 'pressurized cabin air',
     rover: 'none - archive stations only',
     rows: [
-      { label: 'Core blueprints', value: 'LRV, Sojourner' },
-      { label: 'Expansion packs', value: '3 sealed (coming soon)' },
+      { key: 'blueprints', label: 'Core blueprints', value: 'LRV, Sojourner' },
+      { key: 'packs', label: 'Expansion packs', value: '3 sealed (coming soon)' },
     ],
   },
   [Region.MOON]: {
@@ -31,11 +31,12 @@ export const REGION_STATS = deepFreeze({
     atmosphere: 'none (airless regolith)',
     rover: 'LRV - battery-powered, crewed',
     rows: [
-      { label: 'Length of day', value: 'about 29.5 Earth days' },
-      { label: 'Surface temperature', value: 'about +120 C to -170 C' },
-      { label: 'Signal delay from Earth', value: 'about 1.3 s one way' },
-      { label: 'Average distance', value: '384,400 km' },
-      { label: 'Landing', value: 'Apollo 17, Dec 11, 1972' },
+      { key: 'day', label: 'Length of day', value: 'about 29.5 Earth days' },
+      { key: 'pressure', label: 'Air pressure', value: 'none (near vacuum)' },
+      { key: 'temperature', label: 'Surface temperature', value: 'about +120 C to -170 C' },
+      { key: 'signal', label: 'Signal delay from Earth', value: 'about 1.3 s one way' },
+      { key: 'distance', label: 'Average distance', value: '384,400 km' },
+      { key: 'landing', label: 'Landing', value: 'Apollo 17, Dec 11, 1972' },
     ],
   },
   [Region.MARS]: {
@@ -47,11 +48,12 @@ export const REGION_STATS = deepFreeze({
     atmosphere: 'thin CO2 (under 1% of Earth)',
     rover: 'Sojourner - solar-powered, autonomous',
     rows: [
-      { label: 'Length of day', value: '1 sol = 24 h 39 min' },
-      { label: 'Air pressure (Pathfinder)', value: 'about 6.7 millibars' },
-      { label: 'Temperature (Pathfinder)', value: 'about -75 C to -10 C' },
-      { label: 'Signal delay from Earth', value: '~11 min (3 to 22 min)' },
-      { label: 'Landing', value: 'Mars Pathfinder, Jul 4, 1997' },
+      { key: 'day', label: 'Length of day', value: '1 sol = 24 h 39 min' },
+      { key: 'pressure', label: 'Air pressure', value: 'about 6.7 millibars' },
+      { key: 'temperature', label: 'Surface temperature', value: 'about -75 C to -10 C' },
+      { key: 'signal', label: 'Signal delay from Earth', value: '~11 min (3 to 22 min)' },
+      { key: 'distance', label: 'Average distance', value: 'about 225 million km' },
+      { key: 'landing', label: 'Landing', value: 'Mars Pathfinder, Jul 4, 1997' },
     ],
   },
 });
