@@ -124,7 +124,8 @@ export const notebookScreen = makeComputer('notebook');
 export const starMapScreen = makeComputer('starmap');
 
 /* ---------------- Ending ---------------- */
-let eRoot, eStage, ending, eT, eBody, eTyper, ePage, eShot;
+let eRoot, eStage, ending, eT, eBody, eTyper, ePage, eShot, eCred, eCredY;
+const CRED_PX_S = 70;   // credits scroll speed, layout px per second
 const MONTAGE_S = 6;
 
 function showStage(n) {
@@ -142,6 +143,11 @@ function showStage(n) {
     const p = h('p', { class: 'quote' });
     eTyper = new Typer(p, { cps: 34 }); eTyper.set(ending.closing[0]);
     eBody.append(h('div', { class: 'closing' }, p, h('div', { class: 'foot' }, h('span', { class: 'key' }, 'Space'), ' continue')));
+  } else if (n === 3) {
+    eCredY = 0;
+    eCred = h('div', { class: 'credits' }, ending.credits.map((c) => h('div', { class: 'cred-sec' },
+      h('div', { class: 'cred-head' }, c.heading), ...c.lines.map((l) => h('div', { class: 'cred-line' }, l)))));
+    eBody.append(h('div', { class: 'credits-view' }, eCred), h('div', { class: 'foot cred-foot' }, h('span', { class: 'key' }, 'Space'), ' skip'));
   } else {
     eBody.append(h('div', { class: 'closing end' }, h('div', { class: 'theend' }, 'THE END'), h('div', { class: 'tagline' }, 'Abandoned, but not forgotten.'), h('div', { class: 'foot' }, h('span', { class: 'key' }, 'Space'), ' return to the Archive')));
   }
@@ -162,6 +168,11 @@ export const endingScreen = {
       const i = Math.min(1, Math.floor(eT / MONTAGE_S));
       eShot.textContent = ending.montage[i]?.caption || '';
       if (eT >= MONTAGE_S * 2) showStage(2);
+    } else if (eStage === 3) {
+      eCredY += dt * CRED_PX_S;
+      const view = eCred.parentElement;
+      eCred.style.transform = `translateY(${view.clientHeight - eCredY}px)`;
+      if (eCredY > view.clientHeight + eCred.offsetHeight) showStage(4);
     }
   },
   action(a) {
@@ -171,12 +182,13 @@ export const endingScreen = {
     else if (eStage === 2) {
       if (!eTyper.done) { eTyper.skip(); return; }
       if (ePage + 1 < ending.closing.length) { ePage++; eTyper.set(ending.closing[ePage]); } else showStage(3);
-    } else { ctx.audio.play(Sfx.CONFIRM); ctx.engine.enterRegion(Region.HUB); ctx.go(Screen.HUB); }
+    } else if (eStage === 3) showStage(4);
+    else { ctx.audio.play(Sfx.CONFIRM); ctx.engine.enterRegion(Region.HUB); ctx.go(Screen.HUB); }
   },
   /** Montage drawn on the canvas with a crossfade and slow push-in. */
   drawBackdrop(g) {
     g.fillStyle = '#02040c'; g.fillRect(0, 0, CANVAS_W, CANVAS_H);
-    if (eStage === 1 || eStage === 2 || eStage === 3) {
+    if (eStage >= 1) {
       const t = eStage === 1 ? eT : MONTAGE_S * 2;
       const i = Math.min(1, Math.floor(t / MONTAGE_S)), local = t - i * MONTAGE_S;
       const fade = Math.min(1, local / 0.4) * (eStage === 1 ? 1 : 0.35);   // reach full brightness fast so the rovers read clearly

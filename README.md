@@ -44,7 +44,7 @@ Everything in the game is based on real NASA mission data. Where a value is esti
 - **Walk-around facts** about the terrain on both worlds.
 - **Crater shadows on the Moon** stay black until you switch on your headlamp.
 - **Two modes.** Explorer (ages 9–12) tells the story. Archivist (ages 13–18) adds the real telemetry and the physics.
-- **The Archive Computer in the Hub** holds the Notebook, the Star Map, the blueprints, conversation transcripts, the expansion catalog, and the ending.
+- **The Archive Computer in the Hub** holds the Notebook, the Star Map, the blueprints, conversation transcripts, the expansion catalog, and the ending: a Moon-vs-Mars recap, a two-frame montage, the closing message, and rolling credits (team and NASA sources).
 - **A clear goal:** an objective line at the top, an "OBJECTIVE COMPLETE" banner, and a recap that shows both rovers.
 - **Fits any screen:** the whole game scales to the browser window.
 - **Autosave** to your browser.

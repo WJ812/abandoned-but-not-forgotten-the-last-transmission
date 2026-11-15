@@ -102,6 +102,26 @@ export const ENDING = deepFreeze({
     'Though their batteries fade, their solar panels cover with dust, and their wheels fall silent across the planetary voids... these robotic pioneers carry human curiosity into the dark.',
     'They remain abandoned on other worlds, but never forgotten.',
   ],
+  // Rolling credits after the closing quote. Each section: a heading plus its lines.
+  credits: [
+    { heading: 'Abandoned but not Forgotten', lines: ['The Last Transmission', 'NASA Space Apps Challenge, Beirut 2026'] },
+    { heading: 'Team', lines: ['Walid Joujou: Game development', 'Karma Mardirian: Graphic Design'] },
+    { heading: 'Mission sources', lines: [
+      'NASA Science Mission Archives',
+      'NASA Space Science Data Coordinated Archive (NSSDCA)',
+      'NSSDCA: Apollo 17 and its Lunar Roving Vehicle (1972-096)',
+      'NSSDCA: Mars Pathfinder / Sojourner Rover (1996-068A)',
+      'NASA Apollo Lunar Surface Journal (ALSJ)',
+      'NASA Open Data Portal',
+      'Apollo 17 Mission Report (MSC-07904)',
+      'LRV Operations Handbook (Boeing, 1971)',
+      'NASA/JPL Mars Pathfinder press kit and rover fact sheets (1997)',
+      'Landis & Jenkins (1997): Materials Adherence Experiment',
+      'Schofield et al., Science (1997): Pathfinder ASI/MET results',
+    ] },
+    { heading: 'In memory of the machines', lines: ['LRV-3, Taurus-Littrow, 1972', 'Sojourner, Ares Vallis, 1997'] },
+    { heading: 'Thank you for playing', lines: ['They remain abandoned on other worlds, but never forgotten.'] },
+  ],
 });
 
 export const TITLE_TEXT = deepFreeze({

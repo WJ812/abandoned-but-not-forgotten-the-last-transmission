@@ -268,6 +268,7 @@ export const Trigger = Object.freeze({ PRESS: 'press', STEP: 'step' });
  * @property {{label:string, moon:string, mars:string}[]} comparison
  * @property {{art:string, caption:string}[]} montage   exactly 2: LRV, Sojourner
  * @property {string[]} closing   the spec's closing quote, 2 pages
+ * @property {{heading:string, lines:string[]}[]} credits   rolling credits after the closing quote
  */
 
 /* ========================================================================
