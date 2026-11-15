@@ -31,12 +31,20 @@ function buildDom() {
   app.replaceChildren(stage);
   ctx.stage = stage; ctx.canvas = canvas; ctx.ui = ui; ctx.fx = fx;
   ctx.g = canvas.getContext('2d'); ctx.g.imageSmoothingEnabled = false;
+  // The stage is ALWAYS laid out at 4x logical (1440x720) so every overlay has one fixed layout; the whole
+  // stage (canvas + HTML) is then scaled together to the largest size that fits the window.
+  const BASE = 4;
   const resize = () => {
-    const s = Math.max(1, Math.floor(Math.min(innerWidth / CANVAS_W, innerHeight / CANVAS_H)));
-    ctx.scale = s;
-    stage.style.width = `${CANVAS_W * s}px`; stage.style.height = `${CANVAS_H * s}px`;
-    stage.style.setProperty('--u', `${s}px`);
+    const vw = document.documentElement.clientWidth || innerWidth, vh = document.documentElement.clientHeight || innerHeight;
+    const f = Math.min(vw / CANVAS_W, vh / CANVAS_H);                 // px per logical pixel that fits
+    let k = f;
+    if (f >= 1) { const fl = Math.floor(f); if (f - fl < 0.12 * fl) k = fl; }   // crisp integer scale when (nearly) exact
+    ctx.scale = k;
+    stage.style.width = `${CANVAS_W * BASE}px`; stage.style.height = `${CANVAS_H * BASE}px`;
+    stage.style.setProperty('--u', `${BASE}px`);
+    stage.style.transform = `translate(-50%, -50%) scale(${k / BASE})`;
   };
+  document.addEventListener('fullscreenchange', resize);
   addEventListener('resize', resize); resize();
 }
 
