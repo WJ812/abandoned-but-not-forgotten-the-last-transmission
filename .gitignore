@@ -7,7 +7,7 @@ desktop.ini
 .env.*
 .claude/settings.local.json
 
-# Local AI-assistant configuration (not part of the open-source project)
+# Local AI-assistant configuration (not part of the project)
 .claude/
 CLAUDE.md
 docs/PLAN.md

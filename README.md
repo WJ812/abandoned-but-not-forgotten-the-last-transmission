@@ -14,7 +14,7 @@ Everything in the game is based on real NASA mission data. Where a value is esti
 
 ## Play
 
-- **Online:** hosted on **Netlify** at *(link coming soon)*. Nothing to install, and the game is only about 0.5 MB.
+- **Online:** **https://wj812.github.io/abandoned-but-not-forgotten-the-last-transmission/**. It's hosted on GitHub Pages. Nothing to install, and the game is only about 0.5 MB.
 - **Locally:** requires [Node.js](https://nodejs.org/) 22 or later. There are no other dependencies.
 
   ```sh
@@ -65,7 +65,7 @@ The code is vanilla JavaScript ES modules and HTML5 Canvas, with no build step a
 
 ## Deploying
 
-The game is a static site, hosted on Netlify. Any static host works: serve the repository root as-is. There is no build step.
+The game is a static site, hosted on GitHub Pages from the `main` branch (repository root). Every push to `main` redeploys it. There is no build step; `.nojekyll` makes Pages serve the files as-is.
 
 ## Documentation
 
@@ -82,3 +82,7 @@ The mission facts come from NASA and JPL sources, including:
 - Rieder et al. (1997), *Science*, for the APXS results.
 
 Values that are estimated or traced rather than measured are labeled as such in the game.
+
+## License
+
+© 2026 Walid Joujou and Karma Mardirian. All rights reserved. The source is visible for the NASA Space Apps Challenge, but it is not open source: no license is granted to copy, modify, or redistribute the code or the artwork.
