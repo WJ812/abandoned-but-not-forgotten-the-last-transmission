@@ -79,3 +79,13 @@ The full game was played from the title screen to the ending using only key inpu
 |---|---|---|---|---|---|
 | 28 | Medium | Stand-ins / Sojourner screen | With the first version of the stand-ins, the keyboard playthrough failed on Mars: the player could not leave the Sojourner screen. The cause, found by applying the changes one file at a time, was a change that drew rocks on the drive-log map. It also placed the rocks in the wrong coordinate space. | That change was left out. The remaining stand-ins pass the 46-step playthrough twice in a row. An attempted anti-freeze "nudge" workaround was also left out, because it made the player jitter against walls. | `3b0ef4f` |
 | 29 | Info | Test harness | **Correction to #22 and #28.** The intermittent "player froze on Mars" failures did not come from the game. During long automated runs, Edge on Windows decided the headless browser window was covered and stopped drawing it, which froze the game's frame loop at random moments. Measured in a normal window, the game runs at a steady 60 fps on every scene, and 20 cycles through every screen showed no slowdown and no memory leak. | The test launches Edge with occlusion detection and background throttling turned off, and passes 46/46 three times in a row with zero frozen frames. The drive-log rocks (now placed in the map's own coordinates by the data) were restored. | this commit |
+
+## 2026-11-15: Player feedback round
+
+| # | Severity | Area | Bug | Fix | Commit |
+|---|---|---|---|---|---|
+| 30 | Medium | Layout | On some window sizes, the rover dialogue box ran off the bottom of the screen. | The canvas and every HUD and dialogue overlay now scale together to fit the window. Integer scaling is used when it fits, smooth scaling otherwise. | `ecb0570` |
+| 31 | Low | Rover screens | Dialogue text was drawn under the name tab and was partly hidden. A text-only "LANDER" box showed in the hazard panel. | The text now sits inside the box, beside the rover portrait, and the hazard panel draws the lander sprite. | `62351f4` |
+| 32 | Medium | Notebook | In the Moon vs Mars table, the Mars column was shifted one row: temperature showed the air pressure. | Rows are now matched by key. A proper Air pressure row and the average distance to Mars were added. | `4056bea` |
+| 33 | Low | Ending | The recap screen showed no rovers, and the montage faded in too slowly to see them. | The rover sprites now appear on the recap screen, and the montage reaches full brightness quickly. | `d8f5df8` |
+| 34 | Low | Usability | The goal wasn't obvious to young players. | Added an objective line in the HUD, an "OBJECTIVE COMPLETE" banner after the second blueprint, and a "Recap ready!" prompt at the computer. | `d8f5df8` |
