@@ -3,7 +3,7 @@ import { Region, Mode, Screen, BP_COUNT, Sfx } from '../contract.js';
 import { ctx } from '../gfx/ctx.js';
 import { h, spriteCanvas } from './dom.js';
 
-let notesBtn, root, regionEl, bpEl, lampEl, modeBtn, muteBtn, last = '';
+let objEl, notesBtn, root, regionEl, bpEl, lampEl, modeBtn, muteBtn, last = '';
 const HIDE = new Set([Screen.TITLE, Screen.ENDING, Screen.ARCHIVE_COMPUTER, Screen.NOTEBOOK, Screen.STAR_MAP]);
 const MODE_FALLBACK = ['EXPLORER 9-12', 'ARCHIVIST 13-18'];
 
@@ -38,6 +38,8 @@ export function initHud() {
   root = h('div', { class: 'hud hidden' },
     h('div', { class: 'hud-left' }, regionEl, bpEl, lampEl),
     h('div', { class: 'hud-right' }, h('span', { class: 'hud-keys' }, 'N Notebook  P Pause'), notesBtn, modeBtn, muteBtn));
+  objEl = h('div', { class: 'hud-obj' });
+  root.appendChild(objEl);
   ctx.stage.appendChild(root);
 }
 
@@ -50,11 +52,15 @@ export function sync(force) {
   try { regionName = ctx.data.getScene(game.region).name; } catch { /* data not ready */ }
   const bpN = [0, 1].reduce((n, b) => n + ((game.blueprints >> b) & 1), 0);
   let nn = 0; try { nn = ctx.engine.notes?.().length ?? 0; } catch { nn = 0; }
-  const key = [nn, regionName, bpN, game.mode, ctx.audio.muted, game.headlampOn, game.region, force].join('|');
+  const world = ctx.name === Screen.HUB || ctx.name === Screen.REGION;
+  const done = bpN >= BP_COUNT; const seen = !!(game.flags & 2);
+  const obj = seen ? 'OBJECTIVE COMPLETE: you watched the recap. Keep exploring!' : done ? 'OBJECTIVE: Return to the Hub - open the Archive Computer - Recap' : `OBJECTIVE: Recover the LRV blueprint (Moon) and Sojourner's blueprint (Mars) - ${bpN}/${BP_COUNT}`;
+  objEl.style.display = world ? '' : 'none'; objEl.classList.toggle('done', done);
+  const key = [world, obj, nn, regionName, bpN, game.mode, ctx.audio.muted, game.headlampOn, game.region, force].join('|');
   if (key === last && !force) return;
   last = key;
   regionEl.textContent = regionName.toUpperCase();
-  notesBtn.textContent = `NOTES ${nn}`;
+  notesBtn.textContent = `NOTES ${nn}`; objEl.textContent = obj;
   bpEl.replaceChildren(icon(0, 'BP'), ` ${bpN}/${BP_COUNT}`);
   bpEl.classList.toggle('done', bpN === BP_COUNT);
   lampEl.style.display = game.region === Region.MOON ? '' : 'none';

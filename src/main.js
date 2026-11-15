@@ -92,6 +92,12 @@ ctx.applyReduce = () => ctx.stage.classList.toggle('reduce-flash', ctx.reduceFla
 ctx.setSetting = (name, value) => { try { ctx.engine.setSetting?.(name, value); } catch { /* old engine */ } ctx.applyReduce(); };
 ctx.toggleMute = () => { const m = ctx.audio.toggleMute(); ctx.setSetting('muted', m); return m; };
 ctx.flash = (kind = 'cyan') => { const f = ctx.fx; f.className = ''; void f.offsetWidth; f.className = ctx.reduceFlash() ? `soft-${kind}` : `flash-${kind}`; };
+ctx.banner = (title, sub, ms = 7000) => {
+  const bn = h('div', { class: 'banner' }, h('div', { class: 'banner-t' }, title), h('div', { class: 'banner-s' }, sub));
+  ctx.stage.appendChild(bn);
+  requestAnimationFrame(() => requestAnimationFrame(() => bn.classList.add('in')));
+  setTimeout(() => { bn.classList.remove('in'); setTimeout(() => bn.remove(), 400); }, ms);
+};
 ctx.toast = (text, ms = 2400) => {
   const t = h('div', { class: 'toast' }, text); ctx.stage.appendChild(t);
   requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('in')));
@@ -129,7 +135,7 @@ function devJump(go) {
   const E = ctx.engine;
   E.newGame(params.get('mode') === '1' ? 1 : 0);
   if (go === 'ending' || go === 'archive') { E.collectBlueprint(0); E.collectBlueprint(1); }
-  const reg = go === 'moon' || go === 'ret' || go.startsWith('bp') || go.endsWith('moon') || (go.startsWith('prop') && +go.slice(4) < 4) ? Region.MOON : (go === 'hub' || ['notebook', 'starmap', 'archive', 'pause', 'portal', 'ending', 'notes'].includes(go) ? Region.HUB : Region.MARS);
+  const reg = go === 'moon' || go === 'ret' || go.startsWith('bp') || go.endsWith('moon') || (go.startsWith('prop') && +go.slice(4) < 4) ? Region.MOON : (go === 'hub' || ['notebook', 'starmap', 'archive', 'pause', 'portal', 'ending', 'notes', 'banner'].includes(go) ? Region.HUB : Region.MARS);
   E.enterRegion(reg);
   const to = (s, p) => ctx.go(s, p);
   if (go === 'hub' || go === 'moon' || go === 'mars') to(reg === Region.HUB ? Screen.HUB : Screen.REGION);
@@ -139,8 +145,9 @@ function devJump(go) {
     to(Screen.ARCHIVE_COMPUTER, { tab: params.get('tab') || 'notes' });
   }
   else if (go === 'notebook') to(Screen.NOTEBOOK); else if (go === 'starmap') to(Screen.STAR_MAP); else if (go === 'archive') to(Screen.ARCHIVE_COMPUTER);
-  else if (go === 'pause') to(Screen.PAUSE); else if (go === 'ending') to(Screen.ENDING); else if (go === 'portal') to(Screen.PORTAL_MENU);
+  else if (go === 'pause') to(Screen.PAUSE); else if (go === 'ending') { to(Screen.ENDING); if (params.get('stage')) ctx.current.action('confirm'); } else if (go === 'portal') to(Screen.PORTAL_MENU);
   else if (go === 'ret') to('confirmReturn');
+  else if (go === 'banner') { to(Screen.HUB); ctx.banner('OBJECTIVE COMPLETE!', 'Return to the Hub and open the Archive Computer to watch the recap.', 60000); }
   else if (go === 'fact') to(Screen.FACT_POPUP, { fact: ctx.data.getScene(reg).facts[0] });
   else if (go === 'bp' || go === 'bp2' || go === 'bp3') to(Screen.BLUEPRINT_CARD, { bp: go === 'bp3' ? 1 : 0, result: go === 'bp' ? 1 : 0 });
   else if (go.startsWith('prop')) to(Screen.PROP_PANEL, { prop: +go.slice(4) });

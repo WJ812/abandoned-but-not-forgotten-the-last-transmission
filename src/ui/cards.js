@@ -60,7 +60,7 @@ export const blueprintCard = {
     unmount(root);
     if (result === Collect.COMPLETE) {
       ctx.flash('cyan');
-      ctx.toast(`CORE ARCHIVE COMPLETE ${BP_COUNT}/${BP_COUNT}. Return to the Archive Computer in the Hub for the recap.`, 6500);
+      ctx.banner('OBJECTIVE COMPLETE!', 'Return to the Hub and open the Archive Computer to watch the recap.');
     }
   },
   update(dt) {

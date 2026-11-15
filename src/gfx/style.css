@@ -302,3 +302,11 @@ canvas.prop-cv { width: 100%; aspect-ratio: 240 / 135; height: auto; border: 1px
 /* ---- notes journal ---- */
 .notes-grid { margin-top: 0; border-top: 0; padding-top: 0; grid-template-columns: 1.2fr 1fr; } .notes-list { max-height: 15em; } .notes-list .fi em { font-style: normal; color: #cfc3f0; font-weight: 400; }
 .notes-det { max-height: 17em; } .pxbtn.dl { margin-top: 0.5em; border: 0; } .pxbtn.dl:disabled { opacity: 0.4; cursor: default; }
+
+/* ---- objective line and banner ---- */
+.hud-obj { position: absolute; left: 50%; top: calc(100% + 0.3em); transform: translateX(-50%); width: max-content; max-width: 92%; text-align: center; font-family: var(--mono); font-size: 1.6em; font-weight: 800; color: #ffe08a; background: rgba(4, 10, 24, 0.82); border: 2px solid rgba(255, 209, 102, 0.6); border-radius: 0.35em; text-shadow: 0 1px 0 #000; padding: 0.25em 0.9em; pointer-events: none; }
+.hud-obj.done { color: #8fe0ff; }
+.banner { position: absolute; left: 50%; top: 28%; transform: translate(-50%, -0.6em); z-index: 42; text-align: center; padding: 0.8em 1.6em; background: rgba(6, 15, 34, 0.96); border: 3px solid var(--amber); border-radius: 0.4em; box-shadow: 0 0 0 3px #000, 0 0 2em rgba(255, 209, 102, 0.5); opacity: 0; transition: opacity 0.35s, transform 0.35s var(--ease); max-width: 80%; }
+.banner.in { opacity: 1; transform: translate(-50%, 0); } .banner-t { font-size: 1.7em; font-weight: 800; letter-spacing: 0.1em; color: var(--amber); } .banner-s { margin-top: 0.4em; font-size: 1.1em; }
+.reduce-flash .banner { transition: opacity 0.2s; transform: translate(-50%, 0); }
+.cmp-rover { width: calc(var(--u) * 26); height: calc(var(--u) * 26); margin: 0 auto 0.2em; }

@@ -131,7 +131,7 @@ function showStage(n) {
   eStage = n; eBody.replaceChildren(); eTyper = null;
   if (n === 0) {
     eBody.append(h('div', { class: 'card ending-cmp' }, h('div', { class: 'card-title' }, h('span', { class: 'chip cy' }, 'RECAP'), 'MOON vs MARS'),
-      h('table', { class: 'cmp' }, h('thead', null, h('tr', null, h('th'), h('th', null, 'THE MOON'), h('th', null, 'MARS'))),
+      h('table', { class: 'cmp' }, h('thead', null, h('tr', null, h('th'), h('th', null, spriteCanvas('rover_lrv', 0, 'cmp-rover'), 'THE MOON'), h('th', null, spriteCanvas('rover_sojourner', 0, 'cmp-rover'), 'MARS'))),
         h('tbody', null, ending.comparison.map((r) => h('tr', null, h('th', null, r.label), h('td', null, r.moon), h('td', null, r.mars))))),
       h('div', { class: 'foot' }, h('span', { class: 'key' }, 'Space'), ' continue')));
   } else if (n === 1) {
@@ -179,7 +179,7 @@ export const endingScreen = {
     if (eStage === 1 || eStage === 2 || eStage === 3) {
       const t = eStage === 1 ? eT : MONTAGE_S * 2;
       const i = Math.min(1, Math.floor(t / MONTAGE_S)), local = t - i * MONTAGE_S;
-      const fade = Math.min(1, local / 1.2) * (eStage === 1 ? 1 : 0.35);
+      const fade = Math.min(1, local / 0.4) * (eStage === 1 ? 1 : 0.35);   // reach full brightness fast so the rovers read clearly
       const z = 1 + local * 0.006;
       g.save(); g.globalAlpha = fade; g.translate(CANVAS_W / 2, CANVAS_H / 2); g.scale(z, z); g.translate(-CANVAS_W / 2, -CANVAS_H / 2);
       ctx.assets.draw(g, ending.montage[i].art, 0, 0, 0); g.restore();

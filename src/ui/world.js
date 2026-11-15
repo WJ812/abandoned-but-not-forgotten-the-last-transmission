@@ -46,11 +46,12 @@ function ensurePrompt() {
 
 function updatePrompt() {
   const near = ctx.engine.game.nearHotspot;
-  const id = near ? near.id + '|' + near.label : '';
+  const recap = !!(near && near.kind === HotspotKind.STATION && near.ref === Station.ARCHIVE_COMPUTER && (ctx.engine.game.flags & 1));
+  const id = near ? near.id + '|' + near.label + (recap ? '|r' : '') : '';
   if (id === promptId) return;
   promptId = id;
   if (!near) { prompt.classList.add('hidden'); return; }
-  prompt.querySelector('.plabel').textContent = near.label || near.id;
+  prompt.querySelector('.plabel').textContent = (near.label || near.id) + (recap ? ' - Recap ready!' : '');
   prompt.style.left = `${Math.max(9, Math.min(91, ((near.rect.x + near.rect.w / 2) / CANVAS_W) * 100))}%`;
   prompt.style.top = `${(Math.max(14, near.rect.y - 15) / CANVAS_H) * 100}%`;
   prompt.classList.remove('hidden');
