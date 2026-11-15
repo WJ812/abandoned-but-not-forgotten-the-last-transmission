@@ -32,6 +32,8 @@ function normSpec(p, raw) {
   else if (p === Prop.SOJ_HAZARD) s.obstacles = arr(s.obstacles);
   else if (p === Prop.SOJ_DRIVE) {
     s.obstacles = arr(s.obstacles); s.lander = pt(s.lander, { x: 0.5, y: 0.5 });
+    // named rocks, already in minimap fractions (same frame as lander + leg paths)
+    s.rocks = arr(s.rocks).filter((r) => r && [r.x, r.y, r.w, r.h].every(Number.isFinite));
     s.legs = arr(s.legs).map((l, i) => ({ label: `Leg ${i + 1}`, sols: '', distanceM: 0, ...(l || {}), path: arr(l?.path).length >= 2 ? l.path : [{ x: 0.5, y: 0.5 }, { x: 0.6, y: 0.5 }], stops: arr(l?.stops) }));
     if (!s.legs.length) s.legs = [{ label: 'No leg data', sols: '', distanceM: 0, path: [{ x: 0.5, y: 0.5 }, { x: 0.6, y: 0.5 }], stops: [] }];
   }
@@ -277,6 +279,11 @@ const PANELS = {
       frame(g);
       const leg = spec.legs[st.legIndex || 0]; if (!leg) return;
       const P = (p) => [p.x * CW, p.y * CH];
+      // backdrop rocks (minimap fractions, drawn under the route)
+      for (const r of spec.rocks || []) {
+        const rx = Math.round(r.x * CW), ry = Math.round(r.y * CH), rw = Math.max(2, Math.round(r.w * CW)), rh = Math.max(2, Math.round(r.h * CH));
+        g.fillStyle = '#3a3550'; g.fillRect(rx, ry, rw, rh); g.fillStyle = '#5b5476'; g.fillRect(rx, ry, rw, 1);
+      }
       // lander
       const [lx, ly] = P(spec.lander); g.fillStyle = '#b07a4a'; g.fillRect(Math.round(lx) - 6, Math.round(ly) - 4, 13, 9); drawText(g, 'LANDER', Math.round(lx) - 11, Math.round(ly) - 13, '#ffd166');
       const pts = leg.path.map(P);

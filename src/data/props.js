@@ -253,11 +253,25 @@ const SOJ_LEGS = [
     [['Last commanded drive (approx.)', 4]]),
 ];
 
+/** Named rocks on the drive-log minimap (same frame as SOJ_LANDER and the
+ * legs). APPROXIMATE positions, each placed beside the leg vertex where that
+ * stop happens. */
+const rock = (name, cx, cy, w, h) => ({ name, x: Math.round((cx - w / 2) * 1000) / 1000, y: Math.round((cy - h / 2) * 1000) / 1000, w, h });
+const SOJ_ROCKS = [
+  rock('Barnacle Bill', 0.43, 0.7, 0.04, 0.03),
+  rock('Yogi', 0.26, 0.55, 0.06, 0.05),
+  rock('Scooby Doo', 0.28, 0.42, 0.04, 0.02),
+  rock('Wedge', 0.47, 0.3, 0.03, 0.03),
+  rock('Shark', 0.66, 0.24, 0.04, 0.03),
+  rock('Half Dome', 0.77, 0.35, 0.04, 0.04),
+  rock('Chimp', 0.78, 0.48, 0.03, 0.03),
+];
+
 const SOJ_DRIVE = {
   prop: Prop.SOJ_DRIVE,
   title: 'Drive Log (1997)',
   blurb: 'Pathfinder sent its last full transmission on September 27, 1997. Sojourner will never move again. Replay its real drives instead: four legs around the lander, about 100 meters in 83 sols.',
-  archivist: 'Leg paths, per-leg distances, and sol ranges are traced from the 1997 traverse map and are approximate. Totals: about 100 m driven, never more than about 12 m from the lander, at up to 1 cm/s.',
+  archivist: 'Leg paths, rock positions, distances, and sol ranges are traced from the 1997 traverse map and are approximate. Totals: about 100 m driven, never more than about 12 m from the lander, at up to 1 cm/s.',
   maxSpeedCmS: 1,
   totalTraverseM: 100,
   maxFromLanderM: 12,
@@ -267,6 +281,7 @@ const SOJ_DRIVE = {
   fate: 'LAST FULL TRANSMISSION 27 SEP 1997 (sol 83); faint signals until Oct 7, mission ended Nov 4. Its software would drive toward the lander; it likely circled nearby, kept about 3 m off. No one knows how long.',
   lander: SOJ_LANDER,
   legs: SOJ_LEGS,
+  rocks: SOJ_ROCKS,
 };
 
 export const PROP_SPECS = deepFreeze({

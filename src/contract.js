@@ -536,6 +536,9 @@ export const PropAction = Object.freeze({
  *   landerPos: Point (scene px), commandNote: string,
  *   lastContactUtc: '1997-09-27', fate: string (contingency mode, never heard again; verified wording),
  *   lander: Point (minimap fraction 0..1),
+ *   rocks: [{ name, x, y, w, h }] (minimap fractions 0..1, same frame as `lander` and leg paths;
+ *          the real named rocks near the lander, e.g. Barnacle Bill, Yogi, Scooby Doo, Wedge,
+ *          positions approximate and labelled so in archivist text) (>= 3)
  *   legs: [{ id, label, sols: string, distanceM, path: Point[] (minimap fractions, >= 2),
  *            stops: [{name, at:number (0..1 along path)}] }] (>= 3; traced shapes may be
  *            approximate and must be labelled so in archivist text)

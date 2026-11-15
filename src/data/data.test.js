@@ -281,6 +281,23 @@ test('prop specs: shapes and verified hardware values', () => {
     let prev = -1;
     for (const st of l.stops) { assert.ok(st.at >= 0 && st.at <= 1 && st.at >= prev && st.name.length <= LABEL_MAX); prev = st.at; }
   });
+  assert.ok(drv.rocks.length >= 3);
+  const rgap = (r, p) => Math.max(Math.max(0, r.x - p.x, p.x - (r.x + r.w)), Math.max(0, r.y - p.y, p.y - (r.y + r.h)));
+  for (const r of drv.rocks) {
+    assert.ok(r.name.length > 0 && r.name.length <= LABEL_MAX);
+    assert.ok(r.x >= 0 && r.y >= 0 && r.x + r.w <= 1 && r.y + r.h <= 1, r.name);
+    assert.ok(r.w >= 0.02 && r.w <= 0.08 && r.h >= 0.02 && r.h <= 0.08, r.name);
+    assert.ok(rgap(r, drv.lander) > 0.05, `${r.name} overlaps the lander marker`);
+  }
+  // Each stop at a named rock sits beside that rock on the path.
+  for (const l of drv.legs) {
+    for (const st of l.stops) {
+      const r = drv.rocks.find((k) => k.name === st.name);
+      if (!r) continue;
+      const near = l.path.some((p) => rgap(r, p) <= 0.03);
+      assert.ok(near, `path does not reach ${st.name}`);
+    }
+  }
   for (const k of ['blurb', 'commandNote']) assert.doesNotMatch(drv[k], /send Sojourner|pick a spot/i);
 });
 
