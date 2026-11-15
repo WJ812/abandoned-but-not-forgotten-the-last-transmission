@@ -3,7 +3,7 @@
  * behavior from engine prop state. Scene overlays (camera head, rover sprite,
  * laser stripes, dust) are drawn by gfx/renderer.js from the same state.
  */
-import { Prop, PropAction, Sfx, Mode, LATENCY, CANVAS_W } from '../contract.js';
+import { Prop, PropAction, Sfx, Mode, LATENCY, CANVAS_W, CANVAS_H } from '../contract.js';
 import { ctx } from '../gfx/ctx.js';
 import { drawText, wrapLabel } from '../gfx/pixfont.js';
 import { sojournerPos, getSceneCached } from '../gfx/renderer.js';
@@ -31,7 +31,12 @@ function normSpec(p, raw) {
   else if (p === Prop.SOJ_APXS) s.targets = arr(s.targets).map((t) => ({ name: '?', rockType: '', finding: '', ...(t || {}), composition: arr(t?.composition) }));
   else if (p === Prop.SOJ_HAZARD) s.obstacles = arr(s.obstacles);
   else if (p === Prop.SOJ_DRIVE) {
-    s.obstacles = arr(s.obstacles); s.lander = pt(s.lander, { x: 0.5, y: 0.5 });
+    s.obstacles = arr(s.obstacles);
+    if (!s.obstacles.length) {   // SOJ_DRIVE no longer carries rocks: borrow the hazard spec's, else the Mars scene solids
+      try { s.obstacles = arr(ctx.data.getPropSpec(Prop.SOJ_HAZARD)?.obstacles); } catch { /* none */ }
+      if (!s.obstacles.length) { try { s.obstacles = arr(ctx.data.getScene(2)?.solids); } catch { /* none */ } }
+    }
+    s.lander = pt(s.lander, { x: 0.5, y: 0.5 });
     s.legs = arr(s.legs).map((l, i) => ({ label: `Leg ${i + 1}`, sols: '', distanceM: 0, ...(l || {}), path: arr(l?.path).length >= 2 ? l.path : [{ x: 0.5, y: 0.5 }, { x: 0.6, y: 0.5 }], stops: arr(l?.stops) }));
     if (!s.legs.length) s.legs = [{ label: 'No leg data', sols: '', distanceM: 0, path: [{ x: 0.5, y: 0.5 }, { x: 0.6, y: 0.5 }], stops: [] }];
   }
@@ -277,6 +282,8 @@ const PANELS = {
       frame(g);
       const leg = spec.legs[st.legIndex || 0]; if (!leg) return;
       const P = (p) => [p.x * CW, p.y * CH];
+      // backdrop rocks (scene px scaled onto the mini-map)
+      for (const r of spec.obstacles) { const rx = Math.round((r.x / CANVAS_W) * CW), ry = Math.round((r.y / CANVAS_H) * CH), rw = Math.max(3, Math.round((r.w / CANVAS_W) * CW)), rh = Math.max(3, Math.round((r.h / CANVAS_H) * CH)); g.fillStyle = '#2f3a5e'; g.fillRect(rx, ry, rw, rh); g.fillStyle = '#44527f'; g.fillRect(rx, ry, rw, 1); }
       // lander
       const [lx, ly] = P(spec.lander); g.fillStyle = '#b07a4a'; g.fillRect(Math.round(lx) - 6, Math.round(ly) - 4, 13, 9); drawText(g, 'LANDER', Math.round(lx) - 11, Math.round(ly) - 13, '#ffd166');
       const pts = leg.path.map(P);

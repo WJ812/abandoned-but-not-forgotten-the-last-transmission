@@ -6,11 +6,11 @@ import { h, mount, unmount, spriteCanvas, redrawSprite } from './dom.js';
 let root, btns, rows, focus, selMode, armed, blurb, notice, busy;
 
 function makeBtn(assetId, label, activate) {
-  const real = ctx.assets.isReal(assetId);
+  const real = ctx.assets.isReal(assetId) || ctx.assets.hasStandin(assetId);
   const b = { id: assetId, activate, real };
   if (real) {
     b.cv = spriteCanvas(assetId, 0, 'tbtn-art');
-    b.el = h('div', { class: 'tbtn sprite', onclick: () => activate() }, b.cv);
+    b.el = h('div', { class: 'tbtn sprite', onclick: () => activate() }, b.cv, h('span', { class: 'sr' }, label));
   } else {
     b.el = h('div', { class: 'tbtn', onclick: () => activate() }, h('span', { class: 'lb' }, label));
   }
@@ -27,7 +27,7 @@ function refresh() {
       b.el.classList.toggle('chosen', chosen);
       if (b.real) {
         b.el.querySelector('.sel-art')?.remove();
-        if (chosen && ctx.assets.isReal('btn_mode_selected')) b.el.appendChild(spriteCanvas('btn_mode_selected', 0, 'sel-art'));
+        if (chosen && (ctx.assets.isReal('btn_mode_selected') || ctx.assets.hasStandin('btn_mode_selected'))) b.el.appendChild(spriteCanvas('btn_mode_selected', 0, 'sel-art'));
       }
     }
   }));
@@ -98,7 +98,7 @@ export const title = {
   },
   drawBackdrop(g) {
     ctx.assets.draw(g, 'title_bg', 0, 0, 0);
-    if (ctx.assets.isReal('title_logo')) ctx.assets.draw(g, 'title_logo', 0, 40, 10);
+    if (ctx.assets.isReal('title_logo')) ctx.assets.draw(g, 'title_logo', 0, 60, 10);
     return true;
   },
 };
