@@ -131,7 +131,9 @@ function startLoop() {
 
 /** Dev shortcut: ?go=hub|moon|mars|dialogue_moon|dialogue_mars|notebook|starmap|archive|pause|ending|prop<N>|fact|portal|bp */
 function devJump(go) {
-  if (!go) return;
+  // Dev-only: never honored on the public site (it would start a New Game and overwrite the player's save).
+  const local = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+  if (!go || !local) return;
   const E = ctx.engine;
   E.newGame(params.get('mode') === '1' ? 1 : 0);
   if (go === 'ending' || go === 'archive') { E.collectBlueprint(0); E.collectBlueprint(1); }

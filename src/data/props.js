@@ -5,7 +5,7 @@
  * choice (not a hardware number), the field name or the archivist text says so.
  *
  * Sources: NASA NSSDCA LRV fact sheet; LRV Operations Handbook (Boeing, 1971);
- * Apollo 17 Mission Report (MSC-07904) and Apollo Lunar Surface Journal (ALSJ);
+ * Apollo 17 Mission Report (JSC-07904) and Apollo Lunar Surface Journal (ALSJ);
  * RCA GCTA documentation as summarized in the ALSJ; NASA/JPL Mars Pathfinder
  * press kit and rover fact sheets; Landis & Jenkins (1997) Materials Adherence
  * Experiment; NASA NSSDCA preliminary APXS results

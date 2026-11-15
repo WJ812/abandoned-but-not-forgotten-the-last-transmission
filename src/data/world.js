@@ -113,7 +113,7 @@ export const ENDING = deepFreeze({
       'NSSDCA: Mars Pathfinder / Sojourner Rover (1996-068A)',
       'NASA Apollo Lunar Surface Journal (ALSJ)',
       'NASA Open Data Portal',
-      'Apollo 17 Mission Report (MSC-07904)',
+      'Apollo 17 Mission Report (JSC-07904)',
       'LRV Operations Handbook (Boeing, 1971)',
       'NASA/JPL Mars Pathfinder press kit and rover fact sheets (1997)',
       'Landis & Jenkins (1997): Materials Adherence Experiment',

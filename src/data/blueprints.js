@@ -2,7 +2,7 @@
  * blueprints.js -- the two core Blueprint cards (contract section 5, BlueprintCard).
  *
  * Sources: NASA NSSDCA "Apollo Lunar Roving Vehicle" fact sheet; Apollo 17
- * Mission Report (MSC-07904); Apollo Lunar Surface Journal (ALSJ); NASA/JPL
+ * Mission Report (JSC-07904); Apollo Lunar Surface Journal (ALSJ); NASA/JPL
  * Mars Pathfinder rover fact sheets and press kit (1997).
  */
 import { Blueprint } from '../contract.js';

@@ -189,7 +189,7 @@ const PANELS = {
   [Prop.LRV_FENDER]: () => ({
     controls: [{ label: 'Toggle fender', sub: 'repaired / lost', run: () => act(A.FENDER_TOGGLE) }],
     rows: () => [
-      { label: 'Fender', value: st.fenderOn ? `repaired (${spec.fixMaterials})` : 'missing (broken ' + spec.brokenDate + ')' },
+      { label: 'Fender', value: st.fenderOn ? 'repaired (laminated maps)' : 'missing (broken ' + spec.brokenDate + ')' },
       { label: 'Wheel', value: `${spec.wheelDiameterCm} cm, ${spec.wheelMaterial}` }, { label: 'Fixed', value: spec.fixDate },
       { label: 'Dust', value: st.fenderOn ? spec.dustWithFender : spec.dustWithoutFender },
     ],

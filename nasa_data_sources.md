@@ -8,7 +8,7 @@
 - NASA Open Data Portal
 
 ## Also used for specific numbers in the game
-- Apollo 17 Mission Report (MSC-07904)
+- Apollo 17 Mission Report (JSC-07904)
 - LRV Operations Handbook (Boeing, 1971)
 - NASA/JPL Mars Pathfinder press kit and rover fact sheets (1997)
 - Landis & Jenkins (1997): Materials Adherence Experiment

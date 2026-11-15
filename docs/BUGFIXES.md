@@ -89,3 +89,14 @@ The full game was played from the title screen to the ending using only key inpu
 | 32 | Medium | Notebook | In the Moon vs Mars table, the Mars column was shifted one row: temperature showed the air pressure. | Rows are now matched by key. A proper Air pressure row and the average distance to Mars were added. | `035d75d` |
 | 33 | Low | Ending | The recap screen showed no rovers, and the montage faded in too slowly to see them. | The rover sprites now appear on the recap screen, and the montage reaches full brightness quickly. | `d8f5df8` |
 | 34 | Low | Usability | The goal wasn't obvious to young players. | Added an objective line in the HUD, an "OBJECTIVE COMPLETE" banner after the second blueprint, and a "Recap ready!" prompt at the computer. | `d8f5df8` |
+
+## 2026-11-15: Final stress test (Fable)
+
+Verdict: SHIP. Tests 84/84, keyboard playthrough 47/47, save-tampering and XSS checks clean. The four findings below were fixed:
+
+| # | Severity | Area | Bug | Fix | Commit |
+|---|---|---|---|---|---|
+| 35 | Low | Facts | The Apollo 17 Mission Report was cited as "MSC-07904". Its real number is **JSC-07904** (NASA-TM-X-69292). | Corrected in the credits, the data comments, and `nasa_data_sources.md`. | this commit |
+| 36 | Low | Rover screens | On the LRV fender panel, the status line "repaired (Laminated maps from the crew map set, du..." ran out of its row. | It now reads "repaired (laminated maps)". | this commit |
+| 37 | Low | Live site | Developer shortcut links such as `?go=ending` worked on GitHub Pages. They let a player skip to the ending, and they started a New Game that overwrote the player's save. | These links now work only on localhost. | this commit |
+| 38 | Polish | Ending | The "Space return to the Archive" hint on THE END was faint over the bright montage. | The hint now sits on a dark bordered chip. | this commit |
