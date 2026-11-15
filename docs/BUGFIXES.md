@@ -72,3 +72,9 @@ The full game was played from the title screen to the ending using only key inpu
 | 25 | Low | Replays | Pressing Space selected the EVA instead of starting the replay. | Play is now the default control. | `98d20d3` |
 | 26 | Low | Usability | The walkway under Sojourner was only 10 px wide. The world prompt showed "E" while every other hint said "Space". | The walkway is now 18 px, and the prompt says "Space". | `16a271e` |
 | 27 | Low | Moon | Crater shadows were drawn as rectangles over round craters. | They are now drawn as ellipses that match the crater floors. | `d640ca2` |
+
+## 2026-11-15: Pixel-art stand-ins
+
+| # | Severity | Area | Bug | Fix | Commit |
+|---|---|---|---|---|---|
+| 28 | Medium | Stand-ins / Sojourner screen | With the first version of the stand-ins, the keyboard playthrough failed on Mars: the player could not leave the Sojourner screen. The cause, found by applying the changes one file at a time, was a change that drew rocks on the drive-log map. It also placed the rocks in the wrong coordinate space. | That change was left out. The remaining stand-ins pass the 46-step playthrough twice in a row. An attempted anti-freeze "nudge" workaround was also left out, because it made the player jitter against walls. | `3b0ef4f` |

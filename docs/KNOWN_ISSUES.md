@@ -6,9 +6,8 @@ These are open issues, deliberate limitations, and areas where bugs are likely i
 
 | Area | Issue | Status |
 |---|---|---|
-| Art | Several slots still show labeled placeholders until their art is supplied: the Pathfinder lander, return pads, the blueprint pickup, the LRV fender close-up, robot portraits, the title screen and buttons, HUD icons, the ending montage frames, and catalog icons. | Waiting on art |
-| Pixel-art stand-ins | Procedural stand-ins for the missing art (title screen, lander, pad, portraits) live on the `p7-standins` branch. They aren't merged: with them, the automated keyboard playthrough failed intermittently on Mars, and the cause hasn't been found yet. | Under investigation |
-| Drive-log map | Sojourner's 1997 drive-log mini-map doesn't draw the nearby rocks. The fix is on the `p7-standins` branch. | Open |
+| Art | Missing art shows simple pixel-art stand-ins drawn in code until the real art is supplied; the real files replace them automatically. Slots still waiting on art: the Pathfinder lander, return pads, the blueprint pickup, the LRV fender close-up, robot portraits, the title screen and buttons, HUD icons, the ending montage frames, and catalog icons. | Waiting on art |
+| Drive-log map | Sojourner's 1997 drive-log mini-map doesn't draw the nearby rocks. The route is traced on its own map scale, so the rocks need their own map coordinates; projecting the scene's rocks onto it would misplace them. | Open (cosmetic) |
 | Translation | The game is English only. French and Arabic are planned after the hackathon. | Planned |
 
 **Verified so far:** the full keyboard playthrough (title, Moon, Mars, Archive Computer, ending, reload) passes all 46 steps. The 78 automated tests and four stress scripts pass. The stress scripts include more than 200,000 random hardware actions and more than 240,000 frames of random play.
