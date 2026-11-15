@@ -6,7 +6,7 @@ These are open issues, deliberate limitations, and areas where bugs are likely i
 
 | Area | Issue | Status |
 |---|---|---|
-| Art | Missing art shows simple pixel-art stand-ins drawn in code until the real art is supplied; the real files replace them automatically. Slots still waiting on art: the Pathfinder lander, return pads, the blueprint pickup, the LRV fender close-up, robot portraits, the title screen and buttons, HUD icons, the ending montage frames, and catalog icons. | Waiting on art |
+| Art | The team's artwork is final. Anything else (the title screen, Pathfinder lander, blueprint pickup, mission icons, HUD symbols) is pixel art drawn in code. The ending montage frames are composed from the team's scenes and rover sprites. | Done |
 | Drive-log map | Sojourner's 1997 drive-log mini-map doesn't draw the nearby rocks. The route is traced on its own map scale, so the rocks need their own map coordinates; projecting the scene's rocks onto it would misplace them. | Open (cosmetic) |
 | Translation | The game is English only. French and Arabic are planned after the hackathon. | Planned |
 
