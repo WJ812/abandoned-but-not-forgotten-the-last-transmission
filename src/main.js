@@ -128,7 +128,7 @@ function devJump(go) {
   else if (go.startsWith('dialogue')) { to(Screen.DIALOGUE, { robot: reg === Region.MOON ? 0 : 1 }); if (params.get('menu')) ctx.current.action('pause'); }
   else if (go === 'notes') {
     if (params.get('seed')) { E.markAsked(0, 0); E.markAsked(1, 2); E.collectBlueprint(0); E.propOpen(5); E.propAction(5, 'apxsDeploy', 0); for (let i = 0; i < 700; i++) E.propTick(5, 1 / 60); E.propOpen(6); E.propAction(6, 'hazScan'); for (let i = 0; i < 300; i++) E.propTick(6, 1 / 60); }
-    to(Screen.ARCHIVE_COMPUTER, { tab: 'notes' });
+    to(Screen.ARCHIVE_COMPUTER, { tab: params.get('tab') || 'notes' });
   }
   else if (go === 'notebook') to(Screen.NOTEBOOK); else if (go === 'starmap') to(Screen.STAR_MAP); else if (go === 'archive') to(Screen.ARCHIVE_COMPUTER);
   else if (go === 'pause') to(Screen.PAUSE); else if (go === 'ending') to(Screen.ENDING); else if (go === 'portal') to(Screen.PORTAL_MENU);

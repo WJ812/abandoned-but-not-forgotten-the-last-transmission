@@ -154,9 +154,53 @@ function buttonSelected(c, w, h) {
   R(c, PAL.white, 0, 0, 3, 1); R(c, PAL.white, 0, 0, 1, 3); R(c, PAL.white, w - 3, h - 1, 3, 1); R(c, PAL.white, w - 1, h - 3, 1, 3);
 }
 
+/* ---------------- catalog icons (16x16, transparent) ---------------- */
+function iconSurveyor(c) {   // tripod lander with a dish
+  R(c, PAL.ink, 6, 5, 4, 4); R(c, PAL.grey, 7, 6, 2, 2); line(c, PAL.grey2, 8, 5, 8, 2); R(c, PAL.white, 6, 1, 5, 1); px(c, PAL.cyan, 8, 3);
+  line(c, PAL.grey2, 6, 9, 2, 14); line(c, PAL.grey2, 9, 9, 13, 14); line(c, PAL.grey2, 8, 9, 8, 14); R(c, PAL.grey, 1, 14, 3, 1); R(c, PAL.grey, 12, 14, 3, 1); R(c, PAL.grey, 7, 14, 3, 1);
+}
+function iconLm(c) {         // gold octagonal descent stage, 4 legs
+  R(c, PAL.ink, 4, 3, 8, 7); R(c, PAL.gold, 5, 4, 6, 5); R(c, PAL.gold2, 5, 8, 6, 1); R(c, '#f4cf7a', 5, 4, 6, 1); px(c, PAL.ink, 4, 3); px(c, PAL.ink, 11, 3);
+  line(c, PAL.grey2, 4, 9, 1, 14); line(c, PAL.grey2, 11, 9, 14, 14); line(c, PAL.grey2, 6, 10, 5, 14); line(c, PAL.grey2, 9, 10, 10, 14);
+  R(c, PAL.white, 0, 14, 3, 1); R(c, PAL.white, 13, 14, 3, 1); R(c, PAL.white, 4, 14, 3, 1); R(c, PAL.white, 9, 14, 3, 1);
+}
+function iconAlsep(c) {      // central station, RTG and antenna
+  R(c, PAL.ink, 5, 7, 6, 5); R(c, PAL.grey, 6, 8, 4, 3); R(c, PAL.gold, 6, 8, 4, 1);
+  R(c, PAL.ink, 12, 9, 3, 5); R(c, PAL.grey3, 13, 10, 1, 3); px(c, PAL.orange, 13, 9); line(c, PAL.grey2, 11, 10, 12, 10);
+  line(c, PAL.grey2, 8, 7, 8, 2); line(c, PAL.white, 6, 2, 10, 2); px(c, PAL.cyan, 8, 1); R(c, PAL.grey2, 2, 13, 11, 1);
+}
+function iconAirbags(c) {    // cluster of white airbag balls
+  for (const [x, y, r] of [[5, 10, 4], [11, 10, 4], [8, 5, 4], [8, 12, 3]]) { disc(c, PAL.grey2, x, y, r); disc(c, PAL.white, x - 1, y - 1, Math.max(1, r - 1)); }
+  px(c, PAL.white, 6, 3); px(c, PAL.grey, 10, 13);
+}
+function iconInsight(c) {    // lander, two round solar panels, a dome
+  disc(c, PAL.ink, 3, 7, 3); disc(c, PAL.navy, 3, 7, 2); disc(c, PAL.navy2, 2, 6, 1);
+  disc(c, PAL.ink, 12, 7, 3); disc(c, PAL.navy, 12, 7, 2); disc(c, PAL.navy2, 11, 6, 1);
+  R(c, PAL.ink, 5, 8, 6, 4); R(c, PAL.grey, 6, 9, 4, 2); R(c, PAL.gold, 6, 9, 4, 1);
+  disc(c, PAL.ink, 8, 5, 3); disc(c, PAL.white, 8, 5, 2); px(c, PAL.grey2, 9, 6);
+  line(c, PAL.grey2, 5, 12, 3, 14); line(c, PAL.grey2, 10, 12, 12, 14);
+}
+function iconIngenuity(c) {  // helicopter with stacked rotors
+  R(c, PAL.ink, 1, 2, 14, 1); R(c, PAL.white, 2, 2, 12, 1); R(c, PAL.ink, 2, 5, 12, 1); R(c, PAL.white, 3, 5, 10, 1); R(c, PAL.grey2, 8, 3, 1, 4);
+  R(c, PAL.ink, 6, 7, 4, 4); R(c, PAL.white, 7, 8, 2, 2); R(c, PAL.navy, 6, 7, 4, 1); px(c, PAL.orange, 8, 10);
+  line(c, PAL.grey2, 6, 11, 4, 14); line(c, PAL.grey2, 9, 11, 11, 14); line(c, PAL.grey2, 10, 7, 14, 6); R(c, PAL.navy, 12, 6, 3, 1);
+}
+function iconNear(c) {       // octagonal body with 4 solar panels
+  for (const [x, y] of [[0, 2], [11, 2], [0, 10], [11, 10]]) { R(c, PAL.ink, x, y, 5, 4); R(c, PAL.navy, x + 1, y + 1, 3, 2); px(c, PAL.navy2, x + 1, y + 1); }
+  R(c, PAL.ink, 5, 4, 6, 8); R(c, PAL.ink, 4, 5, 8, 6); R(c, PAL.gold, 5, 5, 6, 6); R(c, '#f4cf7a', 5, 5, 6, 1); disc(c, PAL.white, 8, 8, 1); px(c, PAL.ink, 8, 8);
+  line(c, PAL.grey2, 5, 5, 3, 4); line(c, PAL.grey2, 10, 5, 12, 4); line(c, PAL.grey2, 5, 10, 3, 11); line(c, PAL.grey2, 10, 10, 12, 11);
+}
+function iconVoyager(c) {    // big white dish with booms
+  disc(c, PAL.ink, 8, 5, 6); disc(c, PAL.white, 8, 5, 5); disc(c, PAL.grey, 8, 6, 3); px(c, PAL.grey3, 8, 5); R(c, PAL.grey2, 8, 1, 1, 1);
+  line(c, PAL.grey2, 8, 10, 8, 12); R(c, PAL.ink, 6, 11, 5, 3); R(c, PAL.gold, 7, 12, 3, 1);
+  line(c, PAL.grey2, 6, 13, 1, 15); line(c, PAL.grey2, 10, 13, 15, 12); px(c, PAL.orange, 1, 15); R(c, PAL.ink, 13, 11, 2, 2);
+}
+
 export const STANDINS = {
   pathfinder_lander: pathfinderLander, return_pad: returnPad, blueprint_pickup: blueprintPickup, fx_alert: fxAlert,
   lrv_wheel: lrvWheel, lrv_fender: lrvFender, lrv_gcta: lrvGcta, sojourner_apxs: sojApxs,
+  icon_surveyor3: iconSurveyor, icon_apollo_lm_descent: iconLm, icon_alsep: iconAlsep, icon_pathfinder_airbags: iconAirbags,
+  icon_insight_seis: iconInsight, icon_ingenuity: iconIngenuity, icon_near_shoemaker: iconNear, icon_voyager1: iconVoyager,
   portrait_lrv: portraitLrv, portrait_sojourner: portraitSoj,
   title_bg: titleBg, title_logo: titleLogo,
   btn_continue: button, btn_new_game: button, btn_mode_explorer: button, btn_mode_archivist: button, btn_mode_selected: buttonSelected,
