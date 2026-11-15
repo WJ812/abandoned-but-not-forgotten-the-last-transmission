@@ -5,10 +5,6 @@
  */
 import { ASSETS, sheetSize, frameRect } from '../assets.js';
 import { drawLabelBox, drawText, textWidth } from './pixfont.js';
-import { STANDINS } from './standins.js';
-
-/** True when a procedural pixel stand-in exists for this slot (used while the real file is missing). */
-export const hasStandin = (id) => Object.prototype.hasOwnProperty.call(STANDINS, id);
 
 const store = new Map();   // id -> {img, real, sx, sy}
 
@@ -86,16 +82,6 @@ function makePlaceholder(id, slot) {
   const { w, h } = sheetSize(slot);
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
   const c = cv.getContext('2d'); c.imageSmoothingEnabled = false;
-  if (hasStandin(id)) {   // procedural stand-in; any failure falls through to the labeled box
-    try {
-      for (let i = 0; i < slot.frames; i++) {
-        const r = frameRect(slot, i);
-        c.save(); c.translate(r.x, r.y); c.beginPath(); c.rect(0, 0, r.w, r.h); c.clip();
-        STANDINS[id](c, r.w, r.h, i, slot); c.restore();
-      }
-      return cv;
-    } catch (err) { console.warn('stand-in failed for', id, err); c.clearRect(0, 0, w, h); }
-  }
   if (slot.kind === 'scene' && slot.frames === 1 && slot.w >= 160) { paintScene(c, id, slot); return cv; }
   const col = slot.placeholder.color;
   const txt = lum(col) > 0.6 ? '#101820' : '#ffffff';

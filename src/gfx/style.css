@@ -294,7 +294,3 @@ canvas.prop-cv { width: 100%; aspect-ratio: 240 / 135; height: auto; border: 1px
   .hw canvas.prop-cv { aspect-ratio: auto; flex: 1 1 0; min-height: 0; width: 100%; height: auto; object-fit: fill; margin-bottom: 0; }
   .hw-rows em { -webkit-line-clamp: 1; } .hw-rows { line-height: 1.1; } .hw-ctl { margin-bottom: 0.15em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
-
-/* ---- pixel stand-ins ---- */
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.title-logo h1 { font-family: var(--mono); font-weight: 800; text-shadow: 0.06em 0.06em 0 #0b3d91, 0 0.1em 0.5em rgba(0,0,0,0.8); } .title-logo h2 { font-family: var(--mono); font-weight: 800; text-shadow: 0.08em 0.08em 0 #7a5a2a; }
