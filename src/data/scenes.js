@@ -121,7 +121,7 @@ const MOON = {
 };
 
 /* =====================================================================
- * MARS: Ares Vallis. REAL ART: 'Artwork/Scenes/mars_location.png', 360x180.
+ * MARS: Ares Vallis. REAL ART: 'Artwork/Scenes/mars_location (1).png', 360x180.
  * Painted: left ridge, open dunes, Big Crater rim (right), rocks R1-R6.
  * NOT painted (drawn as sprites): Pathfinder lander, Sojourner ('rover_sojourner'
  * 70x70, bottom-aligned on its hotspot), return pad, blueprint.
