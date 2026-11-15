@@ -185,6 +185,21 @@ test('Mars art: every painted rock is solid; facts are separate and clear of spa
   }
 });
 
+test('Mars: every painted rock has a walk-by pop-up hugging it', () => {
+  const s = getScene(Region.MARS);
+  const rocks = {
+    'Scooby Doo': { x: 6, y: 125, w: 21, h: 12 }, 'Barnacle Bill': { x: 51, y: 140, w: 31, h: 20 },
+    Wedge: { x: 242, y: 157, w: 10, h: 9 }, Yogi: { x: 254, y: 147, w: 36, h: 20 }, Chimp: { x: 328, y: 153, w: 10, h: 7 },
+  };
+  const names = getPropSpec(Prop.SOJ_DRIVE).rocks.map((r) => r.name);
+  for (const [name, r] of Object.entries(rocks)) {
+    const f = s.facts.find((z) => z.title === name);
+    assert.ok(f, `no pop-up for ${name}`);
+    assert.ok(!overlap(f.rect, r) && gap(f.rect, r) <= 2, `${name} zone does not hug its rock`);
+    assert.ok(names.includes(name), `${name} missing from SOJ_DRIVE.rocks`);
+  }
+});
+
 test('unknown region throws', () => {
   assert.throws(() => getScene(9), RangeError);
 });

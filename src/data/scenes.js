@@ -132,11 +132,11 @@ const MOON = {
 const MARS_WALKABLE = R(4, 110, 352, 68);         // ground band; sky/slopes above
 const MARS_RIDGE_BASE = R(0, 105, 45, 15);        // left ridge meets the ground
 const MARS_CRATER_RIM = R(265, 80, 95, 38);       // Big Crater rim, intrudes to y=118
-const MARS_R1 = R(6, 125, 21, 12);
+const MARS_R1 = R(6, 125, 21, 12);                // "Scooby Doo"
 const MARS_R2 = R(51, 140, 31, 20);               // "Barnacle Bill"
-const MARS_R4 = R(242, 157, 10, 9);
+const MARS_R4 = R(242, 157, 10, 9);               // "Wedge"
 const MARS_R5 = R(254, 147, 36, 20);              // biggest rock, "Yogi"
-const MARS_R6 = R(328, 153, 10, 7);
+const MARS_R6 = R(328, 153, 10, 7);               // "Chimp"
 // R3 pebble (84-90, 150-155) is decor only: not solid, not interactive.
 const MARS_LANDER = R(110, 112, 48, 28);          // pathfinder_lander sprite (48x28)
 const MARS_ROVER = R(162, 138, 70, 22);           // bottom 70x22 of the 70x70 sprite (sprite 162-232, 90-160); 18 px walk corridor below
@@ -170,29 +170,44 @@ const MARS = {
       archivist: 'Matching horizon features such as Twin Peaks and Big Crater to Viking orbiter images pinpointed the landing site. The peaks are about a kilometer from the lander.',
     },
     {
-      id: 1, rect: R(64, 162, 44, 16), title: 'Rocks from a megaflood',
-      explorer: 'Billions of years ago, giant floods roared through Ares Vallis. They left rounded pebbles and rocks tilted the same way, like books knocked over by a rushing river.',
-      archivist: 'Ares Vallis is an outflow channel. Lander images showed imbricated rocks, stacked and tilted in the downstream direction, a classic sign of catastrophic flooding.',
-    },
-    {
-      id: 2, rect: R(110, 152, 44, 14), title: 'Freezing cold',
+      id: 1, rect: R(110, 152, 44, 14), title: 'Freezing cold',
       explorer: 'Even on summer afternoons the air here stayed below freezing, and nights fell to about minus 75 degrees Celsius. Thin air cannot hold on to the day\'s heat.',
       archivist: 'Pathfinder carried thermometers at three heights on its weather mast. They showed the air could change by many degrees over just one meter, and swing about 60 C from day to night.',
     },
     {
-      id: 3, rect: R(168, 112, 56, 16), title: 'Dunes and dust',
+      id: 2, rect: R(168, 112, 56, 16), title: 'Dunes and dust',
       explorer: 'Mars air is very thin and mostly carbon dioxide, under 1% as thick as Earth\'s. Even so, the wind piles sand into dunes and lifts fine dust, and dust storms can cover the whole planet.',
       archivist: 'Pathfinder\'s weather mast measured a surface pressure of about 6.7 millibars and detected dust devils sweeping past the lander. Dust settling on solar panels cut their power sol by sol.',
     },
     {
-      id: 4, rect: R(226, 167, 70, 11), title: 'A grab bag of rocks',
-      explorer: 'Floods carried big rocks like this one down Ares Vallis from the old highlands far upstream. Scientists picked this spot so a tiny rover could study rocks from many places at once.',
-      archivist: 'The site was chosen because the floods should have dumped a mix of rocks from upstream, letting one small rover sample the highlands without driving there.',
-    },
-    {
-      id: 5, rect: R(300, 120, 56, 26), title: 'Big Crater',
+      id: 3, rect: R(300, 120, 56, 26), title: 'Big Crater',
       explorer: 'That rim belongs to a crater the team called Big Crater, a bowl about 1.5 km across, blasted out long ago when a space rock hit Mars.',
       archivist: 'Big Crater, about 1.5 km across, lies a couple of kilometers from the lander. Seen on the horizon, it helped locate the lander on Viking orbiter maps, together with Twin Peaks.',
+    },
+    {
+      id: 4, rect: R(51, 132, 31, 8), title: 'Barnacle Bill',
+      explorer: 'Barnacle Bill was the first rock Sojourner\'s APXS ever analyzed. It held more silica than scientists expected, a bit like a volcanic rock on Earth called andesite.',
+      archivist: 'Preliminary APXS results: about 55% SiO2 and 3% MgO. High silica hints at evolved magma, though a coating of dust or weathered rind may affect the numbers.',
+    },
+    {
+      id: 5, rect: R(254, 139, 36, 8), title: 'Yogi',
+      explorer: 'Yogi is a big rock the team named after a cartoon bear. Sojourner studied it around sols 8 to 10 and found less silica and more magnesium than Barnacle Bill.',
+      archivist: 'Preliminary APXS: about 51% SiO2 and 6% MgO, affected by dust. The site was picked because floods should have carried a mix of rocks like Yogi from the highlands upstream.',
+    },
+    {
+      id: 6, rect: R(6, 137, 21, 8), title: 'Scooby Doo',
+      explorer: 'Scooby Doo is a pale, flat patch near the lander. It may be a rock, or soil that hardened into a crust. Not everything that looks like a rock on Mars is one!',
+      archivist: 'Its APXS result looked a lot like the local soil, so scientists suspected a cemented soil crust rather than a fresh rock. That reading is uncertain.',
+    },
+    {
+      id: 7, rect: R(240, 166, 14, 8), title: 'Wedge',
+      explorer: 'Wedge is a pointed rock that leans like many others here. Rocks tipped the same way are a clue that giant floods once rushed through Ares Vallis.',
+      archivist: 'Ares Vallis is an outflow channel. Lander images showed imbricated rocks, stacked and tilted downstream, a classic sign of catastrophic flooding billions of years ago.',
+    },
+    {
+      id: 8, rect: R(326, 160, 14, 8), title: 'Chimp',
+      explorer: 'Chimp is one of the rocks near the Rock Garden, a cluster of big rocks Sojourner explored late in its mission, along with Shark and Half Dome.',
+      archivist: 'Sojourner worked around the Rock Garden in the last weeks of the mission. Its last full data came on sol 83; where it drove afterward is not known.',
     },
   ],
 };

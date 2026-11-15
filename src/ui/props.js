@@ -195,11 +195,11 @@ const PANELS = {
     ],
     draw(g, t) {
       frame(g);
-      ctx.assets.draw(g, 'lrv_wheel', Math.floor(((st.wheelAngleDeg % 360 + 360) % 360) / 90) % 4, 84, 40, { w: 60, h: 60 });
-      if (st.fenderOn) ctx.assets.draw(g, 'lrv_fender', 1, 76, 24, { w: 80, h: 40 });
+      g.fillStyle = '#767b86'; g.fillRect(0, 112, CW, 23);
+      ctx.assets.draw(g, 'rover_lrv', 0, 84, 22, { w: 100, h: 100 });   // the rover itself (nearest-neighbor scaled)
+      if (st.fenderOn) { g.fillStyle = '#5fe0a0'; g.fillRect(100, 100, 22, 1); g.fillRect(100, 100, 1, 6); g.fillRect(121, 100, 1, 6); drawText(g, 'TAPED FENDER', 96, 92, '#5fe0a0'); }
       const n = Math.round(30 * st.dustIntensity);
       for (let i = 0; i < n; i++) { const k = (t * 1.5 + i / Math.max(1, n)) % 1; g.fillStyle = `rgba(200,200,205,${1 - k})`; g.fillRect(Math.round(80 - k * 70), Math.round(95 - Math.sin(k * 3.14) * (30 + 30 * st.dustIntensity) + ((i * 7) % 9)), 2, 2); }
-      g.fillStyle = '#767b86'; g.fillRect(0, 100, CW, 35);
       drawText(g, st.fenderOn ? 'WITH TAPED-MAP FENDER' : 'NO FENDER: ROOSTER TAIL', 8, 6, st.fenderOn ? '#5fe0a0' : '#ff6b5a');
     },
   }),
@@ -241,9 +241,9 @@ const PANELS = {
     draw(g, t) {
       frame(g);
       g.fillStyle = '#6e3a1c'; g.fillRect(0, 95, CW, 40);
-      g.fillStyle = '#7d5a46'; g.fillRect(30, 60, 70, 40); g.fillStyle = '#9a7660'; g.fillRect(34, 56, 50, 8);
-      ctx.assets.draw(g, 'sojourner_apxs', st.deployed ? 1 : 0, 56, st.deployed ? 52 : 40, { w: 32, h: 32 });
-      if (st.deployed) { g.fillStyle = `rgba(61,214,245,${0.3 + 0.2 * Math.sin(t * 10)})`; g.fillRect(64, 80, 16, 3); }
+      g.fillStyle = '#7d5a46'; g.fillRect(84, 84, 36, 22); g.fillStyle = '#9a7660'; g.fillRect(88, 80, 24, 6);
+      ctx.assets.draw(g, 'rover_sojourner', 0, 6, 32, { w: 80, h: 80 });   // the rover itself
+      if (st.deployed) { g.fillStyle = `rgba(61,214,245,${0.5 + 0.3 * Math.sin(t * 10)})`; g.fillRect(78, 92, 14, 2); g.fillRect(90, 88, 2, 6); drawText(g, 'APXS', 72, 76, '#3dd6f5'); }
       bar(g, 20, 112, 90, 8, st.progress, '#3dd6f5');
       const comp = arr(st.result?.composition); if (comp.length) {
         comp.slice(0, 6).forEach((c, i) => { drawText(g, c.element, 126, 10 + i * 17, '#8fb4e8'); bar(g, 146, 9 + i * 17, 88, 8, c.pct / 60, '#ffd166'); drawText(g, `${f1(c.pct)}%`, 192, 10 + i * 17, '#fff'); });

@@ -5,7 +5,7 @@
  */
 import { Robot, Mode, Sfx, LATENCY, Prop, CANVAS_W, CANVAS_H, TEXT_CPS } from '../contract.js';
 import { ctx } from '../gfx/ctx.js';
-import { h, mount, unmount, spriteCanvas, redrawSprite, Typer, Menu, at, drawPanelArt } from './dom.js';
+import { h, mount, unmount, spriteCanvas, redrawSprite, pixCanvas, Typer, Menu, at, drawPanelArt } from './dom.js';
 import { createHardware } from './props.js';
 
 const HW = {
@@ -14,7 +14,12 @@ const HW = {
 };
 
 let root, d, robot, st, pages, pi, archFrom, typer, menu, portrait, eqEls, eqT, sigWrap, sigFill, sigPct, textBox, pageTag, archTag, qIdx, lastTick, lastFrame;
-let hw = null, focus = 0, hintEl, menuWrap;
+let hw = null, focus = 0, hintEl, menuWrap, portraitIsRover = false;
+function drawPortrait(f) {
+  const g = portrait.getContext('2d'); g.imageSmoothingEnabled = false;
+  g.fillStyle = '#2a1426'; g.fillRect(0, 0, 70, 70); g.fillStyle = '#3a2038'; g.fillRect(0, 56, 70, 14);
+  ctx.assets.draw(g, portrait.dataset.rover, 0, 0, f ? 1 : 0);   // tiny talk bob
+}
 
 const blipId = () => (robot === Robot.LRV ? Sfx.TALK_LRV : Sfx.TALK_SOJ);
 
@@ -83,7 +88,10 @@ export const dialogue = {
     const E = ctx.engine;
     robot = r; d = ctx.data.getDialogue(r); st = 'greet'; lastFrame = -1; focus = 0;
     hw = HW[r] ? createHardware(HW[r]) : null;
-    portrait = spriteCanvas(d.portrait, 0, 'portrait');
+    // default portrait = the user's real rover sprite (nearest-neighbor); a real portrait_* PNG still wins
+    portraitIsRover = !ctx.assets.isReal(d.portrait);
+    if (portraitIsRover) { portrait = pixCanvas(70, 70, 'portrait').c; portrait.dataset.rover = r === Robot.LRV ? 'rover_lrv' : 'rover_sojourner'; drawPortrait(0); }
+    else portrait = spriteCanvas(d.portrait, 0, 'portrait');
     eqEls = Array.from({ length: 6 }, () => h('i'));
     const txt = h('p', { class: 'dlg-text' });
     pageTag = h('span', { class: 'page-tag' }); archTag = h('span', { class: 'arch-tag hidden' }, 'ARCHIVIST');
@@ -115,7 +123,7 @@ export const dialogue = {
     typer.update(dt);
     const speaking = !typer.done && st !== 'menu' && st !== 'signal';
     const f = speaking ? Math.floor(ctx.time * 8) % 2 : 0;
-    if (f !== lastFrame) { lastFrame = f; redrawSprite(portrait, f); }
+    if (f !== lastFrame) { lastFrame = f; if (portraitIsRover) drawPortrait(f); else redrawSprite(portrait, f); }
     eqT -= dt;
     if (eqT <= 0) { eqT = 0.08; eqEls.forEach((e, i) => { e.style.height = `${speaking ? 12 + Math.random() * 88 : 8 + (i % 3) * 2}%`; }); }
     if (st === 'signal') {
