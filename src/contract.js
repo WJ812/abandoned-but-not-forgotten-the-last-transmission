@@ -626,3 +626,30 @@ export const Screen = Object.freeze({
   PROP_PANEL: 'propPanel', NOTEBOOK: 'notebook', STAR_MAP: 'starMap',
   ARCHIVE_COMPUTER: 'archiveComputer', PAUSE: 'pause', ENDING: 'ending',
 });
+
+/* ========================================================================
+ * 10c. NOTES (automatic field journal). Added 2026-11-15; backward-compatible.
+ * Players NEVER type. The engine appends entries automatically as they play; the
+ * frontend shows them from a HUD "Notes" button AND a "Notes" tab on the Archive
+ * Computer, with an optional "Download .txt" button. A file is created ONLY when
+ * that button is pressed; nothing downloads automatically (the game is a 0 MB web page).
+ *
+ * NoteEntry = { kind, region, ref, sub, n }
+ *   kind:  'fact'      ref = fact zone id                 (when EVT.FACT fires)
+ *          'answer'    ref = Robot, sub = question id     (on markAsked)
+ *          'blueprint' ref = Blueprint                    (on collectBlueprint NEW/COMPLETE)
+ *          'finding'   ref = Prop,  sub = finding key     (when a prop sim produces a result:
+ *                        SOJ_APXS -> sub = target index when an analysis completes;
+ *                        SOJ_HAZARD -> sub = 'scan' when a scan completes;
+ *                        LRV_NAV / SOJ_DRIVE -> sub = eva / leg index when a replay reaches the end;
+ *                        LRV_BATTERY -> sub = 'loadTest' when a load test completes;
+ *                        LRV_CAMERA -> sub = 'liftoff' when the liftoff replay completes)
+ *   region: Region where it happened (answers/findings: the robot's region).
+ *   n:      1-based order number (the order the player discovered things).
+ * De-duplicated by (kind, region, ref, sub): a note is only added the first time.
+ * Save JSON gains optional `notes: NoteEntry[]`; old saves load with []. newGame clears it.
+ *
+ * engine.notes() -> NoteEntry[]   read-only copy, in discovery order.
+ * The frontend renders each entry's text from data (fact text, the question label and answer,
+ * the blueprint card, the prop spec and result) and groups by region (Moon, Mars).
+ */

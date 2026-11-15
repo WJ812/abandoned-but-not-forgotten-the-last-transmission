@@ -5,6 +5,7 @@ import { ctx } from '../gfx/ctx.js';
 import { h, mount, unmount, spriteCanvas, Typer, at, drawPanelArt } from './dom.js';
 import { page1El, page2El } from './cards.js';
 import { buildNotebook, createStarMap } from './menus.js';
+import { buildNotes } from './notes.js';
 
 const TAB_DEFS = [
   { id: 'notebook', label: 'NOTEBOOK', custom: true },
@@ -12,9 +13,10 @@ const TAB_DEFS = [
   { id: 'blueprints', label: 'BLUEPRINTS' },
   { id: 'transcripts', label: 'TRANSCRIPTS' },
   { id: 'expansions', label: 'EXPANSIONS' },
+  { id: 'notes', label: 'NOTES', custom: true },
   { id: 'recap', label: 'RECAP', needsEnding: true },
 ];
-let nbk = null, root, tabs, tab, idx, tabsEl, bodyEl, listEl, detailEl, hintEl, statusEl, map, cur;
+let nts = null, nbk = null, root, tabs, tab, idx, tabsEl, bodyEl, listEl, detailEl, hintEl, statusEl, map, cur;
 
 function items(id) {
   const E = ctx.engine, D = ctx.data, game = E.game;
@@ -65,9 +67,10 @@ function renderTabs() {
 }
 
 function renderBody() {
-  const def = tabs[tab]; map = null; cur = null; nbk = null;
+  const def = tabs[tab]; map = null; cur = null; nbk = null; nts = null;
   bodyEl.replaceChildren();
   if (def.id === 'notebook') { nbk = buildNotebook(); bodyEl.appendChild(h('div', { class: 'apane' }, nbk.el)); }
+  else if (def.id === 'notes') { nts = buildNotes(); bodyEl.appendChild(h('div', { class: 'apane' }, nts.el)); }
   else if (def.id === 'starmap') { map = createStarMap(); bodyEl.appendChild(h('div', { class: 'apane' }, map.el)); }
   else {
     const list = items(def.id);
@@ -79,7 +82,7 @@ function renderBody() {
   }
   const E = ctx.engine; const c = E.completion();
   statusEl.textContent = `ARCHIVE ${c.percent}%  |  BLUEPRINTS ${c.count}/${c.total}  |  MODE ${E.game.mode === Mode.ARCHIVIST ? 'ARCHIVIST' : 'EXPLORER'}`;
-  const nav = def.id === 'notebook' ? 'W/S field notes  ' : def.id === 'starmap' ? 'W/S select body  ' : def.custom ? '' : 'W/S item  Space open  ';
+  const nav = def.id === 'notes' ? 'W/S entries  (mouse: Download button)  ' : def.id === 'notebook' ? 'W/S field notes  ' : def.id === 'starmap' ? 'W/S select body  ' : def.custom ? '' : 'W/S item  Space open  ';
   hintEl.replaceChildren(h('span', { class: 'key' }, 'A/D'), ' tab  ', nav, h('span', { class: 'key' }, '1-9'), ' jump  ', h('span', { class: 'key' }, 'Esc'), ' close');
 }
 
@@ -110,7 +113,7 @@ function makeComputer(initialId) {
       else if (a === 'num' && e.digit <= tabs.length) setTab(e.digit - 1);
       else if (a === 'up' || a === 'down') {
         const d = a === 'up' ? -1 : 1;
-        if (map) map.move(d); else if (nbk) nbk.move(d); else if (!tabs[tab].custom) { idx = Math.max(0, idx + d); ctx.audio.play(Sfx.CURSOR); renderBody(); }
+        if (map) map.move(d); else if (nts) nts.move(d); else if (nbk) nbk.move(d); else if (!tabs[tab].custom) { idx = Math.max(0, idx + d); ctx.audio.play(Sfx.CURSOR); renderBody(); }
       } else if (a === 'confirm') { if (cur?.recap) { ctx.audio.play(Sfx.ENDING); ctx.go(Screen.ENDING); } }
       else if (a === 'pause' || a === 'notebook') { ctx.audio.play(Sfx.CANCEL); ctx.back(); }
     },

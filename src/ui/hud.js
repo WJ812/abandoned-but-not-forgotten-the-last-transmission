@@ -3,7 +3,7 @@ import { Region, Mode, Screen, BP_COUNT, Sfx } from '../contract.js';
 import { ctx } from '../gfx/ctx.js';
 import { h, spriteCanvas } from './dom.js';
 
-let root, regionEl, bpEl, lampEl, modeBtn, muteBtn, last = '';
+let notesBtn, root, regionEl, bpEl, lampEl, modeBtn, muteBtn, last = '';
 const HIDE = new Set([Screen.TITLE, Screen.ENDING, Screen.ARCHIVE_COMPUTER, Screen.NOTEBOOK, Screen.STAR_MAP]);
 const MODE_FALLBACK = ['EXPLORER 9-12', 'ARCHIVIST 13-18'];
 
@@ -31,9 +31,13 @@ export function initHud() {
     class: 'hud-btn', tabindex: '-1', title: 'Mute / unmute', onmousedown: noFocus,
     onclick: (e) => { e.currentTarget.blur(); ctx.audio.unlock(); ctx.toggleMute(); if (!ctx.audio.muted) ctx.audio.play(Sfx.CONFIRM); sync(true); },
   });
+  notesBtn = h('button', {
+    class: 'hud-btn', tabindex: '-1', title: 'Open your field notes', onmousedown: noFocus,
+    onclick: (e) => { e.currentTarget.blur(); ctx.audio.unlock(); if (ctx.isWorld()) { ctx.audio.play(Sfx.NOTEBOOK); ctx.go(Screen.ARCHIVE_COMPUTER, { tab: 'notes' }); } },
+  });
   root = h('div', { class: 'hud hidden' },
     h('div', { class: 'hud-left' }, regionEl, bpEl, lampEl),
-    h('div', { class: 'hud-right' }, h('span', { class: 'hud-keys' }, 'N Notebook  P Pause'), modeBtn, muteBtn));
+    h('div', { class: 'hud-right' }, h('span', { class: 'hud-keys' }, 'N Notebook  P Pause'), notesBtn, modeBtn, muteBtn));
   ctx.stage.appendChild(root);
 }
 
@@ -45,10 +49,12 @@ export function sync(force) {
   let regionName = 'NASA Archives';
   try { regionName = ctx.data.getScene(game.region).name; } catch { /* data not ready */ }
   const bpN = [0, 1].reduce((n, b) => n + ((game.blueprints >> b) & 1), 0);
-  const key = [regionName, bpN, game.mode, ctx.audio.muted, game.headlampOn, game.region, force].join('|');
+  let nn = 0; try { nn = ctx.engine.notes?.().length ?? 0; } catch { nn = 0; }
+  const key = [nn, regionName, bpN, game.mode, ctx.audio.muted, game.headlampOn, game.region, force].join('|');
   if (key === last && !force) return;
   last = key;
   regionEl.textContent = regionName.toUpperCase();
+  notesBtn.textContent = `NOTES ${nn}`;
   bpEl.replaceChildren(icon(0, 'BP'), ` ${bpN}/${BP_COUNT}`);
   bpEl.classList.toggle('done', bpN === BP_COUNT);
   lampEl.style.display = game.region === Region.MOON ? '' : 'none';

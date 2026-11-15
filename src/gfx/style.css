@@ -298,3 +298,7 @@ canvas.prop-cv { width: 100%; aspect-ratio: 240 / 135; height: auto; border: 1px
 /* ---- pixel stand-ins ---- */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .title-logo h1 { font-family: var(--mono); font-weight: 800; text-shadow: 0.06em 0.06em 0 #0b3d91, 0 0.1em 0.5em rgba(0,0,0,0.8); } .title-logo h2 { font-family: var(--mono); font-weight: 800; text-shadow: 0.08em 0.08em 0 #7a5a2a; }
+
+/* ---- notes journal ---- */
+.notes-grid { margin-top: 0; border-top: 0; padding-top: 0; grid-template-columns: 1.2fr 1fr; } .notes-list { max-height: 15em; } .notes-list .fi em { font-style: normal; color: #cfc3f0; font-weight: 400; }
+.notes-det { max-height: 17em; } .pxbtn.dl { margin-top: 0.5em; border: 0; } .pxbtn.dl:disabled { opacity: 0.4; cursor: default; }

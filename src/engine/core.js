@@ -12,7 +12,7 @@ import {
   Region, REGION_COUNT, Dir, Btn, EVT, DT, PLAYER, INTERACT_RANGE_PX, HEADLAMP, LATENCY,
   PHYSICS_DEFAULTS, HOP_REGIONS, STEP_INTERVAL_S, GF, Collect, BP_COUNT, BP_ALL_MASK, ROBOT_COUNT,
   Mode, Trigger, HotspotKind, Prop, PROP_COUNT, propRegion, SAVE_KEY, SAVE_VERSION, CANVAS_W, CANVAS_H,
-  SETTINGS_KEY, SETTINGS_DEFAULTS,
+  SETTINGS_KEY, SETTINGS_DEFAULTS, robotRegion, bpRegion,
 } from '../contract.js';
 import { overlaps, pointIn, rectGap, rectCenter, angleDiff, popcount, sanitizeDt } from './geom.js';
 import { createPropState, propActionImpl, propTickImpl, mergeSpec } from './props.js';
@@ -105,7 +105,25 @@ const sess = {
 let factsLogKeys = [];
 const FACT_KEY_RE = /^\d+:\d+$/;
 
+/** Automatic notes journal (contract 10c): NoteEntry {kind, region, ref, sub, n}. */
+let noteList = [];
+const NOTE_KINDS = ['fact', 'answer', 'blueprint', 'finding'];
+const noteKey = (kind, region, ref, sub) => `${kind}|${region}|${ref}|${sub === null || sub === undefined ? '' : sub}`;
+
+/** Append a note the first time (kind, region, ref, sub) is seen; autosaves. */
+function addNote(kind, region, ref, sub = null) {
+  const key = noteKey(kind, region, ref, sub);
+  if (noteList.some((e) => noteKey(e.kind, e.region, e.ref, e.sub) === key)) return false;
+  noteList.push({ kind, region, ref, sub, n: noteList.length + 1 });
+  writeSave();
+  return true;
+}
+
+/** The journal in discovery order (fresh copies). */
+export function notes() { return noteList.map((e) => ({ ...e })); }
+
 function resetPersistent() {
+  noteList = [];
   factsLogKeys = [];
   game.blueprints = 0; game.robotsTalked = 0; game.asked = new Array(ROBOT_COUNT).fill(0);
   game.mode = Mode.EXPLORER; game.flags = 0;
@@ -326,6 +344,7 @@ export function update(held = 0, pressed = 0) {
       game.events |= EVT.FACT;
       const key = `${game.region}:${f.id}`;
       if (!factsLogKeys.includes(key)) { factsLogKeys.push(key); writeSave(); }
+      addNote('fact', game.region, f.id);
       sess.factArmed.set(f.id, false);
     }
   }
@@ -449,6 +468,7 @@ export function collectBlueprint(bp) {
     res = Collect.COMPLETE;
   }
   writeSave();
+  addNote('blueprint', bpRegion(bp), bp);
   return res;
 }
 
@@ -463,6 +483,7 @@ export function markAsked(robot, questionId) {
   if (!Number.isInteger(questionId) || questionId < 0 || questionId > 30) return;
   game.asked[robot] = (game.asked[robot] | 0) | (1 << questionId);
   writeSave();
+  addNote('answer', robotRegion(robot), robot, questionId);
 }
 
 export function hasAsked(robot, questionId) {
@@ -504,6 +525,43 @@ function ensureProp(prop) {
   return s;
 }
 
+/** Snapshot of the fields that signal a prop result (for 'finding' notes). */
+function findingProbe(s) {
+  switch (s.prop) {
+    case Prop.SOJ_APXS: return { done: s.result !== null };
+    case Prop.SOJ_HAZARD: return { running: !!s.scanning };
+    case Prop.LRV_NAV: case Prop.SOJ_DRIVE: return { done: s.t >= 1 };
+    case Prop.LRV_BATTERY: return { running: !!(s.loadTest && s.loadTest.running) };
+    case Prop.LRV_CAMERA: return { running: !!(s.liftoff && s.liftoff.running) };
+    default: return {};
+  }
+}
+
+function noteFinding(s, before) {
+  const r = propRegion(s.prop);
+  switch (s.prop) {
+    case Prop.SOJ_APXS:
+      if (!before.done && s.result !== null) addNote('finding', r, s.prop, s.targetIndex);
+      break;
+    case Prop.SOJ_HAZARD:
+      if (before.running && !s.scanning && s.progress >= 1) addNote('finding', r, s.prop, 'scan');
+      break;
+    case Prop.LRV_NAV:
+      if (!before.done && s.t >= 1) addNote('finding', r, s.prop, s.evaIndex);
+      break;
+    case Prop.SOJ_DRIVE:
+      if (!before.done && s.t >= 1) addNote('finding', r, s.prop, s.legIndex);
+      break;
+    case Prop.LRV_BATTERY:
+      if (before.running && !s.loadTest.running) addNote('finding', r, s.prop, 'loadTest');
+      break;
+    case Prop.LRV_CAMERA:
+      if (before.running && !s.liftoff.running) addNote('finding', r, s.prop, 'liftoff');
+      break;
+    default: break;
+  }
+}
+
 export function propOpen(prop) {
   const s = ensureProp(prop);
   if (s) s.open = true;
@@ -513,7 +571,9 @@ export function propOpen(prop) {
 export function propAction(prop, action, arg) {
   const s = ensureProp(prop);
   if (!s) return null;
+  const before = findingProbe(s);
   propActionImpl(s, specFor(prop), action, arg, propCtx);
+  noteFinding(s, before);
   if (s.changed) game.events |= EVT.PROP_CHANGED;
   return s;
 }
@@ -521,7 +581,9 @@ export function propAction(prop, action, arg) {
 export function propTick(prop, dt = DT) {
   const s = ensureProp(prop);
   if (!s) return null;
+  const before = findingProbe(s);
   propTickImpl(s, specFor(prop), dt, propCtx);
+  noteFinding(s, before);
   if (s.changed) game.events |= EVT.PROP_CHANGED;
   return s;
 }
@@ -568,6 +630,25 @@ function readRaw() {
 
 const isInt = (v) => Number.isInteger(v) && v >= 0;
 
+/** Optional (10c): older saves lack `notes` -> []. Invalid entries dropped,
+ *  duplicates removed, order kept, n renumbered 1..k. */
+function parseNotes(arr) {
+  if (!Array.isArray(arr)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const e of arr) {
+    if (!e || typeof e !== 'object' || !NOTE_KINDS.includes(e.kind)) continue;
+    if (!Number.isInteger(e.region) || e.region < 0 || e.region >= REGION_COUNT || !isInt(e.ref)) continue;
+    const sub = e.sub === undefined ? null : e.sub;
+    if (!(sub === null || isInt(sub) || (typeof sub === 'string' && sub.length <= 32))) continue;
+    const key = noteKey(e.kind, e.region, e.ref, sub);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ kind: e.kind, region: e.region, ref: e.ref, sub, n: out.length + 1 });
+  }
+  return out;
+}
+
 function parseSave(raw) {
   if (typeof raw !== 'string' || !raw) return null;
   let o;
@@ -586,6 +667,7 @@ function parseSave(raw) {
     factsLog: Array.isArray(o.factsLog)
       ? [...new Set(o.factsLog.filter((k) => typeof k === 'string' && FACT_KEY_RE.test(k)))]
       : [],
+    notes: parseNotes(o.notes),
   };
 }
 
@@ -600,6 +682,7 @@ export function loadSave() {
   game.mode = d.mode;
   game.flags = d.flags;
   factsLogKeys = d.factsLog;
+  noteList = d.notes;
   if ((game.blueprints & BP_ALL_MASK) === BP_ALL_MASK) game.flags |= GF.ENDING_UNLOCKED;
   return true;
 }
@@ -609,6 +692,7 @@ export function writeSave() {
     v: SAVE_VERSION, blueprints: game.blueprints, robotsTalked: game.robotsTalked,
     asked: game.asked.slice(0, ROBOT_COUNT).map((n) => n | 0), mode: game.mode, flags: game.flags,
     factsLog: factsLogKeys.slice(),
+    notes: noteList.map((e) => ({ ...e })),
   });
   memSave = raw;
   memErased = false;

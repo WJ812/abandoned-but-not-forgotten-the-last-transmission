@@ -92,6 +92,8 @@ export const game = {
 };
 const ov = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 const hit = (p) => ({ x: p.x + PLAYER.HIT_X, y: p.y + PLAYER.HIT_Y, w: PLAYER.HIT_W, h: PLAYER.HIT_H });
+const mnotes = [];
+function addNote(kind, region, ref, sub) { if (mnotes.some((x) => x.kind === kind && x.region === region && x.ref === ref && x.sub === sub)) return; mnotes.push({ kind, region, ref, sub, n: mnotes.length + 1 }); }
 const flog = [], settings = { muted: false, reduceFlashing: false };
 let wasOnPortal = false, wasOnPad = false, stepT = 0, prevNear = null;
 const save = () => store().setItem(SAVE_KEY, JSON.stringify({ v: SAVE_VERSION, blueprints: game.blueprints, robotsTalked: game.robotsTalked, asked: game.asked, mode: game.mode, flags: game.flags }));
@@ -141,19 +143,19 @@ export const engine = {
     game.nearHotspot = prevNear = best;
     const onPortal = sc.hotspots.some((h) => h.kind === 'portal' && h.trigger === Trigger.STEP && ov(b, h.rect)); if (onPortal && !wasOnPortal) game.events |= EVT.ON_PORTAL; wasOnPortal = onPortal;
     const onPad = sc.hotspots.some((h) => h.kind === 'returnPad' && h.trigger === Trigger.STEP && ov(b, h.rect)); if (onPad && !wasOnPad) game.events |= EVT.ON_RETURN_PAD; wasOnPad = onPad;
-    for (const f of sc.facts) if (!(game.factsSeen & (1 << f.id)) && ov(b, f.rect)) { game.factsSeen |= 1 << f.id; game.pendingFact = f.id; game.events |= EVT.FACT; if (!flog.some((x) => x.region === game.region && x.id === f.id)) flog.push({ region: game.region, id: f.id }); break; }
+    for (const f of sc.facts) if (!(game.factsSeen & (1 << f.id)) && ov(b, f.rect)) { game.factsSeen |= 1 << f.id; game.pendingFact = f.id; game.events |= EVT.FACT; if (!flog.some((x) => x.region === game.region && x.id === f.id)) flog.push({ region: game.region, id: f.id }); addNote('fact', game.region, f.id, 0); break; }
     const was = game.inShadow; game.inShadow = sc.shadows.some((s) => ov(b, s)) && !engine.isLit(b.x + 6, b.y + 4);
     if (was !== game.inShadow) game.events |= EVT.SHADOW_CHANGED;
   },
   findInteract: () => game.nearHotspot,
   collectBlueprint(bp) {
     if (game.blueprints & (1 << bp)) return Collect.ALREADY;
-    game.blueprints |= 1 << bp; save();
+    game.blueprints |= 1 << bp; save(); addNote('blueprint', bp === 0 ? 1 : 2, bp, 0);
     if (game.blueprints === BP_ALL_MASK) { game.flags |= GF.ENDING_UNLOCKED; game.events |= EVT.BLUEPRINT_COMPLETE; return Collect.COMPLETE; }
     return Collect.NEW;
   },
   markRobotTalked(r) { game.robotsTalked |= 1 << r; save(); },
-  markAsked(r, q) { game.asked[r] |= 1 << q; save(); }, hasAsked: (r, q) => !!(game.asked[r] & (1 << q)),
+  markAsked(r, q) { game.asked[r] |= 1 << q; save(); addNote('answer', r === 0 ? 1 : 2, r, q); }, hasAsked: (r, q) => !!(game.asked[r] & (1 << q)),
   setMode(m) { game.mode = m; save(); }, toggleMode() { game.mode = game.mode === Mode.EXPLORER ? Mode.ARCHIVIST : Mode.EXPLORER; save(); },
   markIntroSeen() { game.flags |= GF.INTRO_SEEN; save(); }, markEndingSeen() { game.flags |= GF.ENDING_SEEN; save(); },
   completion() { const c = [0, 1].reduce((n, b) => n + ((game.blueprints >> b) & 1), 0); return { count: c, total: BP_COUNT, percent: Math.round((c / BP_COUNT) * 100) }; },
@@ -168,6 +170,7 @@ export const engine = {
   latencyProgress: () => game.latency.progress, latencyActive: () => game.latency.active,
   acknowledgeFact() { game.pendingFact = -1; },
   factsLog: () => flog.slice(),
+  notes: () => mnotes.map((x) => ({ ...x })),
   getSettings: () => ({ ...settings }),
   setSetting(n, v) { if (n in settings && typeof v === 'boolean') { settings[n] = v; return true; } return false; },
   propOpen(p) { const s = (game.props[p] ||= initProp(p)); s.open = true; return s; },
@@ -217,7 +220,7 @@ function tickProp(p, s, dt) {
     s.bearingToLmDeg = (Math.atan2(spec.lm.y - s.pos.y, spec.lm.x - s.pos.x) * 180) / Math.PI; s.rangeToLmKm = Math.hypot(s.pos.x - spec.lm.x, s.pos.y - spec.lm.y) * 10;
     s.distanceKm = s.t * eva.distanceKm; s.batteryPct = 100 - s.t * 55; s.station = eva.stations.find((st) => Math.abs(st.at - s.t) < 0.05)?.name ?? null;
   } else if (p === Prop.LRV_BATTERY) {
-    const lt = s.loadTest; if (lt.running) { const tot = spec.evaDrawWh[lt.evaIndex]; lt.drawnWh = Math.min(tot, lt.drawnWh + (tot / 3) * dt); lt.remainingPct = Math.max(0, 100 - (lt.drawnWh / spec.energyWh) * 100); if (lt.drawnWh >= tot) lt.running = false; }
+    const lt = s.loadTest; if (lt.running) { const tot = spec.evaDrawWh[lt.evaIndex]; lt.drawnWh = Math.min(tot, lt.drawnWh + (tot / 3) * dt); lt.remainingPct = Math.max(0, 100 - (lt.drawnWh / spec.energyWh) * 100); if (lt.drawnWh >= tot) { lt.running = false; addNote('finding', 1, 1, 'loadTest'); } }
   } else if (p === Prop.LRV_CAMERA) {
     s.queue.forEach((c) => { c.fireAt -= dt; }); s.nextFireIn = s.queue[0]?.fireAt ?? 0;
     while (s.queue.length && s.queue[0].fireAt <= 0) { const c = s.queue.shift(); if (c.action === 'camPan') s.panDeg = Math.max(-180, Math.min(180, s.panDeg + c.arg * spec.panStepDeg)); else if (c.action === 'camTilt') s.tiltDeg = Math.max(spec.tiltMinDeg, Math.min(spec.tiltMaxDeg, s.tiltDeg + c.arg * spec.tiltStepDeg)); else s.zoom = Math.max(1, Math.min(6, s.zoom + c.arg)); }
@@ -227,9 +230,9 @@ function tickProp(p, s, dt) {
     if (s.playing) { s.solTime += dt / 6; if (s.solTime >= 1) { s.solTime = 0; s.sol = Math.min(83, s.sol + 1); } }
     const e = Math.sin(Math.PI * s.solTime); s.sunElevDeg = e * 60; s.dustFactor = Math.pow(1 - spec.dustLossPerSol, s.sol); s.powerW = Math.max(0, e) * spec.panelW * s.dustFactor; s.onBattery = s.sunElevDeg < 3;
   } else if (p === Prop.SOJ_APXS) {
-    if (s.deployed && !s.result) { s.progress = Math.min(1, s.progress + dt / 6); if (s.progress >= 1) { const t = spec.targets[s.targetIndex]; s.result = { name: t.name, rockType: t.rockType, composition: t.composition, finding: t.finding }; } }
+    if (s.deployed && !s.result) { s.progress = Math.min(1, s.progress + dt / 6); if (s.progress >= 1) { const t = spec.targets[s.targetIndex]; addNote('finding', 2, 5, s.targetIndex); s.result = { name: t.name, rockType: t.rockType, composition: t.composition, finding: t.finding }; } }
   } else if (p === Prop.SOJ_HAZARD) {
-    if (s.scanning) { s.progress += dt / 2; s.stripes = s.stripes.map((_, i) => ({ hit: i > 1 && i < 4, distPx: 24 + ((i * 11) % 20) })); if (s.progress >= 1) { s.scanning = false; s.hazard = true; s.detour = 'left'; } }
+    if (s.scanning) { s.progress += dt / 2; s.stripes = s.stripes.map((_, i) => ({ hit: i > 1 && i < 4, distPx: 24 + ((i * 11) % 20) })); if (s.progress >= 1) { addNote('finding', 2, 6, 'scan'); s.scanning = false; s.hazard = true; s.detour = 'left'; } }
   } else if (p === Prop.SOJ_DRIVE) {
     if (s.playing) { s.t += dt / 20; if (s.t >= 1) { s.t = 1; s.playing = false; } }
     const leg = spec.legs[s.legIndex], pts = leg.path, k = s.t * (pts.length - 1), i = Math.min(pts.length - 2, Math.floor(k)), f = k - i;
