@@ -16,6 +16,8 @@ Everything in the game is based on real NASA mission data. Where a value is esti
 
 - **Online:** **https://wj812.github.io/abandoned-but-not-forgotten-the-last-transmission/**. It's hosted on GitHub Pages.
 
+> **📱 Note on devices:** The submitted version is a web app built for desktop and laptop browsers, with keyboard controls. Mobile and touch support is planned, but it wasn't built during the hackathon, so it isn't part of the submitted version.
+
 ### Fully web-based: players need only a browser
 
 - **Nothing to install.** There is no download, app, plugin, or account. It runs in any modern desktop browser: Chrome, Edge, Firefox, or Safari.
